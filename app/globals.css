@@ -24,3 +24,14 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+/* Comic-style container for subtle double frame */
+.comic-frame {
+  box-shadow: 0 0 0 4px #111,
+              0 8px 16px rgba(0,0,0,0.07);
+}
+
+/* Dragging visual */
+.dragging {
+  opacity: 0.6;
+  transform: scale(0.995);
+}

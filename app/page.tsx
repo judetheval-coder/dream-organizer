@@ -1,65 +1,137 @@
-import Image from "next/image";
+﻿"use client"
 
-export default function Home() {
+import React, { useEffect, useRef, useState } from "react";
+import Panel from "../components/Panel";
+
+export default function Page(): JSX.Element {
+  const [dreamText, setDreamText] = useState<string>("");
+  const [panels, setPanels] = useState<string[]>([]);
+  const [mergeShort, setMergeShort] = useState<boolean>(true);
+  const draggingIndexRef = useRef<number | null>(null);
+  const STORAGE_KEY = "dream-organizer-panels";
+
+  function generatePanelsFromText(text: string) {
+    const trimmed = text?.trim();
+    if (!trimmed) return [];
+
+    const matches = trimmed.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [];
+    let result = matches.map((s) => s.trim()).filter(Boolean);
+
+    if (mergeShort) {
+      const threshold = 20;
+      const merged: string[] = [];
+      for (const m of result) {
+        if (m.length < threshold && merged.length > 0) {
+          merged[merged.length - 1] = merged[merged.length - 1] + " " + m;
+        } else {
+          merged.push(m);
+        }
+      }
+      result = merged;
+    }
+
+    return result;
+  }
+
+  function handleGenerate() {
+    const result = generatePanelsFromText(dreamText);
+    setPanels(result);
+  }
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) setPanels(JSON.parse(saved));
+    } catch (e) {}
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(panels));
+    } catch (e) {}
+  }, [panels]);
+
+  function onDragStart(e: React.DragEvent<HTMLDivElement>, index?: number) {
+    draggingIndexRef.current = index ?? null;
+    e.dataTransfer.effectAllowed = "move";
+  }
+
+  function onDragOver(e: React.DragEvent<HTMLDivElement>, _index?: number) {
+    e.preventDefault();
+  }
+
+  function onDrop(e: React.DragEvent<HTMLDivElement>, index?: number) {
+    e.preventDefault();
+    const fromIndex = draggingIndexRef.current;
+    const toIndex = typeof index === "number" ? index : null;
+    if (fromIndex == null || toIndex == null || fromIndex === toIndex) return;
+    const next = [...panels];
+    const [item] = next.splice(fromIndex, 1);
+    next.splice(toIndex, 0, item);
+    setPanels(next);
+    draggingIndexRef.current = null;
+  }
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+    <div className="space-y-8">
+      <header className="text-center">
+        <h1 className="text-4xl font-extrabold">Dream Organizer 🌙</h1>
+        <p className="text-gray-600 mt-2">Type a dream below and split it into comic-style panels.</p>
+      </header>
+
+      <section className="space-y-4">
+        <label htmlFor="dream" className="block text-sm font-medium text-gray-700">Your dream</label>
+        <textarea
+          id="dream"
+          value={dreamText}
+          onChange={(e) => setDreamText(e.target.value)}
+          placeholder="I was flying..."
+          rows={8}
+          className="w-full rounded-lg p-4 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-200"
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+
+        <div className="flex gap-3">
+          <button onClick={handleGenerate} className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md">
+            Generate Panels
+          </button>
+
+          <button onClick={() => { setDreamText(""); setPanels([]); }} className="bg-gray-200 hover:bg-gray-300 text-gray-900 px-4 py-2 rounded-md">
+            Clear
+          </button>
+
+          <button onClick={() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(panels)); alert("Saved to localStorage."); }} className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-md">
+            Save locally
+          </button>
+
+          <label className="ml-4 flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={mergeShort} onChange={(e) => setMergeShort(e.target.checked)} />
+            Merge short sentences
+          </label>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </section>
+
+      <hr />
+
+      <section>
+        <h2 className="text-2xl font-semibold mb-4">Panels</h2>
+        {panels.length === 0 ? (
+          <p className="text-gray-600">Press "Generate Panels" to split your dream into comic panels.</p>
+        ) : (
+          <div className="grid gap-6 grid-cols-1 md:grid-cols-2">
+            {panels.map((p, i) => (
+              <Panel
+                key={i}
+                index={i}
+                text={p}
+                onDragStart={onDragStart}
+                onDragOver={onDragOver}
+                onDrop={onDrop}
+                dragging={draggingIndexRef.current === i}
+              />
+            ))}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
