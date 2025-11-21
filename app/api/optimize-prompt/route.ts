@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 
 const openai = new OpenAI({
@@ -16,31 +16,36 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log(" Optimizing DALL-E prompt...");
+    console.log("🎨 Optimizing comic panel prompt...");
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
-          content: `You are an expert at crafting DALL-E prompts for dream-like comic panels. Transform user descriptions into detailed, vivid prompts that produce high-quality comic art. Include:
-- Art style (comic book, graphic novel, manga, etc.)
-- Visual details (colors, lighting, composition)
-- Mood and atmosphere
-- Character descriptions
-- Setting details
-Keep it under 300 characters. Focus on visual elements, not story.`
+          content: `You are an expert comic artist. Transform dream descriptions into visual comic panel prompts. Keep it simple and visual.
+
+Create a prompt that describes a single comic panel with:
+- Clear, simple composition
+- A person or character doing something
+- Vivid but clear visual details
+- Comic book art style (like graphic novels)
+- Strong colors and mood
+
+Be concise (under 150 characters). Focus only on WHAT IS VISIBLE in the panel.`
         },
         {
           role: "user",
-          content: `Create a DALL-E prompt for this dream scene:
-Description: ${description}
-${style ? `Style: ${style}` : ''}
-${mood ? `Mood: ${mood}` : ''}`
+          content: `Make a comic panel prompt:
+"${description}"
+${style ? `Art style hint: ${style}` : ''}
+${mood ? `Feeling: ${mood}` : ''}
+
+Output only the visual description, nothing else.`
         }
       ],
       temperature: 0.7,
-      max_tokens: 150,
+      max_tokens: 120,
     });
 
     const optimized = response.choices[0]?.message?.content;
@@ -49,11 +54,11 @@ ${mood ? `Mood: ${mood}` : ''}`
       throw new Error("No optimized prompt returned");
     }
 
-    console.log(" Prompt optimized");
+    console.log("✓ Prompt ready");
 
     return NextResponse.json({ optimized });
   } catch (error: any) {
-    console.error(" Prompt optimization error:", error);
+    console.error("❌ Prompt error:", error);
     return NextResponse.json(
       { error: error.message || "Failed to optimize prompt" },
       { status: 500 }
