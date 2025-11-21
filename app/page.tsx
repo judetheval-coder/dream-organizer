@@ -1,7 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { useUser } from '@clerk/nextjs'
-import { UserButton } from '@clerk/nextjs'
+import { useUser, UserButton, SignOutButton } from '@clerk/nextjs'
 import { colors, gradients, shadows } from '@/lib/design'
 import Panel from '@/components/Panel'
 import { enhanceDreamStory, analyzeDreams } from '@/lib/gpt-helpers'
@@ -218,6 +217,12 @@ export default function DashboardPage() {
             onClick={() => setCurrentTab('Insights')}
           />
           <NavItem
+            label="Subscription"
+            icon="💎"
+            active={currentTab === 'Subscription'}
+            onClick={() => setCurrentTab('Subscription')}
+          />
+          <NavItem
             label="Settings"
             icon="⚙️"
             active={currentTab === 'Settings'}
@@ -241,6 +246,7 @@ export default function DashboardPage() {
             {currentTab === 'My Dreams' && '💭 My Dreams'}
             {currentTab === 'Comics' && '🎨 Comics Gallery'}
             {currentTab === 'Insights' && '✨ Dream Insights'}
+            {currentTab === 'Subscription' && '💎 Subscription Plans'}
             {currentTab === 'Settings' && '⚙️ Settings'}
           </h2>
           <p style={{ color: colors.textMuted }}>
@@ -248,6 +254,7 @@ export default function DashboardPage() {
             {currentTab === 'My Dreams' && 'Browse and manage all your saved dreams'}
             {currentTab === 'Comics' && 'View your generated dream comics'}
             {currentTab === 'Insights' && 'Analyze patterns in your dreams'}
+            {currentTab === 'Subscription' && 'Manage your plan and features'}
             {currentTab === 'Settings' && 'Customize your experience'}
           </p>
         </div>
@@ -545,64 +552,9 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Settings Tab - Account & Subscription Management */}
-        {currentTab === 'Settings' && isLoaded && (
-          <div className="max-w-4xl w-full space-y-6">
-            {/* Account Information Card */}
-            <div
-              className="rounded-xl p-8"
-              style={{
-                background: colors.surface,
-                border: `2px solid ${colors.purple}`,
-              }}
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold" style={{ color: colors.textPrimary }}>
-                  Account
-                </h2>
-                <UserButton afterSignOutUrl="/sign-in" />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <p className="text-sm font-semibold mb-2" style={{ color: colors.textMuted }}>
-                    Email Address
-                  </p>
-                  <p className="text-lg" style={{ color: colors.textPrimary }}>
-                    {user?.emailAddresses[0]?.emailAddress || 'N/A'}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm font-semibold mb-2" style={{ color: colors.textMuted }}>
-                    Name
-                  </p>
-                  <p className="text-lg" style={{ color: colors.textPrimary }}>
-                    {user?.firstName || 'User'} {user?.lastName || ''}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm font-semibold mb-2" style={{ color: colors.textMuted }}>
-                    Member Since
-                  </p>
-                  <p className="text-lg" style={{ color: colors.textPrimary }}>
-                    {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm font-semibold mb-2" style={{ color: colors.textMuted }}>
-                    Total Dreams
-                  </p>
-                  <p className="text-lg" style={{ color: colors.textPrimary }}>
-                    {dreams.length}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Subscription Card */}
+        {/* Subscription Tab */}
+        {currentTab === 'Subscription' && isLoaded && (
+          <div className="max-w-6xl w-full">
             <div
               className="rounded-xl p-8"
               style={{
@@ -610,10 +562,6 @@ export default function DashboardPage() {
                 border: `2px solid ${colors.cyan}`,
               }}
             >
-              <h2 className="text-2xl font-bold mb-6" style={{ color: colors.textPrimary }}>
-                Subscription
-              </h2>
-
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Current Plan */}
                 <div
@@ -733,6 +681,75 @@ export default function DashboardPage() {
                     </button>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Settings Tab - Account Management */}
+        {currentTab === 'Settings' && isLoaded && (
+          <div className="max-w-4xl w-full space-y-6">
+            {/* Account Information Card */}
+            <div
+              className="rounded-xl p-8"
+              style={{
+                background: colors.surface,
+                border: `2px solid ${colors.purple}`,
+              }}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold" style={{ color: colors.textPrimary }}>
+                  Account
+                </h2>
+                <SignOutButton>
+                  <button 
+                    className="px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105"
+                    style={{
+                      background: '#dc2626',
+                      color: 'white',
+                    }}
+                  >
+                    Sign Out
+                  </button>
+                </SignOutButton>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <p className="text-sm font-semibold mb-2" style={{ color: colors.textMuted }}>
+                    Email Address
+                  </p>
+                  <p className="text-lg" style={{ color: colors.textPrimary }}>
+                    {user?.emailAddresses[0]?.emailAddress || 'N/A'}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold mb-2" style={{ color: colors.textMuted }}>
+                    Name
+                  </p>
+                  <p className="text-lg" style={{ color: colors.textPrimary }}>
+                    {user?.firstName || 'User'} {user?.lastName || ''}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold mb-2" style={{ color: colors.textMuted }}>
+                    Member Since
+                  </p>
+                  <p className="text-lg" style={{ color: colors.textPrimary }}>
+                    {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold mb-2" style={{ color: colors.textMuted }}>
+                    Total Dreams
+                  </p>
+                  <p className="text-lg" style={{ color: colors.textPrimary }}>
+                    {dreams.length}
+                  </p>
+                </div>
               </div>
             </div>
 
