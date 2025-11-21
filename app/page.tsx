@@ -545,7 +545,7 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Settings Tab */}
+        {/* Settings Tab - Account & Subscription Management */}
         {currentTab === 'Settings' && (
           <div
             className="rounded-xl p-6 max-w-md"
@@ -833,6 +833,7 @@ function StatCard({
     </div>
   )
 }
+
 
 
 
