@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react"
 import Image from "next/image"
 import { colors, shadows, radii, typography } from "@/lib/design"
+import { optimizePromptForDalle } from "@/lib/gpt-helpers"
 
 type PanelProps = {
   description: string
@@ -66,13 +67,13 @@ export default function Panel({ description, style, mood, onImageReady, generate
     }, 800)
 
     try {
-      // Refined prompt focused on coherence and quality for DALL-E 2 HD
-      const animePrompt = `High quality detailed ${style} anime illustration. ${description}. Rich color palette, beautiful lighting, professional art, intricate details, coherent composition, ${mood} atmosphere, clear subject focus, well rendered, artistic`    
+      // Use the optimized prompt API to get a clean, beautiful comic-style prompt
+      const optimizedPrompt = await optimizePromptForDalle(description, style, mood)
 
       const response = await fetch("/api/generate-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt: animePrompt }),
+        body: JSON.stringify({ prompt: optimizedPrompt }),
       })
 
       if (!response.ok) {
@@ -92,7 +93,7 @@ export default function Panel({ description, style, mood, onImageReady, generate
       setImage(data.image)
       persistImage(data.image)
       onImageReady?.(data.image)
-      
+
       // Don't clear loading state - keep image displayed
       setLoading(false)
       setProgress(0)
@@ -117,7 +118,7 @@ export default function Panel({ description, style, mood, onImageReady, generate
   return (
     <div className="relative w-full rounded-xl overflow-hidden" style={{ aspectRatio: "2/1", minHeight: '300px' }}>
       {loading && (
-        <div 
+        <div
           className="absolute inset-0 flex flex-col items-center justify-center p-6"
           style={{
             background: colors.backgroundDark,
@@ -131,7 +132,7 @@ export default function Panel({ description, style, mood, onImageReady, generate
                 borderTopColor: colors.cyan,
               }}
             />
-            <div 
+            <div
               className="absolute inset-0 flex items-center justify-center text-2xl font-bold"
               style={{ fontFamily: typography.heading, color: colors.textPrimary }}
             >
@@ -139,7 +140,7 @@ export default function Panel({ description, style, mood, onImageReady, generate
             </div>
           </div>
 
-          <div 
+          <div
             className="px-6 py-3 font-semibold rounded-full"
             style={{
               background: colors.surface,
@@ -152,12 +153,12 @@ export default function Panel({ description, style, mood, onImageReady, generate
       )}
 
       {!loading && error && !image && (
-        <div 
+        <div
           className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center"
           style={{ background: colors.backgroundDark }}
         >
           <p className="text-4xl mb-4"></p>
-          <p 
+          <p
             className="text-sm font-semibold mb-4"
             style={{ fontFamily: typography.body, color: colors.textPrimary }}
           >
@@ -206,13 +207,13 @@ export default function Panel({ description, style, mood, onImageReady, generate
       )}
 
       {!loading && !image && !error && (
-        <div 
+        <div
           className="absolute inset-0 flex flex-col items-center justify-center p-6"
           style={{
             background: colors.backgroundDark,
           }}
         >
-          <p 
+          <p
             className="text-sm mb-4 text-center"
             style={{ fontFamily: typography.body, color: colors.textSecondary }}
           >
@@ -234,5 +235,3 @@ export default function Panel({ description, style, mood, onImageReady, generate
     </div>
   )
 }
-
-
