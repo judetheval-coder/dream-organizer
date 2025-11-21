@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useUser } from '@clerk/nextjs'
+import { UserButton } from '@clerk/nextjs'
 import { colors, gradients, shadows } from '@/lib/design'
 import Panel from '@/components/Panel'
 import { enhanceDreamStory, analyzeDreams } from '@/lib/gpt-helpers'
@@ -832,6 +833,8 @@ function StatCard({
     </div>
   )
 }
+
+
 
 
 
