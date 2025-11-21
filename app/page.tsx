@@ -546,56 +546,252 @@ export default function DashboardPage() {
         )}
 
         {/* Settings Tab - Account & Subscription Management */}
-        {currentTab === 'Settings' && (
-          <div
-            className="rounded-xl p-6 max-w-md"
-            style={{
-              background: colors.surface,
-              border: `2px solid ${colors.purple}`,
-            }}
-          >
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-semibold mb-2" style={{ color: colors.textPrimary }}>
-                  Theme
-                </label>
-                <div
-                  className="p-3 rounded-lg"
-                  style={{
-                    background: colors.backgroundDark,
-                    color: colors.textMuted,
-                  }}
-                >
-                  Dark Purple & Cyan (Fixed)
+        {currentTab === 'Settings' && isLoaded && (
+          <div className="max-w-4xl w-full space-y-6">
+            {/* Account Information Card */}
+            <div
+              className="rounded-xl p-8"
+              style={{
+                background: colors.surface,
+                border: `2px solid ${colors.purple}`,
+              }}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold" style={{ color: colors.textPrimary }}>
+                  Account
+                </h2>
+                <UserButton afterSignOutUrl="/sign-in" />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <p className="text-sm font-semibold mb-2" style={{ color: colors.textMuted }}>
+                    Email Address
+                  </p>
+                  <p className="text-lg" style={{ color: colors.textPrimary }}>
+                    {user?.emailAddresses[0]?.emailAddress || 'N/A'}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold mb-2" style={{ color: colors.textMuted }}>
+                    Name
+                  </p>
+                  <p className="text-lg" style={{ color: colors.textPrimary }}>
+                    {user?.firstName || 'User'} {user?.lastName || ''}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold mb-2" style={{ color: colors.textMuted }}>
+                    Member Since
+                  </p>
+                  <p className="text-lg" style={{ color: colors.textPrimary }}>
+                    {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-sm font-semibold mb-2" style={{ color: colors.textMuted }}>
+                    Total Dreams
+                  </p>
+                  <p className="text-lg" style={{ color: colors.textPrimary }}>
+                    {dreams.length}
+                  </p>
                 </div>
               </div>
+            </div>
 
-              <div>
-                <label className="block text-sm font-semibold mb-2" style={{ color: colors.textPrimary }}>
-                  Storage
-                </label>
-                <p style={{ color: colors.textMuted }}>
-                  Dreams are saved locally: <strong>{dreams.length} dreams</strong>
-                </p>
-              </div>
+            {/* Subscription Card */}
+            <div
+              className="rounded-xl p-8"
+              style={{
+                background: colors.surface,
+                border: `2px solid ${colors.cyan}`,
+              }}
+            >
+              <h2 className="text-2xl font-bold mb-6" style={{ color: colors.textPrimary }}>
+                Subscription
+              </h2>
 
-              <div>
-                <button
-                  onClick={() => {
-                    localStorage.clear()
-                    // dreams state managed by useDreams hook([])
-                    setPanels([])
-                  }}
-                  className="px-4 py-2 rounded-lg font-semibold cursor-pointer hover:scale-105 transition-all"
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Current Plan */}
+                <div
+                  className="rounded-lg p-6 relative"
                   style={{
                     background: colors.backgroundDark,
-                    color: colors.cyan,
-                    border: `1px solid ${colors.cyan}`,
                   }}
                 >
-                  Clear All Data
-                </button>
+                  <div
+                    className="absolute top-0 right-0 px-3 py-1 rounded-bl-lg rounded-tr-lg text-xs font-bold"
+                    style={{
+                      background: colors.cyan,
+                      color: colors.background,
+                    }}
+                  >
+                    CURRENT
+                  </div>
+                  <p className="text-sm font-semibold mb-2" style={{ color: colors.textMuted }}>
+                    Current Plan
+                  </p>
+                  <p className="text-3xl font-bold mb-4" style={{ color: colors.purple }}>
+                    {getTierName(userTier)}
+                  </p>
+                  <p className="text-lg font-bold mb-4" style={{ color: colors.cyan }}>
+                    ${SUBSCRIPTION_TIERS[userTier].price === 0 ? 'Free' : SUBSCRIPTION_TIERS[userTier].price.toFixed(2)}/mo
+                  </p>
+                  <div className="space-y-3">
+                    {getTierFeatures(userTier).map((feature, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <span style={{ color: colors.cyan }}>✓</span>
+                        <span style={{ color: colors.textMuted }} className="text-sm">
+                          {feature}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Pro Plan */}
+                {userTier !== 'pro' && (
+                  <div
+                    className="rounded-lg p-6"
+                    style={{
+                      background: colors.backgroundDark,
+                      border: `1px solid ${colors.purple}`,
+                    }}
+                  >
+                    <p className="text-sm font-semibold mb-2" style={{ color: colors.textMuted }}>
+                      Upgrade to Pro
+                    </p>
+                    <p className="text-3xl font-bold mb-4" style={{ color: colors.purple }}>
+                      Pro
+                    </p>
+                    <p className="text-lg font-bold mb-4" style={{ color: colors.cyan }}>
+                      $9.99/mo
+                    </p>
+                    <div className="space-y-3 mb-6">
+                      {getTierFeatures('pro').map((feature, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <span style={{ color: colors.cyan }}>✓</span>
+                          <span style={{ color: colors.textMuted }} className="text-sm">
+                            {feature}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => setShowUpgrade(true)}
+                      className="w-full py-2 rounded-lg font-semibold transition-all hover:scale-105"
+                      style={{
+                        background: colors.purple,
+                        color: colors.textPrimary,
+                      }}
+                    >
+                      Choose Plan
+                    </button>
+                  </div>
+                )}
+
+                {/* Premium Plan */}
+                {userTier !== 'premium' && (
+                  <div
+                    className="rounded-lg p-6"
+                    style={{
+                      background: colors.backgroundDark,
+                      border: `1px solid ${colors.cyan}`,
+                    }}
+                  >
+                    <p className="text-sm font-semibold mb-2" style={{ color: colors.textMuted }}>
+                      Upgrade to Premium
+                    </p>
+                    <p className="text-3xl font-bold mb-4" style={{ color: colors.cyan }}>
+                      Premium
+                    </p>
+                    <p className="text-lg font-bold mb-4" style={{ color: colors.cyan }}>
+                      $19.99/mo
+                    </p>
+                    <div className="space-y-3 mb-6">
+                      {getTierFeatures('premium').map((feature, idx) => (
+                        <div key={idx} className="flex items-center gap-2">
+                          <span style={{ color: colors.cyan }}>✓</span>
+                          <span style={{ color: colors.textMuted }} className="text-sm">
+                            {feature}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                    <button
+                      onClick={() => setShowUpgrade(true)}
+                      className="w-full py-2 rounded-lg font-semibold transition-all hover:scale-105"
+                      style={{
+                        background: colors.cyan,
+                        color: colors.background,
+                      }}
+                    >
+                      Choose Plan
+                    </button>
+                  </div>
+                )}
               </div>
+            </div>
+
+            {/* Preferences Card */}
+            <div
+              className="rounded-xl p-8"
+              style={{
+                background: colors.surface,
+                border: `2px solid ${colors.purple}`,
+              }}
+            >
+              <h2 className="text-2xl font-bold mb-6" style={{ color: colors.textPrimary }}>
+                Preferences
+              </h2>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: colors.textPrimary }}>
+                    Theme
+                  </label>
+                  <div
+                    className="p-3 rounded-lg"
+                    style={{
+                      background: colors.backgroundDark,
+                      color: colors.textMuted,
+                    }}
+                  >
+                    Dark Purple & Cyan (Fixed)
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Danger Zone */}
+            <div
+              className="rounded-xl p-8"
+              style={{
+                background: colors.surface,
+                border: `2px solid #dc2626`,
+              }}
+            >
+              <h2 className="text-2xl font-bold mb-6" style={{ color: '#dc2626' }}>
+                Danger Zone
+              </h2>
+
+              <button
+                onClick={() => {
+                  localStorage.clear()
+                  setPanels([])
+                }}
+                className="px-4 py-2 rounded-lg font-semibold cursor-pointer hover:scale-105 transition-all"
+                style={{
+                  background: '#dc2626',
+                  color: 'white',
+                  border: `1px solid #dc2626`,
+                }}
+              >
+                Clear All Data
+              </button>
             </div>
           </div>
         )}
