@@ -1,6 +1,5 @@
 "use client"
 import React from 'react'
-import { layout } from '../../lib/design'
 
 interface Props { id?: string; className?: string; children: React.ReactNode; }
 
@@ -11,4 +10,3 @@ export const SectionWrapper: React.FC<Props> = ({ id, className = '', children }
 )
 
 export default SectionWrapper
-
