@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { useUser } from '@clerk/nextjs'
 import { colors, gradients, shadows } from '@/lib/design'
 import Panel from '@/components/Panel'
 import { enhanceDreamStory, analyzeDreams } from '@/lib/gpt-helpers'
@@ -7,8 +8,15 @@ import Logo from '@/components/Logo'
 import WelcomeScreen from '@/components/WelcomeScreen'
 import EmptyState from '@/components/EmptyState'
 import Footer from '@/components/Footer'
+import UpgradePrompt from '@/components/UpgradePrompt'
+import { useDreams } from '@/hooks/useDreams'
+import { canCreateDream, getTierName, getTierFeatures, SUBSCRIPTION_TIERS } from '@/lib/subscription-tiers'
 
 export default function DashboardPage() {
+  const { user, isLoaded } = useUser()
+  const { dreams, loading, userTier, saveDream, updatePanel, removeDream } = useDreams()
+  const [showUpgrade, setShowUpgrade] = useState(false)
+  
   const [currentTab, setCurrentTab] = useState('Dashboard')
   const [dreamText, setDreamText] = useState('')
   const [style, setStyle] = useState('Anime')
@@ -17,18 +25,18 @@ export default function DashboardPage() {
   const [enhancing, setEnhancing] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
   const [insights, setInsights] = useState<string | null>(null)
-  const [savedDreams, setSavedDreams] = useState<any[]>([])
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [currentGeneratingIndex, setCurrentGeneratingIndex] = useState(-1)
   const [showWelcome, setShowWelcome] = useState(true)
 
+  // Check if first visit
   useEffect(() => {
-    const saved = localStorage.getItem('dream-archives')
-    if (saved) setSavedDreams(JSON.parse(saved))
+    const hasVisited = localStorage.getItem('has-visited')
+    if (hasVisited) setShowWelcome(false)
   }, [])
 
   const stats = {
-    totalDreams: savedDreams.length,
+    totalDreams: dreams.length,
     lucidDreams: 0,
     nightmares: 0,
     achievements: 2,
@@ -50,8 +58,14 @@ export default function DashboardPage() {
     return scenes
   }
 
-  const handleCreate = () => {
-    if (!dreamText.trim()) return
+  const handleCreate = async () => {
+    if (!dreamText.trim() || !user) return
+
+    // Check subscription limits
+    if (!canCreateDream(userTier, dreams.length)) {
+      setShowUpgrade(true)
+      return
+    }
 
     const sceneDescriptions = generateSceneDescriptions(dreamText)
 
@@ -64,42 +78,57 @@ export default function DashboardPage() {
       generating: false,
     }))
 
-    const dream = { text: dreamText, date: new Date().toISOString(), panels: newPanels }
-    const updated = [dream, ...savedDreams]
-    setSavedDreams(updated)
-    localStorage.setItem('dream-archives', JSON.stringify(updated))
     setPanels(newPanels)
     setCurrentGeneratingIndex(0)
-    
     setDreamText('')
     setShowCreateModal(false)
     setCurrentTab('Comics')
+
+    // Save to Supabase
+    try {
+      await saveDream({
+        text: dreamText,
+        style,
+        mood,
+        panels: newPanels.map((p, i) => ({
+          description: p.description,
+          scene_number: i,
+          image_url: p.image || undefined
+        }))
+      })
+    } catch (error) {
+      console.error('Error saving dream:', error)
+    }
   }
 
-  const handlePanelImageReady = (panelId: number, imageUrl: string) => {
+  const handlePanelImageReady = async (panelId: number, imageUrl: string) => {
     // Update the panel with the generated image
-    const updatedPanels = panels.map(p => 
+    const updatedPanels = panels.map(p =>
       p.id === panelId ? { ...p, image: imageUrl } : p
     )
     setPanels(updatedPanels)
 
-    // Update savedDreams to persist the image
-    const updatedDreams = savedDreams.map(dream => ({
-      ...dream,
-      panels: dream.panels?.map((p: any) => 
-        p.id === panelId ? { ...p, image: imageUrl } : p
-      ) || []
-    }))
-    setSavedDreams(updatedDreams)
-    localStorage.setItem('dream-archives', JSON.stringify(updatedDreams))
+    // Find the corresponding Supabase panel ID and update with storage
+    const currentDream = dreams[0] // Most recent dream
+    if (currentDream?.panels && user) {
+      const panelIndex = panels.findIndex(p => p.id === panelId)
+      const supabasePanel = currentDream.panels.find((p: any) => p.scene_number === panelIndex)
+
+      if (supabasePanel) {
+        try {
+          // Upload to Supabase Storage and update panel
+          await updatePanel(supabasePanel.id, imageUrl, currentDream.id, panelIndex)
+        } catch (error) {
+          console.error('Error updating panel image:', error)
+        }
+      }
+    }
 
     // Move to next panel in queue
     if (currentGeneratingIndex < panels.length - 1) {
       setCurrentGeneratingIndex(currentGeneratingIndex + 1)
     }
-  }
-
-  const handleEnhance = async () => {
+  }`r`n`r`n  const handleEnhance = async () => {
     if (!dreamText.trim()) return
     setEnhancing(true)
     try {
@@ -112,11 +141,11 @@ export default function DashboardPage() {
   }
 
   const handleAnalyze = async () => {
-    if (savedDreams.length === 0) return
+    if (dreams.length === 0) return
     setAnalyzing(true)
     try {
       const result = await analyzeDreams(
-        savedDreams.map((d) => d.text),
+        dreams.map((d) => d.text),
         false
       )
       setInsights(result)
@@ -265,7 +294,7 @@ export default function DashboardPage() {
               </button>
               <button
                 onClick={handleAnalyze}
-                disabled={analyzing || savedDreams.length === 0}
+                disabled={analyzing || dreams.length === 0}
                 className="px-6 py-3 rounded-xl font-semibold flex items-center gap-2 transition-all hover:scale-105 cursor-pointer disabled:opacity-50"
                 style={{
                   background: gradients.card,
@@ -289,10 +318,10 @@ export default function DashboardPage() {
                   border: `1px solid ${colors.backgroundDark}`,
                 }}
               >
-                {savedDreams.length === 0 ? (
+                {dreams.length === 0 ? (
                   <p style={{ color: colors.textMuted }}>No dreams yet. Create your first one!</p>
                 ) : (
-                  savedDreams.slice(0, 5).map((dream, idx) => (
+                  dreams.slice(0, 5).map((dream, idx) => (
                     <div
                       key={idx}
                       className="p-4 rounded-lg cursor-pointer transition-all hover:opacity-80"
@@ -356,7 +385,7 @@ export default function DashboardPage() {
         {/* My Dreams Tab */}
         {currentTab === 'My Dreams' && (
           <div>
-            {savedDreams.length === 0 ? (
+            {dreams.length === 0 ? (
               <div
                 className="rounded-xl p-12 text-center"
                 style={{
@@ -369,7 +398,7 @@ export default function DashboardPage() {
               </div>
             ) : (
               <div className="space-y-4">
-                {savedDreams.map((dream, idx) => (
+                {dreams.map((dream, idx) => (
                   <div
                     key={idx}
                     className="p-6 rounded-xl"
@@ -386,9 +415,9 @@ export default function DashboardPage() {
                       </div>
                       <button
                         onClick={() => {
-                          const updated = savedDreams.filter((_, i) => i !== idx)
-                          setSavedDreams(updated)
-                          localStorage.setItem('dream-archives', JSON.stringify(updated))
+                          const updated = dreams.filter((_, i) => i !== idx)
+                          // dreams state managed by useDreams hook(updated)
+                          // Auto-saved to Supabase)
                         }}
                         className="px-3 py-1 text-sm rounded-lg transition-all hover:opacity-80"
                         style={{
@@ -433,7 +462,7 @@ export default function DashboardPage() {
         {/* Comics Tab */}
         {currentTab === 'Comics' && (
           <div>
-            {savedDreams.length === 0 || !savedDreams.some(d => d.panels?.length > 0) ? (
+            {dreams.length === 0 || !dreams.some(d => d.panels?.length > 0) ? (
               <div
                 className="rounded-xl p-12 text-center"
                 style={{
@@ -449,7 +478,7 @@ export default function DashboardPage() {
               </div>
             ) : (
               <div className="space-y-8">
-                {savedDreams.map((dream, dIdx) =>
+                {dreams.map((dream, dIdx) =>
                   dream.panels && dream.panels.length > 0 ? (
                     <div key={dIdx}>
                       <div className="mb-6">
@@ -488,12 +517,12 @@ export default function DashboardPage() {
               border: `2px solid ${colors.purple}`,
             }}
           >
-            {savedDreams.length === 0 ? (
+            {dreams.length === 0 ? (
               <p style={{ color: colors.textMuted }}>Save some dreams first to analyze patterns!</p>
             ) : (
               <>
                 <p className="mb-4" style={{ color: colors.textMuted }}>
-                  You have <strong style={{ color: colors.cyan }}>{savedDreams.length}</strong> dreams saved.
+                  You have <strong style={{ color: colors.cyan }}>{dreams.length}</strong> dreams saved.
                 </p>
                 <button
                   onClick={handleAnalyze}
@@ -543,7 +572,7 @@ export default function DashboardPage() {
                   Storage
                 </label>
                 <p style={{ color: colors.textMuted }}>
-                  Dreams are saved locally: <strong>{savedDreams.length} dreams</strong>
+                  Dreams are saved locally: <strong>{dreams.length} dreams</strong>
                 </p>
               </div>
 
@@ -551,7 +580,7 @@ export default function DashboardPage() {
                 <button
                   onClick={() => {
                     localStorage.clear()
-                    setSavedDreams([])
+                    // dreams state managed by useDreams hook([])
                     setPanels([])
                   }}
                   className="px-4 py-2 rounded-lg font-semibold cursor-pointer hover:scale-105 transition-all"
@@ -790,6 +819,22 @@ function StatCard({
       <div className="text-sm" style={{ color: colors.textMuted }}>
         {label}
       </div>
+    
+
+      {/* Upgrade Prompt Modal */}
+      {showUpgrade && (
+        <UpgradePrompt
+          currentTier={userTier}
+          onClose={() => setShowUpgrade(false)}
+        />
+      )}
+
     </div>
   )
 }
+
+
+
+
+
+
