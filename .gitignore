@@ -1,41 +1,73 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
+# Dependencies
+node_modules/
 /.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+.pnp.js
 
-# testing
+# Testing
 /coverage
 
-# next.js
+# Next.js
 /.next/
 /out/
 
-# production
+# Production
 /build
+/dist
 
-# misc
+# Misc
 .DS_Store
 *.pem
-
-# debug
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
-# vercel
-.vercel
+# Backup and old files
+*.bak
+*-backup.*
+*-old.*
+temp_*
+build.log
+dev.log
+*.bat
+*.ps1
+requirements.txt
+run_sd.bat
+sd_*.js
+sd_*.py
+sd_*.log
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# Documentation
+COMIC_MODELS.md
+COMPLETION_REPORT.md
+DELIVERY_SUMMARY.md
+DESIGN_GUIDE.md
+DOCS_INDEX.md
+ENHANCEMENT_GUIDE.md
+IMPLEMENTATION_SUMMARY.md
+QUICK_START.md
+README.old.md
+SETUP_STABLE_DIFFUSION.md
+SPEED_GUIDE.md
+START_GUIDE.md
+UPGRADES.md
+
+# App backups
+app/page-*.jsx
+app/page-old-backup.jsx
+app/achievements/
+app/calendar/
+app/dashboard/
+app/dreams/
+app/settings/
