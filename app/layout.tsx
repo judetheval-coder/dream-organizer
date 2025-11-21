@@ -21,7 +21,7 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
-        <body className={$inter.variable} font-sans antialiased}>
+        <body className={`${inter.variable} font-sans antialiased`}>
           {children}
         </body>
       </html>

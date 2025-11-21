@@ -128,7 +128,9 @@ export default function DashboardPage() {
     if (currentGeneratingIndex < panels.length - 1) {
       setCurrentGeneratingIndex(currentGeneratingIndex + 1)
     }
-  }`r`n`r`n  const handleEnhance = async () => {
+  }
+
+  const handleEnhance = async () => {
     if (!dreamText.trim()) return
     setEnhancing(true)
     try {
@@ -752,6 +754,14 @@ export default function DashboardPage() {
         </div>
       )}
       
+      {/* Upgrade Prompt Modal */}
+      {showUpgrade && (
+        <UpgradePrompt
+          currentTier={userTier}
+          onClose={() => setShowUpgrade(false)}
+        />
+      )}
+      
       <Footer />
     </div>
   )
@@ -819,16 +829,6 @@ function StatCard({
       <div className="text-sm" style={{ color: colors.textMuted }}>
         {label}
       </div>
-    
-
-      {/* Upgrade Prompt Modal */}
-      {showUpgrade && (
-        <UpgradePrompt
-          currentTier={userTier}
-          onClose={() => setShowUpgrade(false)}
-        />
-      )}
-
     </div>
   )
 }

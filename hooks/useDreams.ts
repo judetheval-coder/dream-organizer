@@ -119,7 +119,9 @@ export function useDreams() {
       console.error('Error updating panel:', err)
       throw err
     }
-  }\n\n  const removeDream = async (dreamId: string) => {
+  }
+
+  const removeDream = async (dreamId: string) => {
     if (!user) throw new Error('Not authenticated')
 
     try {
