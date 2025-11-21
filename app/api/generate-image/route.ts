@@ -23,13 +23,15 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    console.log(" Generating image with DALL-E 2:", prompt.substring(0, 80));
+    console.log("🎨 Generating image with DALL-E 3:", prompt.substring(0, 80));
 
     const response = await openai.images.generate({
-      model: "dall-e-2",
+      model: "dall-e-3",
       prompt: prompt,
       n: 1,
       size: "1024x1024",
+      quality: "standard",
+      style: "vivid",
     });
 
     const imageUrl = response.data?.[0]?.url;

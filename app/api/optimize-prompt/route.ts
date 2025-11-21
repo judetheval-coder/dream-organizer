@@ -23,29 +23,29 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: "system",
-          content: `You are an expert comic artist. Transform dream descriptions into visual comic panel prompts. Keep it simple and visual.
+          content: `You are an expert comic artist. Transform dream descriptions into detailed, high-quality comic panel prompts for DALL-E 3.
 
 Create a prompt that describes a single comic panel with:
-- Clear, simple composition
-- A person or character doing something
-- Vivid but clear visual details
-- Comic book art style (like graphic novels)
-- Strong colors and mood
+- Clear, dynamic composition
+- A person or character doing something specific
+- Vivid visual details (lighting, colors, texture)
+- Specific comic book art style (e.g., "digital comic book art", "graphic novel style", "vibrant colors", "inked lines")
+- Mention the mood explicitly
 
-Be concise (under 150 characters). Focus only on WHAT IS VISIBLE in the panel.`
+Do not use "under 150 characters". Make it descriptive (around 50-75 words) to ensure high quality. Focus only on WHAT IS VISIBLE.`
         },
         {
           role: "user",
           content: `Make a comic panel prompt:
 "${description}"
-${style ? `Art style hint: ${style}` : ''}
-${mood ? `Feeling: ${mood}` : ''}
+${style ? `Art style: ${style}` : ''}
+${mood ? `Mood/Atmosphere: ${mood}` : ''}
 
-Output only the visual description, nothing else.`
+Output only the visual description.`
         }
       ],
       temperature: 0.7,
-      max_tokens: 120,
+      max_tokens: 200,
     });
 
     const optimized = response.choices[0]?.message?.content;

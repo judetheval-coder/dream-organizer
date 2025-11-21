@@ -472,20 +472,40 @@ export default function DashboardPage() {
         {/* Comics Tab */}
         {currentTab === 'Comics' && (
           <div>
-            {dreams.length === 0 || !dreams.some(d => d.panels?.length > 0) ? (
-              <div
-                className="rounded-xl p-12 text-center"
-                style={{
-                  background: colors.surface,
-                  border: `2px dashed ${colors.cyan}`,
-                }}
-              >
-                <p className="text-2xl mb-3">📚</p>
-                <p style={{ color: colors.textMuted }}>No comic panels generated yet.</p>
-                <p className="text-sm mt-3" style={{ color: colors.textMuted }}>
-                  Create a new dream on the Dashboard to generate comic panels!
-                </p>
+            {/* Active Generation View */}
+            {panels.length > 0 && (
+              <div className="mb-12 p-6 rounded-xl" style={{ background: colors.backgroundDark, border: `2px solid ${colors.cyan}` }}>
+                <h3 className="text-xl font-bold mb-4" style={{ color: colors.cyan }}>✨ Generating New Comic...</h3>
+                <div className="grid grid-cols-2 gap-6">
+                  {panels.map((panel, idx) => (
+                    <Panel 
+                      key={panel.id} 
+                      {...panel} 
+                      generateDelay={0}
+                      shouldGenerate={idx === currentGeneratingIndex}
+                      onImageReady={(url) => handlePanelImageReady(panel.id, url)}
+                    />
+                  ))}
+                </div>
               </div>
+            )}
+
+            {dreams.length === 0 || !dreams.some(d => d.panels?.length > 0) ? (
+              !panels.length && (
+                <div
+                  className="rounded-xl p-12 text-center"
+                  style={{
+                    background: colors.surface,
+                    border: `2px dashed ${colors.cyan}`,
+                  }}
+                >
+                  <p className="text-2xl mb-3">📚</p>
+                  <p style={{ color: colors.textMuted }}>No comic panels generated yet.</p>
+                  <p className="text-sm mt-3" style={{ color: colors.textMuted }}>
+                    Create a new dream on the Dashboard to generate comic panels!
+                  </p>
+                </div>
+              )
             ) : (
               <div className="space-y-8">
                 {dreams.map((dream, dIdx) =>
