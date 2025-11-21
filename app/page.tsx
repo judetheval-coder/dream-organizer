@@ -3,6 +3,10 @@ import { useState, useEffect } from 'react'
 import { colors, gradients, shadows } from '@/lib/design'
 import Panel from '@/components/Panel'
 import { enhanceDreamStory, analyzeDreams } from '@/lib/gpt-helpers'
+import Logo from '@/components/Logo'
+import WelcomeScreen from '@/components/WelcomeScreen'
+import EmptyState from '@/components/EmptyState'
+import Footer from '@/components/Footer'
 
 export default function DashboardPage() {
   const [currentTab, setCurrentTab] = useState('Dashboard')
@@ -16,6 +20,7 @@ export default function DashboardPage() {
   const [savedDreams, setSavedDreams] = useState<any[]>([])
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [currentGeneratingIndex, setCurrentGeneratingIndex] = useState(-1)
+  const [showWelcome, setShowWelcome] = useState(true)
 
   useEffect(() => {
     const saved = localStorage.getItem('dream-archives')
@@ -122,8 +127,27 @@ export default function DashboardPage() {
     setAnalyzing(false)
   }
 
+  // Check if first visit
+  useEffect(() => {
+    const hasVisited = localStorage.getItem('has-visited')
+    if (hasVisited) setShowWelcome(false)
+  }, [])
+
+  if (showWelcome) {
+    return (
+      <div style={{ background: gradients.page }} className="min-h-screen">
+        <WelcomeScreen 
+          onGetStarted={() => {
+            localStorage.setItem('has-visited', 'true')
+            setShowWelcome(false)
+          }} 
+        />
+      </div>
+    )
+  }
+
   return (
-    <div style={{ background: gradients.page }} className="min-h-screen">
+    <div style={{ background: gradients.page }} className="min-h-screen flex flex-col">
       {/* Sidebar */}
       <div
         className="fixed left-0 top-0 h-screen w-64 p-6 overflow-y-auto z-40"
@@ -132,9 +156,9 @@ export default function DashboardPage() {
           borderRight: `1px solid ${colors.surface}`,
         }}
       >
-        <h1 className="text-2xl font-bold mb-8" style={{ color: colors.purple }}>
-          Dream Org
-        </h1>
+        <div className="mb-8">
+          <Logo size="md" />
+        </div>
 
         <nav className="space-y-2">
           <NavItem
@@ -698,6 +722,8 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+      
+      <Footer />
     </div>
   )
 }
