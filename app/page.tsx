@@ -43,16 +43,31 @@ export default function DashboardPage() {
   }
 
   const generateSceneDescriptions = (dreamText: string) => {
-    // Split dream into logical scenes for image generation
+    // Split dream into logical scenes based on sentences
     const sentences = dreamText.match(/[^.!?]+[.!?]+/g) || [dreamText]
-    const sentencesPerScene = Math.ceil(sentences.length / 4)
+    
+    // Determine optimal number of panels (min 2, max 6 based on tier)
+    const maxPanels = SUBSCRIPTION_TIERS[userTier].limits.panelsPerDream
+    const numPanels = Math.min(Math.max(sentences.length, 2), maxPanels)
+    
     const scenes = []
-
-    for (let i = 0; i < 4; i++) {
-      const start = i * sentencesPerScene
-      const end = start + sentencesPerScene
-      const sceneText = sentences.slice(start, end).join('').trim()
-      scenes.push(sceneText || dreamText)
+    
+    // If we have enough sentences, use one per panel
+    if (sentences.length >= numPanels) {
+      const sentencesPerScene = Math.floor(sentences.length / numPanels)
+      const remainder = sentences.length % numPanels
+      
+      let sentenceIndex = 0
+      for (let i = 0; i < numPanels; i++) {
+        const extraSentence = i < remainder ? 1 : 0
+        const count = sentencesPerScene + extraSentence
+        const sceneText = sentences.slice(sentenceIndex, sentenceIndex + count).join('').trim()
+        scenes.push(sceneText)
+        sentenceIndex += count
+      }
+    } else {
+      // If fewer sentences than panels, distribute evenly
+      sentences.forEach(sentence => scenes.push(sentence.trim()))
     }
 
     return scenes
@@ -69,7 +84,7 @@ export default function DashboardPage() {
 
     const sceneDescriptions = generateSceneDescriptions(dreamText)
 
-    const newPanels = Array.from({ length: 4 }, (_, i) => ({
+    const newPanels = Array.from({ length: sceneDescriptions.length }, (_, i) => ({
       id: Date.now() + i,
       description: `${sceneDescriptions[i]} - Scene ${i + 1}`,
       style,
