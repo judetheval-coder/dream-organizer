@@ -82,6 +82,9 @@ export default function DashboardPage() {
       return
     }
 
+    const currentDreamText = dreamText
+    const currentStyle = style
+    const currentMood = mood
     const sceneDescriptions = generateSceneDescriptions(dreamText)
 
     const newPanels = Array.from({ length: sceneDescriptions.length }, (_, i) => ({
@@ -99,21 +102,23 @@ export default function DashboardPage() {
     setShowCreateModal(false)
     setCurrentTab('Comics')
 
-    // Save to Supabase
-    try {
-      await saveDream({
-        text: dreamText,
-        style,
-        mood,
-        panels: newPanels.map((p, i) => ({
-          description: p.description,
-          scene_number: i,
-          image_url: p.image || undefined
-        }))
-      })
-    } catch (error) {
-      console.error('Error saving dream:', error)
-    }
+    // Wait a bit for panels to start generating, then save to database
+    setTimeout(async () => {
+      try {
+        await saveDream({
+          text: currentDreamText,
+          style: currentStyle,
+          mood: currentMood,
+          panels: newPanels.map((p, i) => ({
+            description: p.description,
+            scene_number: i,
+            image_url: undefined
+          }))
+        })
+      } catch (error) {
+        console.error('Error saving dream:', error)
+      }
+    }, 1000)
   }
 
   const handlePanelImageReady = async (panelId: number, imageUrl: string) => {

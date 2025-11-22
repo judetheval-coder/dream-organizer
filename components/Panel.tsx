@@ -190,7 +190,65 @@ export default function Panel({ description, style, mood, onImageReady, generate
             priority
           />
 
-          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 rounded-xl">
+          <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3 rounded-xl p-4">
+            <div className="flex gap-2 flex-wrap justify-center">
+              <button
+                onClick={() => {
+                  const link = document.createElement('a')
+                  link.href = image
+                  link.download = `dream-panel-${Date.now()}.png`
+                  link.click()
+                }}
+                className="px-3 py-2 font-semibold rounded-lg transition-all hover:scale-105 text-sm"
+                style={{
+                  background: colors.cyan,
+                  color: colors.background,
+                }}
+                title="Download"
+              >
+                📥 Download
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(image)
+                    alert('Image URL copied to clipboard!')
+                  } catch {
+                    alert('Failed to copy')
+                  }
+                }}
+                className="px-3 py-2 font-semibold rounded-lg transition-all hover:scale-105 text-sm"
+                style={{
+                  background: colors.purple,
+                  color: colors.white,
+                }}
+                title="Copy URL"
+              >
+                📋 Copy
+              </button>
+              <button
+                onClick={() => {
+                  if (confirm('Delete this image?')) {
+                    setImage('')
+                    setError('')
+                    try {
+                      const store = JSON.parse(localStorage.getItem(IMAGE_STORE_KEY) || '{}')
+                      const key = `${description}-${style}-${mood}`
+                      delete store[key]
+                      localStorage.setItem(IMAGE_STORE_KEY, JSON.stringify(store))
+                    } catch {}
+                  }
+                }}
+                className="px-3 py-2 font-semibold rounded-lg transition-all hover:scale-105 text-sm"
+                style={{
+                  background: '#dc2626',
+                  color: 'white',
+                }}
+                title="Delete"
+              >
+                🗑️ Delete
+              </button>
+            </div>
             <button
               onClick={generateImage}
               className="px-4 py-2 font-semibold rounded-lg transition-all hover:scale-105"
@@ -200,7 +258,7 @@ export default function Panel({ description, style, mood, onImageReady, generate
                 boxShadow: shadows.glow,
               }}
             >
-               Regenerate
+              🔄 Regenerate
             </button>
           </div>
         </div>
