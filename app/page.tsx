@@ -582,16 +582,17 @@ export default function DashboardPage() {
                 border: `2px solid ${colors.cyan}`,
               }}
             >
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {/* Current Plan */}
                 <div
-                  className="rounded-lg p-6 relative"
+                  className="rounded-xl p-8 relative transition-all duration-300 hover:scale-105 hover:shadow-2xl"
                   style={{
                     background: colors.backgroundDark,
+                    border: `1px solid ${colors.surface}`,
                   }}
                 >
                   <div
-                    className="absolute top-0 right-0 px-3 py-1 rounded-bl-lg rounded-tr-lg text-xs font-bold"
+                    className="absolute top-0 right-0 px-4 py-1 rounded-bl-xl rounded-tr-xl text-xs font-bold tracking-wider"
                     style={{
                       background: colors.cyan,
                       color: colors.background,
@@ -599,20 +600,22 @@ export default function DashboardPage() {
                   >
                     CURRENT
                   </div>
-                  <p className="text-sm font-semibold mb-2" style={{ color: colors.textMuted }}>
-                    Current Plan
+                  <p className="text-sm font-bold uppercase tracking-widest mb-4" style={{ color: colors.textMuted }}>
+                    Starter
                   </p>
-                  <p className="text-3xl font-bold mb-4" style={{ color: colors.purple }}>
+                  <p className="text-4xl font-black mb-2" style={{ color: colors.purple }}>
                     {getTierName(userTier)}
                   </p>
-                  <p className="text-lg font-bold mb-4" style={{ color: colors.cyan }}>
-                    ${SUBSCRIPTION_TIERS[userTier].price === 0 ? 'Free' : SUBSCRIPTION_TIERS[userTier].price.toFixed(2)}/mo
+                  <p className="text-xl font-bold mb-6" style={{ color: colors.cyan }}>
+                    ${SUBSCRIPTION_TIERS[userTier].price === 0 ? 'Free' : SUBSCRIPTION_TIERS[userTier].price.toFixed(2)}<span className="text-sm font-normal text-gray-400">/mo</span>
                   </p>
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {getTierFeatures(userTier).map((feature, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <span style={{ color: colors.cyan }}>✓</span>
-                        <span style={{ color: colors.textMuted }} className="text-sm">
+                      <div key={idx} className="flex items-center gap-3">
+                        <div className="rounded-full p-1" style={{ background: 'rgba(6, 182, 212, 0.1)' }}>
+                          <span style={{ color: colors.cyan, fontSize: '12px' }}>✓</span>
+                        </div>
+                        <span style={{ color: colors.textMuted }} className="text-sm font-medium">
                           {feature}
                         </span>
                       </div>
@@ -620,29 +623,41 @@ export default function DashboardPage() {
                   </div>
                 </div>
 
-                {/* Pro Plan */}
+                {/* Pro Plan - Best Value */}
                 {userTier !== 'pro' && (
                   <div
-                    className="rounded-lg p-6"
+                    className="rounded-xl p-8 relative transform scale-105 z-10 transition-all duration-300 hover:scale-110 hover:shadow-2xl"
                     style={{
-                      background: colors.backgroundDark,
-                      border: `1px solid ${colors.purple}`,
+                      background: `linear-gradient(145deg, ${colors.backgroundDark}, #2a1b3d)`,
+                      border: `2px solid ${colors.purple}`,
+                      boxShadow: `0 0 30px rgba(139, 92, 246, 0.2)`,
                     }}
                   >
-                    <p className="text-sm font-semibold mb-2" style={{ color: colors.textMuted }}>
-                      Upgrade to Pro
+                    <div
+                      className="absolute -top-4 left-1/2 transform -translate-x-1/2 px-6 py-1 rounded-full text-xs font-bold tracking-wider animate-pulse shadow-lg"
+                      style={{
+                        background: colors.purple,
+                        color: 'white',
+                      }}
+                    >
+                      MOST POPULAR
+                    </div>
+                    <p className="text-sm font-bold uppercase tracking-widest mb-4" style={{ color: colors.purple }}>
+                      Professional
                     </p>
-                    <p className="text-3xl font-bold mb-4" style={{ color: colors.purple }}>
+                    <p className="text-4xl font-black mb-2 text-white">
                       Pro
                     </p>
-                    <p className="text-lg font-bold mb-4" style={{ color: colors.cyan }}>
-                      $9.99/mo
+                    <p className="text-xl font-bold mb-6" style={{ color: colors.cyan }}>
+                      $9.99<span className="text-sm font-normal text-gray-400">/mo</span>
                     </p>
-                    <div className="space-y-3 mb-6">
+                    <div className="space-y-4 mb-8">
                       {getTierFeatures('pro').map((feature, idx) => (
-                        <div key={idx} className="flex items-center gap-2">
-                          <span style={{ color: colors.cyan }}>✓</span>
-                          <span style={{ color: colors.textMuted }} className="text-sm">
+                        <div key={idx} className="flex items-center gap-3">
+                          <div className="rounded-full p-1" style={{ background: 'rgba(139, 92, 246, 0.2)' }}>
+                            <span style={{ color: colors.purple, fontSize: '12px' }}>✓</span>
+                          </div>
+                          <span style={{ color: 'white' }} className="text-sm font-medium">
                             {feature}
                           </span>
                         </div>
@@ -650,13 +665,13 @@ export default function DashboardPage() {
                     </div>
                     <button
                       onClick={() => setShowUpgrade(true)}
-                      className="w-full py-2 rounded-lg font-semibold transition-all hover:scale-105"
+                      className="w-full py-3 rounded-xl font-bold transition-all hover:brightness-110 shadow-lg"
                       style={{
-                        background: colors.purple,
-                        color: colors.textPrimary,
+                        background: gradients.button,
+                        color: colors.white,
                       }}
                     >
-                      Choose Plan
+                      Upgrade to Pro
                     </button>
                   </div>
                 )}
@@ -664,26 +679,28 @@ export default function DashboardPage() {
                 {/* Premium Plan */}
                 {userTier !== 'premium' && (
                   <div
-                    className="rounded-lg p-6"
+                    className="rounded-xl p-8 relative transition-all duration-300 hover:scale-105 hover:shadow-2xl"
                     style={{
                       background: colors.backgroundDark,
                       border: `1px solid ${colors.cyan}`,
                     }}
                   >
-                    <p className="text-sm font-semibold mb-2" style={{ color: colors.textMuted }}>
-                      Upgrade to Premium
+                    <p className="text-sm font-bold uppercase tracking-widest mb-4" style={{ color: colors.cyan }}>
+                      Ultimate
                     </p>
-                    <p className="text-3xl font-bold mb-4" style={{ color: colors.cyan }}>
+                    <p className="text-4xl font-black mb-2" style={{ color: colors.cyan }}>
                       Premium
                     </p>
-                    <p className="text-lg font-bold mb-4" style={{ color: colors.cyan }}>
-                      $19.99/mo
+                    <p className="text-xl font-bold mb-6" style={{ color: colors.cyan }}>
+                      $19.99<span className="text-sm font-normal text-gray-400">/mo</span>
                     </p>
-                    <div className="space-y-3 mb-6">
+                    <div className="space-y-4 mb-8">
                       {getTierFeatures('premium').map((feature, idx) => (
-                        <div key={idx} className="flex items-center gap-2">
-                          <span style={{ color: colors.cyan }}>✓</span>
-                          <span style={{ color: colors.textMuted }} className="text-sm">
+                        <div key={idx} className="flex items-center gap-3">
+                          <div className="rounded-full p-1" style={{ background: 'rgba(6, 182, 212, 0.1)' }}>
+                            <span style={{ color: colors.cyan, fontSize: '12px' }}>✓</span>
+                          </div>
+                          <span style={{ color: colors.textMuted }} className="text-sm font-medium">
                             {feature}
                           </span>
                         </div>
@@ -691,13 +708,13 @@ export default function DashboardPage() {
                     </div>
                     <button
                       onClick={() => setShowUpgrade(true)}
-                      className="w-full py-2 rounded-lg font-semibold transition-all hover:scale-105"
+                      className="w-full py-3 rounded-xl font-bold transition-all hover:scale-105 shadow-lg"
                       style={{
                         background: colors.cyan,
                         color: colors.background,
                       }}
                     >
-                      Choose Plan
+                      Get Premium
                     </button>
                   </div>
                 )}
@@ -785,19 +802,88 @@ export default function DashboardPage() {
                 Preferences
               </h2>
 
-              <div className="space-y-4">
+              <div className="space-y-6">
+                {/* Theme Settings */}
                 <div>
                   <label className="block text-sm font-semibold mb-2" style={{ color: colors.textPrimary }}>
                     Theme
                   </label>
                   <div
-                    className="p-3 rounded-lg"
+                    className="p-3 rounded-lg flex items-center justify-between"
                     style={{
                       background: colors.backgroundDark,
                       color: colors.textMuted,
                     }}
                   >
-                    Dark Purple & Cyan (Fixed)
+                    <span>Dark Purple & Cyan (Fixed)</span>
+                    <span className="text-xs px-2 py-1 rounded bg-purple-900 text-purple-200">Active</span>
+                  </div>
+                </div>
+
+                {/* AI Preferences */}
+                <div>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: colors.textPrimary }}>
+                    Default AI Style
+                  </label>
+                  <select
+                    className="w-full p-3 rounded-lg"
+                    style={{
+                      background: colors.backgroundDark,
+                      color: colors.textPrimary,
+                      border: `1px solid ${colors.surface}`,
+                    }}
+                    defaultValue="Anime"
+                  >
+                    <option>Anime</option>
+                    <option>Watercolor</option>
+                    <option>Oil Painting</option>
+                    <option>Abstract</option>
+                    <option>Realistic</option>
+                  </select>
+                </div>
+
+                {/* Notifications */}
+                <div>
+                  <label className="block text-sm font-semibold mb-4" style={{ color: colors.textPrimary }}>
+                    Notifications
+                  </label>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: colors.backgroundDark }}>
+                      <span style={{ color: colors.textMuted }}>Weekly Dream Digest</span>
+                      <div className="w-10 h-6 rounded-full relative cursor-pointer transition-colors" style={{ background: colors.purple }}>
+                        <div className="absolute right-1 top-1 w-4 h-4 rounded-full bg-white shadow-sm"></div>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: colors.backgroundDark }}>
+                      <span style={{ color: colors.textMuted }}>New Feature Updates</span>
+                      <div className="w-10 h-6 rounded-full relative cursor-pointer transition-colors" style={{ background: colors.purple }}>
+                        <div className="absolute right-1 top-1 w-4 h-4 rounded-full bg-white shadow-sm"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Data Privacy */}
+                <div>
+                  <label className="block text-sm font-semibold mb-4" style={{ color: colors.textPrimary }}>
+                    Data & Privacy
+                  </label>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: colors.backgroundDark }}>
+                      <span style={{ color: colors.textMuted }}>Public Profile Visibility</span>
+                      <div className="w-10 h-6 rounded-full relative cursor-pointer transition-colors" style={{ background: '#374151' }}>
+                        <div className="absolute left-1 top-1 w-4 h-4 rounded-full bg-white shadow-sm"></div>
+                      </div>
+                    </div>
+                    <button
+                      className="w-full p-3 rounded-lg text-left transition-colors hover:bg-opacity-80"
+                      style={{
+                        background: colors.backgroundDark,
+                        color: colors.cyan,
+                      }}
+                    >
+                      📥 Download My Data (JSON)
+                    </button>
                   </div>
                 </div>
               </div>
