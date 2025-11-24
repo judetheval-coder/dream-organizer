@@ -32,6 +32,10 @@ const HEADLINES: Record<DashboardTab, { title: string; subtitle: string }> = {
     title: '👥 Dream Groups',
     subtitle: 'Join communities of like-minded dreamers',
   },
+  'Events': {
+    title: '🏆 Events & Contests',
+    subtitle: 'Compete for prizes and win Premium subscriptions',
+  },
   'Insights': {
     title: '✨ Dream Insights',
     subtitle: 'Analyze patterns in your dreams',

@@ -20,7 +20,7 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <h3 className="font-bold text-lg mb-2" style={{ color: colors.textPrimary }}>
-              💭 Dream Organizer
+              💭 The Dream Machine
             </h3>
             <p className="text-sm" style={{ color: colors.textMuted }}>
               Transform your dreams into visual stories with AI-powered comic generation
@@ -84,7 +84,7 @@ export default function Footer() {
           style={{ borderColor: colors.border }}
         >
           <p className="text-sm" style={{ color: colors.textMuted }}>
-            © {currentYear} Dream Organizer. Made with 💜 for dreamers everywhere.
+            © {currentYear} The Dream Machine. Made with 💜 for dreamers everywhere.
           </p>
           <div className="flex gap-6 text-sm">
             <Link href="/privacy" className="hover:opacity-80 transition-opacity" style={{ color: colors.textMuted }}>

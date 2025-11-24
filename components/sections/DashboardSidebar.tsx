@@ -11,6 +11,7 @@ export const DASHBOARD_TABS = [
   { key: 'Patterns', label: 'Global Patterns', icon: '🌍' },
   { key: 'Gallery', label: 'Public Gallery', icon: '🌟' },
   { key: 'Groups', label: 'Dream Groups', icon: '👥' },
+  { key: 'Events', label: 'Events & Contests', icon: '🏆' },
   { key: 'Insights', label: 'Insights', icon: '✨' },
   { key: 'Gift', label: 'Gift a Sub', icon: '🎁' },
   { key: 'Subscription', label: 'Subscription', icon: '💎' },
