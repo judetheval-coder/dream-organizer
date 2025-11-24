@@ -7,7 +7,12 @@ export const DASHBOARD_TABS = [
   { key: 'Dashboard', label: 'Dashboard', icon: '📊' },
   { key: 'My Dreams', label: 'My Dreams', icon: '💭' },
   { key: 'Comics', label: 'Comics', icon: '🎨' },
+  { key: 'Dictionary', label: 'Dream Dictionary', icon: '📖' },
+  { key: 'Patterns', label: 'Global Patterns', icon: '🌍' },
+  { key: 'Gallery', label: 'Public Gallery', icon: '🌟' },
+  { key: 'Groups', label: 'Dream Groups', icon: '👥' },
   { key: 'Insights', label: 'Insights', icon: '✨' },
+  { key: 'Gift', label: 'Gift a Sub', icon: '🎁' },
   { key: 'Subscription', label: 'Subscription', icon: '💎' },
   { key: 'Settings', label: 'Settings', icon: '⚙️' },
 ] as const
@@ -51,7 +56,7 @@ export function DashboardSidebar({ currentTab, onTabChange }: SidebarProps) {
 
       <div className="mt-12 pt-6" style={{ borderTop: `1px solid ${colors.surface}` }}>
         <p className="text-xs" style={{ color: colors.textMuted }}>
-          v1.0 • Dream Organizer
+          v1.0 • The Dream Machine
         </p>
       </div>
     </div>

@@ -16,9 +16,29 @@ const HEADLINES: Record<DashboardTab, { title: string; subtitle: string }> = {
     title: '🎨 Comics Gallery',
     subtitle: 'View your generated dream comics',
   },
+  'Dictionary': {
+    title: '📖 Dream Dictionary',
+    subtitle: 'Discover the meanings behind dream symbols',
+  },
+  'Patterns': {
+    title: '🌍 Global Patterns',
+    subtitle: 'Compare your dreams with dreamers worldwide',
+  },
+  'Gallery': {
+    title: '🌟 Public Gallery',
+    subtitle: 'Explore dreams shared by the community',
+  },
+  'Groups': {
+    title: '👥 Dream Groups',
+    subtitle: 'Join communities of like-minded dreamers',
+  },
   'Insights': {
     title: '✨ Dream Insights',
     subtitle: 'Analyze patterns in your dreams',
+  },
+  'Gift': {
+    title: '🎁 Gift a Subscription',
+    subtitle: 'Share the magic of dreams with someone special',
   },
   'Subscription': {
     title: '💎 Subscription Plans',
