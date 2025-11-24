@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     description: "AI-powered dream journaling that transforms your nightly adventures into stunning visual stories.",
     images: [
       {
-        url: "/og-image.png",
+        url: "/api/og",
         width: 1200,
         height: 630,
         alt: "Dream Organizer - AI Dream Comics",
@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Dream Organizer - Turn Your Dreams Into Beautiful Comics",
     description: "AI-powered dream journaling that transforms your nightly adventures into stunning visual stories.",
-    images: ["/og-image.png"],
+    images: ["/api/og"],
     creator: "@dreamorganizer",
   },
   robots: {
@@ -55,11 +55,19 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
     shortcut: "/favicon.ico",
     apple: "/apple-touch-icon.png",
   },
   manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "Dream Organizer",
+  },
 };
 
 export default function RootLayout({
