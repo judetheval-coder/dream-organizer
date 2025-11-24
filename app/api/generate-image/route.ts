@@ -1,53 +1,99 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { auth } from '@clerk/nextjs/server'
+import { validateImageGenerationInput } from '@/lib/validation'
+import { checkRateLimit } from '@/lib/rate-limiter'
+import { captureException } from '@/lib/sentry'
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+const RATE_LIMIT = 10
+const RATE_WINDOW = 5 * 60 * 1000
+
 export async function POST(req: NextRequest) {
   try {
-    const { prompt } = await req.json();
+    const { userId } = await auth()
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
-    if (!prompt) {
+    const { allowed, remaining, resetTime, headers } = checkRateLimit(
+      userId,
+      RATE_LIMIT,
+      RATE_WINDOW,
+    )
+
+    if (!allowed) {
       return NextResponse.json(
-        { error: "Prompt is required" },
-        { status: 400 }
-      );
+        {
+          error: `Rate limited. Try again in ${resetTime} seconds.`,
+          remaining,
+          resetTime,
+        },
+        { status: 429, headers },
+      )
+    }
+
+    const body = await req.json()
+    const validation = validateImageGenerationInput(body)
+
+    if (!validation.valid || !validation.data) {
+      return NextResponse.json(
+        { error: 'Invalid request', details: validation.errors },
+        { status: 400, headers },
+      )
     }
 
     if (!process.env.OPENAI_API_KEY) {
+      console.error('❌ OpenAI API key not configured')
       return NextResponse.json(
-        { error: "OpenAI API key not configured" },
-        { status: 500 }
-      );
+        { error: 'Image generation service not configured' },
+        { status: 500, headers },
+      )
     }
 
-    console.log("🎨 Generating image with DALL-E 3:", prompt.substring(0, 80));
+    const { prompt } = validation.data as { prompt: string }
+    console.log('🎨 Generating image with DALL-E 3:', prompt.substring(0, 80))
 
     const response = await openai.images.generate({
-      model: "dall-e-3",
-      prompt: prompt,
+      model: 'dall-e-3',
+      prompt,
       n: 1,
-      size: "1024x1024",
-      quality: "standard",
-      style: "vivid",
-    });
+      size: '1024x1024',
+      quality: 'standard',
+      style: 'vivid',
+    })
 
-    const imageUrl = response.data?.[0]?.url;
+    const imageUrl = response.data?.[0]?.url
 
     if (!imageUrl) {
-      throw new Error("No image URL returned from OpenAI");
+      throw new Error('No image URL returned from OpenAI')
     }
 
-    console.log(" Image generated successfully");
+    console.log('✅ Image generated successfully')
 
-    return NextResponse.json({ image: imageUrl });
-  } catch (error: any) {
-    console.error(" Image generation error:", error);
+    return NextResponse.json({ image: imageUrl }, { headers })
+  } catch (error) {
+    console.error('❌ Image generation error:', error)
+    captureException(error, { route: '/api/generate-image' })
+
+    const status =
+      typeof error === 'object' && error !== null && 'status' in error
+        ? Number((error as { status?: number }).status)
+        : undefined
+
+    if (status === 429) {
+      return NextResponse.json(
+        { error: 'OpenAI rate limit reached. Please try again shortly.' },
+        { status: 429 },
+      )
+    }
+
     return NextResponse.json(
-      { error: error.message || "Failed to generate image" },
-      { status: 500 }
-    );
+      { error: error instanceof Error ? error.message : 'Failed to generate image' },
+      { status: 500 },
+    )
   }
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from 'react'
-import { calculateDreamStats, DreamStats } from '../lib/enhanced-store'
+import { calculateDreamStats, DreamStats } from '@/lib/enhanced-store'
 
 interface AnalyticsProps {
   darkMode?: boolean

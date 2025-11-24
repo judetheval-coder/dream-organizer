@@ -1,6 +1,7 @@
 "use client"
 
 import React from 'react'
+import { captureException } from '@/lib/sentry'
 
 interface ErrorBoundaryProps {
   children: React.ReactNode
@@ -24,6 +25,7 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error('Error caught by boundary:', error, errorInfo)
+    captureException(error, { componentStack: errorInfo.componentStack })
   }
 
   render() {
@@ -42,6 +44,11 @@ export default class ErrorBoundary extends React.Component<ErrorBoundaryProps, E
             >
               Try Again
             </button>
+            {process.env.NODE_ENV === 'development' && this.state.error?.stack && (
+              <pre className="text-left text-xs text-red-200 bg-slate-950/60 rounded-xl p-4 mt-4 max-h-48 overflow-auto">
+                {this.state.error.stack}
+              </pre>
+            )}
           </div>
         </div>
       )

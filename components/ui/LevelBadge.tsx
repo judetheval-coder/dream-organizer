@@ -1,6 +1,6 @@
 "use client"
 import React from 'react'
-import { colors, radii, gradients } from '../../lib/design'
+import { colors } from '../../lib/design'
 import { PlayerStats } from '../../lib/xp-system'
 
 interface Props { stats?: PlayerStats | null }

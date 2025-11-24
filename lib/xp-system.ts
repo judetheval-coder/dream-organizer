@@ -19,7 +19,7 @@ const XP_ACTION_MAP: Record<string, number> = {
   IMAGE_GEN: 25
 }
 
-function normalizeStats(raw: any): PlayerStats {
+function normalizeStats(raw: unknown): PlayerStats {
   const base: PlayerStats = {
     totalXP: 0,
     level: 1,
@@ -28,23 +28,24 @@ function normalizeStats(raw: any): PlayerStats {
     imagesGenerated: 0
   }
   if (!raw || typeof raw !== 'object') return base
+  const record = raw as Record<string, unknown>
   // Support legacy typos and corrupted string XP values
   let totalXP: number
-  if (typeof raw.totalXP === 'number') {
-    totalXP = raw.totalXP
-  } else if (typeof raw.totalXP === 'string') {
-    const digits = raw.totalXP.replace(/[^0-9]/g, '')
+  if (typeof record.totalXP === 'number') {
+    totalXP = record.totalXP
+  } else if (typeof record.totalXP === 'string') {
+    const digits = record.totalXP.replace(/[^0-9]/g, '')
     totalXP = digits ? parseInt(digits, 10) : 0
   } else {
     totalXP = 0
   }
-  const dreamsCreated = typeof raw.dreamsCreated === 'number'
-    ? raw.dreamsCreated
-    : typeof raw.dreamsCrated === 'number'
-      ? raw.dreamsCrated
+  const dreamsCreated = typeof record.dreamsCreated === 'number'
+    ? record.dreamsCreated
+    : typeof record.dreamsCrated === 'number'
+      ? record.dreamsCrated
       : 0
-  const panelsGenerated = typeof raw.panelsGenerated === 'number' ? raw.panelsGenerated : 0
-  const imagesGenerated = typeof raw.imagesGenerated === 'number' ? raw.imagesGenerated : 0
+  const panelsGenerated = typeof record.panelsGenerated === 'number' ? record.panelsGenerated : 0
+  const imagesGenerated = typeof record.imagesGenerated === 'number' ? record.imagesGenerated : 0
   const level = Math.floor(totalXP / XP_PER_LEVEL) + 1
   return { totalXP, level, dreamsCreated, panelsGenerated, imagesGenerated, dreamsCrated: dreamsCreated }
 }

@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from 'react'
-import { saveDream, getDreamById, Dream } from '../lib/enhanced-store'
+import { saveDream, getDreamById, Dream } from '@/lib/enhanced-store'
 
 interface DreamEditorProps {
   dreamId?: string

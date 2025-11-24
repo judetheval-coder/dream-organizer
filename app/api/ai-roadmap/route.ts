@@ -29,7 +29,8 @@ export async function POST(request: Request) {
       ]
     })
 
-  } catch (error: any) {
-    return Response.json({ error: error.message }, { status: 500 })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Unexpected error'
+    return Response.json({ error: message }, { status: 500 })
   }
 }

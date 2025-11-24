@@ -2,19 +2,48 @@
 
 import { useState, FormEvent } from 'react'
 
+type MoodOption = 'happy' | 'neutral' | 'anxious' | 'scared' | 'excited' | 'sad' | 'peaceful'
+
+type NewDreamFormState = {
+  title: string
+  description: string
+  sleepDate: string
+  vividness: number
+  mood: MoodOption
+  category: string
+  emoji: string
+  isLucid: boolean
+  isNightmare: boolean
+  isRecurring: boolean
+  tags: string
+  people: string
+  places: string
+}
+
+type DraftDream = Omit<NewDreamFormState, 'tags' | 'people' | 'places'> & {
+  id: number
+  tags: string[]
+  people: string[]
+  places: string[]
+  status: 'recent'
+  notes: string[]
+  createdAt: string
+  updatedAt: string
+}
+
 type NewDreamModalProps = {
   isOpen: boolean
   onClose: () => void
-  onSave: (dream: any) => void
+  onSave: (dream: DraftDream) => void
 }
 
 export default function NewDreamModal({ isOpen, onClose, onSave }: NewDreamModalProps) {
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<NewDreamFormState>({
     title: '',
     description: '',
     sleepDate: new Date().toISOString().split('T')[0],
     vividness: 3,
-    mood: 'neutral' as 'happy' | 'neutral' | 'anxious' | 'scared' | 'excited' | 'sad' | 'peaceful',
+    mood: 'neutral',
     category: 'Adventure',
     emoji: '💭',
     isLucid: false,
@@ -27,9 +56,9 @@ export default function NewDreamModal({ isOpen, onClose, onSave }: NewDreamModal
 
   const emojis = ['💭', '🌙', '✨', '🦋', '🌈', '🔮', '🌟', '🦅', '🌊', '🏔️']
   const categories = ['Adventure', 'Mystery', 'Nightmare', 'Memory', 'Fantasy', 'Lucid', 'Symbolic', 'Flying', 'Other']
-  const moods: Array<'happy' | 'neutral' | 'anxious' | 'scared' | 'excited' | 'sad' | 'peaceful'> = ['happy', 'neutral', 'anxious', 'scared', 'excited', 'sad', 'peaceful']
+  const moods: MoodOption[] = ['happy', 'neutral', 'anxious', 'scared', 'excited', 'sad', 'peaceful']
   
-  const moodEmojis = {
+  const moodEmojis: Record<MoodOption, string> = {
     happy: '😊',
     neutral: '😐',
     anxious: '😰',

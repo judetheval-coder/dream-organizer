@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import NewDreamModal from './NewDreamModal'
+import NewDreamModal from '@/components/NewDreamModal'
 
 export default function TopBar() {
   const [searchQuery, setSearchQuery] = useState('')

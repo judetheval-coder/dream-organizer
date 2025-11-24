@@ -1,16 +1,57 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useUser } from '@clerk/nextjs'
-import { supabase, getUserDreams, createDream, createPanels, updatePanelImage, deleteDream } from '@/lib/supabase'
+import {
+  supabase,
+  getUserDreams,
+  createDream,
+  createPanels,
+  updatePanelImage,
+  deleteDream,
+  type DreamWithPanels,
+  type Panel,
+} from '@/lib/supabase'
 import { uploadImageFromDataURL, deleteDreamImages } from '@/lib/supabase-storage'
 import type { SubscriptionTier } from '@/lib/subscription-tiers'
 
-export function useDreams() {
+type PanelInput = {
+  description: string
+  scene_number: number
+  image_url?: string
+}
+
+interface SaveDreamInput {
+  text: string
+  style: string
+  mood: string
+  panels: PanelInput[]
+}
+
+interface UseDreamsResult {
+  dreams: DreamWithPanels[]
+  loading: boolean
+  loadingMore: boolean
+  hasMore: boolean
+  error: string | null
+  userTier: SubscriptionTier
+  refreshDreams: () => Promise<void>
+  saveDream: (dreamData: SaveDreamInput) => Promise<DreamWithPanels>
+  updatePanel: (panelId: string, imageDataURL: string, dreamId: string, sceneNumber: number) => Promise<string>
+  removeDream: (dreamId: string) => Promise<void>
+  loadMoreDreams: () => Promise<void>
+}
+
+export function useDreams(): UseDreamsResult {
   const { user } = useUser()
-  const [dreams, setDreams] = useState<any[]>([])
+  const [dreams, setDreams] = useState<DreamWithPanels[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [userTier, setUserTier] = useState<SubscriptionTier>('free')
+  const [cursor, setCursor] = useState<string | null>(null)
+  const [hasMore, setHasMore] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+
+  const PAGE_SIZE = 10
 
   // Sync user to Supabase on first load
   useEffect(() => {
@@ -26,20 +67,30 @@ export function useDreams() {
     syncUser()
   }, [user])
 
-  // Load dreams and user tier from Supabase
-  useEffect(() => {
-    async function loadDreams() {
-      if (!user) {
-        setLoading(false)
-        return
+  const fetchDreams = async (reset = false) => {
+    if (!user) {
+      setLoading(false)
+      return
+    }
+        
+    try {
+      if (reset) {
+        setLoading(true)
+      } else {
+        setLoadingMore(true)
       }
 
-      try {
-        setLoading(true)
-        const data = await getUserDreams(user.id)
-        setDreams(data || [])
-        
-        // Fetch user tier
+      const { dreams: fetchedDreams, nextCursor: newCursor } = await getUserDreams(user.id, {
+        limit: PAGE_SIZE,
+        cursor: reset ? undefined : cursor ?? undefined,
+      })
+
+      setDreams(prev => (reset ? fetchedDreams : [...prev, ...fetchedDreams]))
+      setCursor(newCursor || null)
+      setHasMore(Boolean(newCursor))
+
+      // Fetch user tier on reset only
+      if (reset) {
         const { data: userData } = await supabase
           .from('users')
           .select('subscription_tier')
@@ -49,29 +100,37 @@ export function useDreams() {
         if (userData) {
           setUserTier(userData.subscription_tier as SubscriptionTier)
         }
-        
-        setError(null)
-      } catch (err: any) {
-        console.error('Error loading dreams:', err)
-        setError(err.message)
-      } finally {
+      }
+
+      setError(null)
+    } catch (err) {
+      console.error('Error loading dreams:', err)
+      setError(err instanceof Error ? err.message : 'Failed to load dreams')
+    } finally {
+      if (reset) {
         setLoading(false)
+      } else {
+        setLoadingMore(false)
       }
     }
+  }
 
-    loadDreams()
-  }, [user])
+  // Load dreams and user tier from Supabase
+  useEffect(() => {
+    fetchDreams(true)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id])
 
-  const saveDream = async (dreamData: {
-    text: string
-    style: string
-    mood: string
-    panels: Array<{
-      description: string
-      scene_number: number
-      image_url?: string
-    }>
-  }) => {
+  const loadMoreDreams = async () => {
+    if (!hasMore || loadingMore) return
+    await fetchDreams(false)
+  }
+
+  const refreshDreams = async () => {
+    await fetchDreams(true)
+  }
+
+  const saveDream = async (dreamData: SaveDreamInput) => {
     if (!user) throw new Error('Not authenticated')
 
     try {
@@ -87,10 +146,10 @@ export function useDreams() {
 
       // Update local state
       const newDream = { ...dream, panels }
-      setDreams([newDream, ...dreams])
+      setDreams(prev => [newDream, ...prev])
 
       return newDream
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error saving dream:', err)
       throw err
     }
@@ -107,15 +166,15 @@ export function useDreams() {
       await updatePanelImage(panelId, publicUrl)
 
       // Update local state
-      setDreams(dreams.map(dream => ({
+      setDreams(prev => prev.map(dream => ({
         ...dream,
-        panels: dream.panels?.map((panel: any) =>
+        panels: dream.panels?.map((panel: Panel) =>
           panel.id === panelId ? { ...panel, image_url: publicUrl } : panel
-        )
+        ),
       })))
       
       return publicUrl
-    } catch (err: any) {
+    } catch (err) {
       console.error('Error updating panel:', err)
       throw err
     }
@@ -130,8 +189,8 @@ export function useDreams() {
       
       // Then delete dream from database
       await deleteDream(dreamId, user.id)
-      setDreams(dreams.filter(d => d.id !== dreamId))
-    } catch (err: any) {
+        setDreams(prev => prev.filter(d => d.id !== dreamId))
+    } catch (err) {
       console.error('Error deleting dream:', err)
       throw err
     }
@@ -140,11 +199,15 @@ export function useDreams() {
   return {
     dreams,
     loading,
+    loadingMore,
+    hasMore,
     error,
     userTier,
+    refreshDreams,
     saveDream,
     updatePanel,
-    removeDream
+    removeDream,
+    loadMoreDreams,
   }
 }
 

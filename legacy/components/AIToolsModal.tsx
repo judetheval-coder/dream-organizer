@@ -1,4 +1,4 @@
-﻿"use client"
+"use client"
 
 import { useState } from 'react'
 
@@ -83,7 +83,7 @@ export default function AIToolsModal({ dream }: { dream: string }) {
           <div className="flex items-center gap-4 mb-4">
             <span className="text-6xl">{mood.emoji}</span>
             <div>
-              <h3 className="text-2xl font-bold text-white">Mood: {mood.mood}</h3>
+              <h3 className="text-2xl font-bold text.white">Mood: {mood.mood}</h3>
               <p className="text-[#666]">{mood.confidence}% confidence</p>
             </div>
           </div>

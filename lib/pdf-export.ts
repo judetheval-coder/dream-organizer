@@ -6,7 +6,6 @@ export async function exportDreamsAsPDF(dreams: Dream[], filename: string = 'dre
   
   try {
     const { jsPDF } = await import('jspdf')
-    const html2canvas = (await import('html2canvas')).default
 
     const doc = new jsPDF({
       orientation: 'portrait',
@@ -15,7 +14,6 @@ export async function exportDreamsAsPDF(dreams: Dream[], filename: string = 'dre
     })
 
     const pageWidth = doc.internal.pageSize.getWidth()
-    const pageHeight = doc.internal.pageSize.getHeight()
     const margin = 15
     let yPosition = margin
 

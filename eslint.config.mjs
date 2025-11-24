@@ -12,6 +12,14 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Project-specific ignores
+    "legacy/**",
+    "sd_env/**",
+    "sd_bridge.js",
+    "sd_server.js",
+    "temp_page_original.txt",
+    "temp_panel_original.txt",
+    "temp-user-section.txt",
   ]),
 ]);
 

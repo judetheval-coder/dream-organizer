@@ -40,6 +40,14 @@ export const gradients = {
   glow: 'radial-gradient(circle at 50% 50%, rgba(124, 58, 237, 0.3) 0%, transparent 70%)',
 };
 
+export const surfaces = {
+  card: 'rgba(12, 5, 23, 0.9)',
+  cardHover: 'rgba(21, 10, 36, 0.95)',
+  overlay: 'rgba(5, 0, 8, 0.85)',
+  border: colors.border,
+  muted: 'rgba(255, 255, 255, 0.04)',
+};
+
 export const shadows = {
   sm: '0 1px 2px rgba(0, 0, 0, 0.3)',
   md: '0 4px 6px rgba(0, 0, 0, 0.4)',
@@ -47,6 +55,12 @@ export const shadows = {
   xl: '0 20px 25px rgba(0, 0, 0, 0.6)',
   glow: '0 0 20px rgba(124, 58, 237, 0.4)',
   glowCyan: '0 0 20px rgba(6, 182, 212, 0.4)',
+};
+
+export const motion = {
+  fast: '150ms ease',
+  base: '250ms ease',
+  slow: '450ms ease',
 };
 
 export const borders = {
@@ -70,13 +84,41 @@ export const typography = {
   mono: "'JetBrains Mono', 'Fira Code', 'Courier New', monospace",
 };
 
+export const components = {
+  card: {
+    background: surfaces.card,
+    border: borders.sm,
+    hoverBackground: surfaces.cardHover,
+    shadow: shadows.md,
+  },
+  buttonPrimary: {
+    background: gradients.button,
+    color: colors.white,
+    shadow: shadows.glow,
+  },
+  buttonSecondary: {
+    background: colors.surface,
+    color: colors.textPrimary,
+    border: borders.sm,
+  },
+  chip: {
+    background: surfaces.muted,
+    color: colors.textSecondary,
+    activeBackground: colors.purple,
+    activeColor: colors.white,
+  },
+};
+
 export const theme = {
   colors,
   gradients,
+  surfaces,
   shadows,
   borders,
   radii,
   typography,
+  motion,
+  components,
 };
 
 export type Theme = typeof theme;

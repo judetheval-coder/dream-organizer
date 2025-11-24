@@ -1,26 +1,53 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
+import { auth } from '@clerk/nextjs/server'
+import { validateDreamAnalysisInput } from '@/lib/validation'
+import { checkRateLimit } from '@/lib/rate-limiter'
+import { captureException } from '@/lib/sentry'
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
+const RATE_LIMIT = 5
+const RATE_WINDOW = 5 * 60 * 1000
+
 export async function POST(req: NextRequest) {
   try {
-    const { dreams, analyzeCharacters = false } = await req.json();
-
-    if (!dreams || dreams.length === 0) {
-      return NextResponse.json(
-        { error: "Dreams array is required" },
-        { status: 400 }
-      );
+    const { userId } = await auth()
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
+
+    const rate = checkRateLimit(userId, RATE_LIMIT, RATE_WINDOW)
+    if (!rate.allowed) {
+      return NextResponse.json(
+        { error: `Too many analyses. Try again in ${rate.resetTime}s.` },
+        { status: 429, headers: rate.headers },
+      )
+    }
+
+    const body = await req.json()
+    const validation = validateDreamAnalysisInput(body)
+
+    if (!validation.valid || !validation.data) {
+      return NextResponse.json(
+        { error: 'Invalid request', details: validation.errors },
+        { status: 400, headers: rate.headers },
+      )
+    }
+
+    const { dreams, analyzeCharacters } = validation.data
 
     console.log(" Analyzing dreams...");
 
-    const dreamTexts = dreams.map((d: any, i: number) => 
-      `Dream ${i + 1} (${d.date || 'undated'}): ${d.description || d.text || d}`
-    ).join('\n\n');
+    const dreamTexts = dreams
+      .map((dream, index) => {
+        const dateLabel = dream.date || 'undated'
+        const content = dream.description || dream.text || 'No description provided'
+        return `Dream ${index + 1} (${dateLabel}): ${content}`
+      })
+      .join('\n\n')
 
     const systemPrompt = analyzeCharacters 
       ? `You are a dream analyst specializing in character and symbol recognition. Analyze the dreams to identify:
@@ -63,11 +90,13 @@ Be insightful but accessible. Focus on patterns across multiple dreams.`;
 
     console.log(" Analysis complete");
 
-    return NextResponse.json({ analysis });
-  } catch (error: any) {
+    return NextResponse.json({ analysis }, { headers: rate.headers });
+  } catch (error) {
     console.error(" Dream analysis error:", error);
+    captureException(error, { route: '/api/analyze-dream' })
+    const message = error instanceof Error ? error.message : 'Failed to analyze dreams'
     return NextResponse.json(
-      { error: error.message || "Failed to analyze dreams" },
+      { error: message },
       { status: 500 }
     );
   }

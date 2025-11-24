@@ -1,8 +1,8 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useCallback } from "react"
 import Image from "next/image"
-import { colors, shadows, radii, typography } from "@/lib/design"
+import { colors, shadows, typography } from "@/lib/design"
 import { optimizePromptForDalle } from "@/lib/gpt-helpers"
 
 type PanelProps = {
@@ -46,16 +46,16 @@ export default function Panel({ description, style, mood, onImageReady, generate
     } catch {}
   }, [initialImage, description, style, mood, onImageReady])
 
-  const persistImage = (img: string) => {
+  const persistImage = useCallback((img: string) => {
     try {
       const store = JSON.parse(localStorage.getItem(IMAGE_STORE_KEY) || "{}")
       const key = `${description}-${style}-${mood}`
       store[key] = img
       localStorage.setItem(IMAGE_STORE_KEY, JSON.stringify(store))
     } catch {}
-  }
+  }, [description, mood, style])
 
-  const generateImage = async () => {
+  const generateImage = useCallback(async () => {
     if (!description || loading) return
 
     setLoading(true)
@@ -97,23 +97,23 @@ export default function Panel({ description, style, mood, onImageReady, generate
       // Don't clear loading state - keep image displayed
       setLoading(false)
       setProgress(0)
-    } catch (e: any) {
+    } catch (e) {
       clearInterval(interval)
       setProgress(0)
       setLoading(false)
-      setError(e.message || "Generation failed")
+      setError(e instanceof Error ? e.message : "Generation failed")
       console.error("Panel generation error:", e)
     }
-  }
+  }, [description, loading, mood, onImageReady, persistImage, style])
 
   useEffect(() => {
     if (!image && !loading && description && shouldGenerate) {
       const timer = setTimeout(() => {
-        generateImage()
+        void generateImage()
       }, generateDelay)
       return () => clearTimeout(timer)
     }
-  }, [shouldGenerate])
+  }, [description, generateDelay, generateImage, image, loading, shouldGenerate])
 
   return (
     <div className="relative w-full rounded-xl overflow-hidden" style={{ aspectRatio: "2/1", minHeight: '300px' }}>
@@ -187,7 +187,7 @@ export default function Panel({ description, style, mood, onImageReady, generate
             sizes="(max-width: 768px) 100vw, 50vw"
             className="object-cover rounded-xl"
             unoptimized
-            priority
+            loading="lazy"
           />
 
           <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-3 rounded-xl p-4">

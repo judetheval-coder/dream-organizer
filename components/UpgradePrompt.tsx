@@ -1,5 +1,4 @@
 import { SUBSCRIPTION_TIERS, type SubscriptionTier } from '@/lib/subscription-tiers'
-import { colors, gradients } from '@/lib/design'
 
 interface UpgradePromptProps {
   currentTier: SubscriptionTier

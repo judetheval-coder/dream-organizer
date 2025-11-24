@@ -1,15 +1,21 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+import { validateEnvironment } from '@/lib/env-validation'
 
 const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
   '/sign-up(.*)',
 ])
 
-export default clerkMiddleware(async (auth, request) => {
+// Validate environment variables once on first load
+validateEnvironment()
+
+const proxy = clerkMiddleware(async (auth, request) => {
   if (!isPublicRoute(request)) {
     await auth.protect()
   }
 })
+
+export default proxy
 
 export const config = {
   matcher: [

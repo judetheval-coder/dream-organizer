@@ -24,9 +24,18 @@ export type Panel = {
   created_at: string
 }
 
+export type DreamWithPanels = Dream & {
+  panels?: Panel[] | null
+}
+
 // Helper functions
-export async function getUserDreams(userId: string) {
-  const { data, error } = await supabase
+export async function getUserDreams(
+  userId: string,
+  options: { limit?: number; cursor?: string } = {}
+): Promise<{ dreams: DreamWithPanels[]; nextCursor?: string }> {
+  const { limit = 10, cursor } = options
+
+  let query = supabase
     .from('dreams')
     .select(`
       *,
@@ -35,15 +44,30 @@ export async function getUserDreams(userId: string) {
     .eq('user_id', userId)
     .order('created_at', { ascending: false })
 
+  if (cursor) {
+    query = query.lt('created_at', cursor)
+  }
+
+  const { data, error } = await query.limit(limit + 1)
+
   if (error) throw error
-  return data
+
+  let nextCursor: string | undefined
+  const items: DreamWithPanels[] = (data as DreamWithPanels[]) || []
+
+  if (items.length > limit) {
+    const last = items.pop()
+    nextCursor = last?.created_at
+  }
+
+  return { dreams: items, nextCursor }
 }
 
 export async function createDream(userId: string, dreamData: {
   text: string
   style: string
   mood: string
-}) {
+}): Promise<Dream> {
   const { data, error } = await supabase
     .from('dreams')
     .insert([{
@@ -56,14 +80,17 @@ export async function createDream(userId: string, dreamData: {
     .single()
 
   if (error) throw error
-  return data
+  return data as Dream
 }
 
-export async function createPanels(dreamId: string, panels: Array<{
-  description: string
-  scene_number: number
-  image_url?: string
-}>) {
+export async function createPanels(
+  dreamId: string,
+  panels: Array<{
+    description: string
+    scene_number: number
+    image_url?: string
+  }>,
+): Promise<Panel[]> {
   const { data, error } = await supabase
     .from('panels')
     .insert(
@@ -77,7 +104,7 @@ export async function createPanels(dreamId: string, panels: Array<{
     .select()
 
   if (error) throw error
-  return data
+  return (data as Panel[]) || []
 }
 
 export async function updatePanelImage(panelId: string, imageUrl: string) {

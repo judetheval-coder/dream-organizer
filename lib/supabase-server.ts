@@ -1,4 +1,4 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 
 // Server-side Supabase client with service role key
 function getSupabaseAdmin() {
@@ -18,9 +18,9 @@ function getSupabaseAdmin() {
 }
 
 // Lazy load the client
-let supabaseAdmin: any = null
+let supabaseAdmin: SupabaseClient | null = null
 
-function getClient() {
+function getClient(): SupabaseClient {
   if (!supabaseAdmin) {
     supabaseAdmin = getSupabaseAdmin()
   }

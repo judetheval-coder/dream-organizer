@@ -1,5 +1,4 @@
 // Enhanced Dream Store with Tags, Collections, and Analytics
-import { Activity } from './store'
 
 export interface DreamTag {
   id: string

@@ -34,7 +34,7 @@ export async function uploadImageFromDataURL(
     const filename = `${userId}/${dreamId}/panel-${panelNumber}-${timestamp}.png`
     
     // Upload to Supabase Storage
-    const { data, error } = await supabase.storage
+    const { error } = await supabase.storage
       .from(BUCKET_NAME)
       .upload(filename, blob, {
         contentType: 'image/png',
@@ -68,7 +68,7 @@ export async function uploadImageBlob(
   const timestamp = Date.now()
   const filename = `${userId}/${dreamId}/panel-${panelNumber}-${timestamp}.png`
   
-  const { data, error } = await supabase.storage
+  const { error } = await supabase.storage
     .from(BUCKET_NAME)
     .upload(filename, blob, {
       contentType: 'image/png',

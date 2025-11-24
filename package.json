@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^6.35.4",
+    "@sentry/node": "^8.20.0",
+    "@sentry/react": "^8.20.0",
     "@supabase/supabase-js": "^2.84.0",
     "@swc/helpers": "^0.5.17",
     "html2canvas": "^1.4.1",
