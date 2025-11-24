@@ -78,7 +78,7 @@ export default function NotFound() {
         className="absolute bottom-8 text-sm"
         style={{ color: colors.textMuted }}
       >
-        Dream Organizer • Transform dreams into comics
+        The Dream Machine • Transform dreams into comics
       </p>
     </div>
   )

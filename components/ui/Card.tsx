@@ -1,6 +1,6 @@
 "use client"
 
-import { ElementType, ReactNode } from 'react'
+import { ElementType, ReactNode, CSSProperties, MouseEventHandler } from 'react'
 import { components, motion } from '@/lib/design'
 
 interface CardProps {
@@ -9,6 +9,8 @@ interface CardProps {
   className?: string
   interactive?: boolean
   padding?: string
+  onClick?: MouseEventHandler<HTMLElement>
+  style?: CSSProperties
 }
 
 export function Card({
@@ -17,13 +19,15 @@ export function Card({
   className = '',
   interactive = false,
   padding = 'p-6',
+  onClick,
+  style: customStyle,
 }: CardProps) {
   const baseClasses = [
     'rounded-2xl',
     'border',
     'backdrop-blur-md',
     'transition-all',
-    interactive ? 'hover:-translate-y-1 hover:shadow-2xl' : '',
+    interactive ? 'hover:-translate-y-1 hover:shadow-2xl cursor-pointer' : '',
     className,
     padding,
   ]
@@ -33,11 +37,13 @@ export function Card({
   return (
     <Component
       className={baseClasses}
+      onClick={onClick}
       style={{
         background: components.card.background,
         border: components.card.border,
         boxShadow: components.card.shadow,
         transition: `transform ${motion.base}, box-shadow ${motion.base}`,
+        ...customStyle,
       }}
     >
       {children}
@@ -46,3 +52,4 @@ export function Card({
 }
 
 export default Card
+

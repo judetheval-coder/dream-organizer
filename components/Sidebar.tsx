@@ -25,7 +25,7 @@ export default function Sidebar() {
           </div>
           <div>
             <h1 className="text-xl font-black bg-gradient-to-r from-[#5B2CFC] to-[#03DAC6] bg-clip-text text-transparent">
-              Dream Organizer
+              Dream Machine
             </h1>
             <p className="text-[10px] text-[#666] uppercase tracking-wider">Beta v1.0</p>
           </div>

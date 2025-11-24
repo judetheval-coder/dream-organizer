@@ -11,37 +11,37 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Dream Organizer - Turn Your Dreams Into Beautiful Comics",
-    template: "%s | Dream Organizer",
+    default: "The Dream Machine - Turn Your Dreams Into Beautiful Comics",
+    template: "%s | The Dream Machine",
   },
   description: "AI-powered dream journaling that transforms your nightly adventures into stunning visual stories. Record, visualize, and share your dreams like never before.",
-  keywords: ["dream journal", "AI art", "comic generator", "dream tracker", "DALL-E", "dream visualization", "dream diary", "AI comic"],
-  authors: [{ name: "Dream Organizer" }],
-  creator: "Dream Organizer",
-  publisher: "Dream Organizer",
+  keywords: ["dream journal", "AI art", "comic generator", "dream tracker", "DALL-E", "dream visualization", "dream diary", "AI comic", "dream machine"],
+  authors: [{ name: "The Dream Machine" }],
+  creator: "The Dream Machine",
+  publisher: "The Dream Machine",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://dream-organizer.vercel.app"),
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "/",
-    siteName: "Dream Organizer",
-    title: "Dream Organizer - Turn Your Dreams Into Beautiful Comics",
+    siteName: "The Dream Machine",
+    title: "The Dream Machine - Turn Your Dreams Into Beautiful Comics",
     description: "AI-powered dream journaling that transforms your nightly adventures into stunning visual stories.",
     images: [
       {
         url: "/api/og",
         width: 1200,
         height: 630,
-        alt: "Dream Organizer - AI Dream Comics",
+        alt: "The Dream Machine - AI Dream Comics",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Dream Organizer - Turn Your Dreams Into Beautiful Comics",
+    title: "The Dream Machine - Turn Your Dreams Into Beautiful Comics",
     description: "AI-powered dream journaling that transforms your nightly adventures into stunning visual stories.",
     images: ["/api/og"],
-    creator: "@dreamorganizer",
+    creator: "@thedreammachine",
   },
   robots: {
     index: true,

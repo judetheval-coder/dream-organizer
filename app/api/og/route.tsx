@@ -96,7 +96,7 @@ export async function GET() {
               marginBottom: '20px',
             }}
           >
-            Dream Organizer
+            The Dream Machine
           </h1>
 
           {/* Subtitle */}

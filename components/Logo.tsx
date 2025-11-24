@@ -30,7 +30,7 @@ export default function Logo({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
               backgroundImage: `linear-gradient(135deg, ${colors.purple} 0%, ${colors.cyan} 100%)`
             }}
           >
-            Dream Org
+            Dream Machine
           </h1>
           <p className="text-xs" style={{ color: colors.textMuted }}>
             Your Dream Canvas

@@ -51,7 +51,7 @@ const TESTIMONIALS = [
   {
     name: 'James K.',
     role: 'Writer',
-    text: 'I use Dream Organizer for story inspiration. The comics help me remember dream details.',
+    text: 'I use The Dream Machine for story inspiration. The comics help me remember dream details.',
     avatar: '✍️',
   },
   {
@@ -74,7 +74,7 @@ export default function LandingPage() {
           <Link href="/" className="flex items-center gap-2">
             <span className="text-3xl">💭</span>
             <span className="text-xl font-bold" style={{ color: colors.textPrimary }}>
-              Dream Organizer
+              The Dream Machine
             </span>
           </Link>
           

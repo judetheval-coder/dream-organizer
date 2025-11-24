@@ -2,8 +2,8 @@ import { colors, gradients } from '@/lib/design'
 import Link from 'next/link'
 
 export const metadata = {
-  title: 'Privacy Policy - Dream Organizer',
-  description: 'Privacy policy for Dream Organizer - AI-powered dream journaling platform',
+  title: 'Privacy Policy - The Dream Machine',
+  description: 'Privacy policy for The Dream Machine - AI-powered dream journaling platform',
 }
 
 export default function PrivacyPage() {
@@ -32,7 +32,7 @@ export default function PrivacyPage() {
               1. Introduction
             </h2>
             <p>
-              Dream Organizer (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) respects your privacy and is committed to protecting 
+              The Dream Machine (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) respects your privacy and is committed to protecting 
               your personal data. This privacy policy explains how we collect, use, and safeguard your 
               information when you use our dream journaling and AI comic generation service.
             </p>
