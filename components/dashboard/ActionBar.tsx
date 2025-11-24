@@ -1,17 +1,29 @@
 "use client"
 
 import { colors, gradients, motion } from '@/lib/design'
+import AutoSaveIndicator from '@/components/AutoSaveIndicator'
 
 interface ActionBarProps {
   onCreate: () => void
   onAnalyze: () => void
   disableAnalysis?: boolean
   analyzing?: boolean
+  isSaving?: boolean
+  lastSaved?: Date | null
+  saveError?: string | null
 }
 
-export function ActionBar({ onCreate, onAnalyze, disableAnalysis, analyzing }: ActionBarProps) {
+export function ActionBar({ 
+  onCreate, 
+  onAnalyze, 
+  disableAnalysis, 
+  analyzing,
+  isSaving = false,
+  lastSaved = null,
+  saveError = null,
+}: ActionBarProps) {
   return (
-    <div className="flex flex-wrap gap-3">
+    <div className="flex flex-wrap items-center gap-3">
       <button
         type="button"
         onClick={onCreate}
@@ -39,6 +51,11 @@ export function ActionBar({ onCreate, onAnalyze, disableAnalysis, analyzing }: A
       >
         {analyzing ? '🔄 Analyzing...' : '🔍 Analyze Dreams'}
       </button>
+      
+      {/* Auto-save status indicator */}
+      <div className="ml-auto">
+        <AutoSaveIndicator isSaving={isSaving} lastSaved={lastSaved} error={saveError} />
+      </div>
     </div>
   )
 }

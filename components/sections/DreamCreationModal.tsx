@@ -1,6 +1,7 @@
 "use client"
 
 import { colors, gradients, shadows } from '@/lib/design'
+import VoiceInput from '@/components/VoiceInput'
 
 interface DreamCreationModalProps {
   isOpen: boolean
@@ -78,7 +79,7 @@ export function DreamCreationModal({
           value={dreamText}
           onChange={(e) => onDreamTextChange(e.target.value)}
           placeholder="Describe your dream..."
-          className="w-full mt-6 mb-6 p-4 rounded-lg"
+          className="w-full mt-6 mb-4 p-4 rounded-lg"
           rows={5}
           aria-label="Dream description"
           aria-required="true"
@@ -89,6 +90,14 @@ export function DreamCreationModal({
             border: `1px solid ${colors.cyan}`,
           }}
         />
+
+        {/* Voice input for hands-free dream recording */}
+        <div className="mb-6">
+          <VoiceInput 
+            onTranscript={onDreamTextChange}
+            existingText=""
+          />
+        </div>
 
         <div className="grid grid-cols-1 gap-6 mb-6 md:grid-cols-2">
           <div>
