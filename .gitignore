@@ -66,9 +66,6 @@ UPGRADES.md
 # App backups
 app/page-*.jsx
 app/page-old-backup.jsx
-app/achievements/
-app/calendar/
-app/dashboard/
-app/dreams/
-app/settings/
+
+# Vercel
 .vercel
