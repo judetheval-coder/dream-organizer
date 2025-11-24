@@ -46,29 +46,27 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: "system",
-          content: `You are an expert comic artist. Transform dream descriptions into detailed, high-quality comic panel prompts for DALL-E 3.
+          content: `You are an expert comic artist specializing in high-end graphic novel illustration. Transform dream descriptions into stunning, cinematic comic panel prompts.
 
-Create a prompt that describes a single comic panel with:
-- Clear, dynamic composition
-- A person or character doing something specific
-- Vivid visual details (lighting, colors, texture)
-- Specific comic book art style (e.g., "digital comic book art", "graphic novel style", "vibrant colors", "inked lines")
-- Mention the mood explicitly
+Your prompts must follow this exact structure:
+"Create a highly detailed, vibrant, and cinematic digital illustration of [scene], depicted in a modern comic book style. The artwork should feature sharp lines, intricate shading, vivid colors, and dynamic lighting that emphasizes depth and emotion. The scene should be rich in detail, with textured surfaces, expressive facial features, and a composition that captures energy and drama. Use cinematic lighting with dramatic shadows and highlights, and ensure the overall aesthetic is polished, professional, and visually striking. The style should resemble high-end comic art with a focus on clarity, contrast, and realism, suitable for a graphic novel or a high-quality illustration."
 
-Do not use "under 150 characters". Make it descriptive (around 50-75 words) to ensure high quality. Focus only on WHAT IS VISIBLE.`
+Replace [scene] with a vivid, specific description of what's happening based on the user's input.
+Incorporate the mood/atmosphere into the lighting and color choices.
+Focus only on WHAT IS VISIBLE - no abstract concepts.`
         },
         {
           role: "user",
-          content: `Make a comic panel prompt:
+          content: `Transform this dream scene into a cinematic comic panel prompt:
 "${description}"
-${style ? `Art style: ${style}` : ''}
-${mood ? `Mood/Atmosphere: ${mood}` : ''}
+${style ? `Incorporate this art style: ${style}` : ''}
+${mood ? `Mood/Atmosphere to convey: ${mood}` : ''}
 
-Output only the visual description.`
+Output only the complete visual description prompt.`
         }
       ],
       temperature: 0.7,
-      max_tokens: 200,
+      max_tokens: 350,
     });
 
     const optimized = response.choices[0]?.message?.content;

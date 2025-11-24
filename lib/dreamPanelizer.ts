@@ -228,16 +228,16 @@ const describeFocus = (text: string) => {
 
 const createPrompt = (chunk: string, tone: string, palette: PanelPalette, keywords: string[]) => {
   const toneDescriptors: Record<string, string> = {
-    wonder: "vibrant neon glow, cinematic depth of field",
-    serene: "soft gradients, gentle lighting, tranquil energy",
-    nightmare: "dramatic chiaroscuro, sharp angular shadows",
-    adventure: "bold perspective, dynamic motion, kinetic lines"
+    wonder: "ethereal glow with mystical ambient lighting, cosmic color palette with purples and cyans",
+    serene: "soft golden hour lighting, peaceful atmosphere with gentle gradients and warm tones",
+    nightmare: "dramatic chiaroscuro with deep shadows, intense contrast with blood reds and dark purples",
+    adventure: "dynamic action lighting with bold colors, high energy composition with oranges and teals"
   }
 
   const descriptor = toneDescriptors[tone] || toneDescriptors.wonder
   const keywordList = keywords.slice(0, 4).join(", ")
 
-  return `${chunk}. ${descriptor}. ${palette.name} palette, bold ink outlines, halftone shading, ${keywordList}. comic book panel, widescreen.`
+  return `Create a highly detailed, vibrant, and cinematic digital illustration of ${chunk}, depicted in a modern comic book style. The artwork should feature sharp lines, intricate shading, vivid colors, and dynamic lighting that emphasizes depth and emotion. ${descriptor}. The scene should be rich in detail, with textured surfaces, expressive facial features, and a composition that captures energy and drama. Use cinematic lighting with dramatic shadows and highlights. Visual elements: ${keywordList}. The style should resemble high-end comic art with a focus on clarity, contrast, and realism, suitable for a graphic novel.`
 }
 
 const ensureId = () => {
