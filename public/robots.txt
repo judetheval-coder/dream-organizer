@@ -1,0 +1,11 @@
+# Dream Organizer - Sitemap
+# https://dream-organizer.vercel.app
+
+User-agent: *
+Allow: /
+
+Sitemap: https://dream-organizer.vercel.app/sitemap.xml
+
+# Disallow dashboard and API routes
+Disallow: /dashboard
+Disallow: /api/

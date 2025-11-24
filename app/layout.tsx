@@ -10,8 +10,56 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Dream Organizer - Turn Dreams Into Comics",
-  description: "AI-powered dream tracking and comic generation platform",
+  title: {
+    default: "Dream Organizer - Turn Your Dreams Into Beautiful Comics",
+    template: "%s | Dream Organizer",
+  },
+  description: "AI-powered dream journaling that transforms your nightly adventures into stunning visual stories. Record, visualize, and share your dreams like never before.",
+  keywords: ["dream journal", "AI art", "comic generator", "dream tracker", "DALL-E", "dream visualization", "dream diary", "AI comic"],
+  authors: [{ name: "Dream Organizer" }],
+  creator: "Dream Organizer",
+  publisher: "Dream Organizer",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://dream-organizer.vercel.app"),
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "/",
+    siteName: "Dream Organizer",
+    title: "Dream Organizer - Turn Your Dreams Into Beautiful Comics",
+    description: "AI-powered dream journaling that transforms your nightly adventures into stunning visual stories.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Dream Organizer - AI Dream Comics",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Dream Organizer - Turn Your Dreams Into Beautiful Comics",
+    description: "AI-powered dream journaling that transforms your nightly adventures into stunning visual stories.",
+    images: ["/og-image.png"],
+    creator: "@dreamorganizer",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
