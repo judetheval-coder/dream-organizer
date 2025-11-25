@@ -774,7 +774,7 @@ function DashboardPageContent() {
         )}
 
         {currentTab === 'Gallery' && (
-          <PublicGallery dreams={[]} />
+          <PublicGallery />
         )}
 
         {currentTab === 'Groups' && (
