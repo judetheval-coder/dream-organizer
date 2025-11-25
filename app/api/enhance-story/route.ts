@@ -39,8 +39,6 @@ export async function POST(req: NextRequest) {
 
     const { dreamText } = validation.data
 
-    console.log(" Enhancing dream story...");
-
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -62,8 +60,6 @@ export async function POST(req: NextRequest) {
     if (!enhanced) {
       throw new Error("No enhanced story returned");
     }
-
-    console.log(" Story enhanced successfully");
 
     return NextResponse.json({ enhanced }, { headers: rate.headers });
   } catch (error) {

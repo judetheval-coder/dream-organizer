@@ -90,11 +90,14 @@ export interface PublicDream {
 
 export async function publishDreamToGallery(dreamId: string, userId: string): Promise<{ success: boolean; error?: string }> {
   try {
+    // Insert into published_dreams table
     const { error } = await supabase
-      .from('dreams')
-      .update({ is_public: true })
-      .eq('id', dreamId)
-      .eq('user_id', userId)
+      .from('published_dreams')
+      .upsert({
+        dream_id: dreamId,
+        user_id: userId,
+        published_at: new Date().toISOString(),
+      })
 
     if (error) throw error
     return { success: true }
@@ -106,9 +109,9 @@ export async function publishDreamToGallery(dreamId: string, userId: string): Pr
 export async function unpublishDreamFromGallery(dreamId: string, userId: string): Promise<{ success: boolean; error?: string }> {
   try {
     const { error } = await supabase
-      .from('dreams')
-      .update({ is_public: false })
-      .eq('id', dreamId)
+      .from('published_dreams')
+      .delete()
+      .eq('dream_id', dreamId)
       .eq('user_id', userId)
 
     if (error) throw error
@@ -118,44 +121,59 @@ export async function unpublishDreamFromGallery(dreamId: string, userId: string)
   }
 }
 
-export async function fetchPublicDreams(): Promise<PublicDream[]> {
+export async function fetchPublicDreams(currentUserId?: string): Promise<PublicDream[]> {
   try {
+    // Get published dreams with dream data
     const { data, error } = await supabase
-      .from('dreams')
+      .from('published_dreams')
       .select(`
         id,
+        dream_id,
         user_id,
-        text,
-        style,
-        mood,
-        created_at,
-        panels (id, description, image_url),
+        view_count,
+        like_count,
+        comment_count,
+        published_at,
+        dreams (
+          id,
+          text,
+          style,
+          mood,
+          created_at,
+          panels (id, description, image_url)
+        ),
         users (id, email)
       `)
-      .eq('is_public', true)
-      .order('created_at', { ascending: false })
+      .order('published_at', { ascending: false })
       .limit(50)
 
     if (error) throw error
 
+    // Get current user's following list if logged in
+    let followingList: string[] = []
+    if (currentUserId) {
+      followingList = await getFollowing(currentUserId)
+    }
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (data || []).map((d: any) => ({
-      id: d.id,
+      id: d.dreams?.id || d.dream_id,
       userId: d.user_id,
-      username: d.users?.[0]?.email?.split('@')[0] || d.users?.email?.split('@')[0] || 'Dreamer',
+      username: d.users?.email?.split('@')[0] || 'Dreamer',
       avatar: '🌙',
-      dreamText: d.text,
-      panels: d.panels?.map((p: { id: string; description: string; image_url: string }) => ({
+      dreamText: d.dreams?.text || '',
+      panels: d.dreams?.panels?.map((p: { id: string; description: string; image_url: string }) => ({
         id: p.id,
         imageUrl: p.image_url,
         description: p.description,
       })) || [],
-      style: d.style,
-      mood: d.mood,
-      createdAt: d.created_at,
-      reactions: { like: 0, wow: 0, scary: 0, funny: 0 },
-      comments: 0,
+      style: d.dreams?.style || '',
+      mood: d.dreams?.mood || '',
+      createdAt: d.dreams?.created_at || d.published_at,
+      reactions: { like: d.like_count || 0, wow: 0, scary: 0, funny: 0 },
+      comments: d.comment_count || 0,
       isPublic: true,
+      isFollowing: followingList.includes(d.user_id),
     }))
   } catch {
     return []
@@ -164,28 +182,68 @@ export async function fetchPublicDreams(): Promise<PublicDream[]> {
 
 // ============= REACTION FUNCTIONS =============
 
+export type ReactionType = 'like' | 'love' | 'wow' | 'dream' | 'insightful'
+
 export async function reactToDream(
   dreamId: string, 
   userId: string, 
-  reaction: 'like' | 'wow' | 'scary' | 'funny'
-): Promise<{ success: boolean; error?: string }> {
+  reaction: ReactionType
+): Promise<{ success: boolean; added: boolean; error?: string }> {
   try {
-    // For now, store in local storage since we don't have a reactions table
-    const key = `dream-reactions-${dreamId}`
-    const existing = JSON.parse(localStorage.getItem(key) || '{}')
-    
-    if (existing[userId] === reaction) {
+    // Check if user already has this reaction
+    const { data: existing } = await supabase
+      .from('dream_reactions')
+      .select('id')
+      .eq('dream_id', dreamId)
+      .eq('user_id', userId)
+      .eq('reaction_type', reaction)
+      .single()
+
+    if (existing) {
       // Remove reaction
-      delete existing[userId]
+      const { error } = await supabase
+        .from('dream_reactions')
+        .delete()
+        .eq('id', existing.id)
+
+      if (error) throw error
+      return { success: true, added: false }
     } else {
-      // Add/change reaction
-      existing[userId] = reaction
+      // Add reaction
+      const { error } = await supabase
+        .from('dream_reactions')
+        .insert({
+          dream_id: dreamId,
+          user_id: userId,
+          reaction_type: reaction,
+        })
+
+      if (error) throw error
+      return { success: true, added: true }
     }
-    
-    localStorage.setItem(key, JSON.stringify(existing))
-    return { success: true }
   } catch (e) {
-    return { success: false, error: e instanceof Error ? e.message : 'Failed to react' }
+    return { success: false, added: false, error: e instanceof Error ? e.message : 'Failed to react' }
+  }
+}
+
+export async function getDreamReactions(dreamId: string): Promise<Record<ReactionType, number>> {
+  try {
+    const { data, error } = await supabase
+      .from('dream_reactions')
+      .select('reaction_type')
+      .eq('dream_id', dreamId)
+
+    if (error) throw error
+
+    const counts: Record<ReactionType, number> = { like: 0, love: 0, wow: 0, dream: 0, insightful: 0 }
+    data?.forEach(r => {
+      if (r.reaction_type in counts) {
+        counts[r.reaction_type as ReactionType]++
+      }
+    })
+    return counts
+  } catch {
+    return { like: 0, love: 0, wow: 0, dream: 0, insightful: 0 }
   }
 }
 
@@ -196,15 +254,14 @@ export async function followUser(
   followingId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    // Store in local storage for now
-    const key = `following-${followerId}`
-    const following = JSON.parse(localStorage.getItem(key) || '[]')
-    
-    if (!following.includes(followingId)) {
-      following.push(followingId)
-      localStorage.setItem(key, JSON.stringify(following))
-    }
-    
+    const { error } = await supabase
+      .from('follows')
+      .upsert({
+        follower_id: followerId,
+        following_id: followingId,
+      })
+
+    if (error) throw error
     return { success: true }
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : 'Failed to follow' }
@@ -216,27 +273,59 @@ export async function unfollowUser(
   followingId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const key = `following-${followerId}`
-    const following = JSON.parse(localStorage.getItem(key) || '[]')
-    
-    const index = following.indexOf(followingId)
-    if (index > -1) {
-      following.splice(index, 1)
-      localStorage.setItem(key, JSON.stringify(following))
-    }
-    
+    const { error } = await supabase
+      .from('follows')
+      .delete()
+      .eq('follower_id', followerId)
+      .eq('following_id', followingId)
+
+    if (error) throw error
     return { success: true }
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : 'Failed to unfollow' }
   }
 }
 
-export function getFollowing(userId: string): string[] {
+export async function getFollowing(userId: string): Promise<string[]> {
   try {
-    const key = `following-${userId}`
-    return JSON.parse(localStorage.getItem(key) || '[]')
+    const { data, error } = await supabase
+      .from('follows')
+      .select('following_id')
+      .eq('follower_id', userId)
+
+    if (error) throw error
+    return data?.map(f => f.following_id) || []
   } catch {
     return []
+  }
+}
+
+export async function getFollowers(userId: string): Promise<string[]> {
+  try {
+    const { data, error } = await supabase
+      .from('follows')
+      .select('follower_id')
+      .eq('following_id', userId)
+
+    if (error) throw error
+    return data?.map(f => f.follower_id) || []
+  } catch {
+    return []
+  }
+}
+
+export async function isFollowing(followerId: string, followingId: string): Promise<boolean> {
+  try {
+    const { data } = await supabase
+      .from('follows')
+      .select('id')
+      .eq('follower_id', followerId)
+      .eq('following_id', followingId)
+      .single()
+
+    return !!data
+  } catch {
+    return false
   }
 }
 
@@ -257,68 +346,140 @@ export interface DreamGroup {
   createdBy?: string
 }
 
-export function joinGroup(groupId: string, userId: string): { success: boolean } {
+export async function joinGroup(groupId: string, userId: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const key = `groups-joined-${userId}`
-    const joined = JSON.parse(localStorage.getItem(key) || '[]')
-    
-    if (!joined.includes(groupId)) {
-      joined.push(groupId)
-      localStorage.setItem(key, JSON.stringify(joined))
-    }
-    
+    const { error } = await supabase
+      .from('group_memberships')
+      .upsert({
+        group_id: groupId,
+        user_id: userId,
+        role: 'member',
+      })
+
+    if (error) throw error
     return { success: true }
-  } catch {
-    return { success: false }
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : 'Failed to join group' }
   }
 }
 
-export function leaveGroup(groupId: string, userId: string): { success: boolean } {
+export async function leaveGroup(groupId: string, userId: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const key = `groups-joined-${userId}`
-    const joined = JSON.parse(localStorage.getItem(key) || '[]')
-    
-    const index = joined.indexOf(groupId)
-    if (index > -1) {
-      joined.splice(index, 1)
-      localStorage.setItem(key, JSON.stringify(joined))
-    }
-    
+    const { error } = await supabase
+      .from('group_memberships')
+      .delete()
+      .eq('group_id', groupId)
+      .eq('user_id', userId)
+
+    if (error) throw error
     return { success: true }
-  } catch {
-    return { success: false }
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : 'Failed to leave group' }
   }
 }
 
-export function getJoinedGroups(userId: string): string[] {
+export async function getJoinedGroups(userId: string): Promise<string[]> {
   try {
-    const key = `groups-joined-${userId}`
-    return JSON.parse(localStorage.getItem(key) || '[]')
+    const { data, error } = await supabase
+      .from('group_memberships')
+      .select('group_id')
+      .eq('user_id', userId)
+
+    if (error) throw error
+    return data?.map(m => m.group_id) || []
   } catch {
     return []
   }
 }
 
-export function createGroup(group: Omit<DreamGroup, 'id' | 'memberCount' | 'postCount' | 'isJoined'>, userId: string): DreamGroup {
-  const newGroup: DreamGroup = {
-    ...group,
-    id: `group-${Date.now()}`,
-    memberCount: 1,
-    postCount: 0,
-    isJoined: true,
-    createdBy: userId,
+export async function fetchGroups(userId?: string): Promise<DreamGroup[]> {
+  try {
+    const { data, error } = await supabase
+      .from('dream_groups')
+      .select('*')
+      .order('member_count', { ascending: false })
+
+    if (error) throw error
+
+    let joinedGroups: string[] = []
+    if (userId) {
+      joinedGroups = await getJoinedGroups(userId)
+    }
+
+    return (data || []).map(g => ({
+      id: g.id,
+      name: g.name,
+      description: g.description || '',
+      emoji: getCategoryEmoji(g.category),
+      memberCount: g.member_count || 0,
+      postCount: 0,
+      isJoined: joinedGroups.includes(g.id),
+      isPrivate: false,
+      category: g.category,
+      createdBy: g.created_by,
+    }))
+  } catch {
+    return []
   }
-  
-  // Store in local storage
-  const key = 'dream-groups-custom'
-  const groups = JSON.parse(localStorage.getItem(key) || '[]')
-  groups.push(newGroup)
-  localStorage.setItem(key, JSON.stringify(groups))
-  
-  // Auto-join creator
-  joinGroup(newGroup.id, userId)
-  
-  return newGroup
+}
+
+export async function createGroup(
+  group: { name: string; description: string; category: string; isPrivate: boolean }, 
+  userId: string
+): Promise<{ success: boolean; group?: DreamGroup; error?: string }> {
+  try {
+    const { data, error } = await supabase
+      .from('dream_groups')
+      .insert({
+        name: group.name,
+        description: group.description,
+        category: group.category,
+        created_by: userId,
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+
+    // Auto-join the creator as admin
+    await supabase
+      .from('group_memberships')
+      .insert({
+        group_id: data.id,
+        user_id: userId,
+        role: 'admin',
+      })
+
+    const newGroup: DreamGroup = {
+      id: data.id,
+      name: data.name,
+      description: data.description || '',
+      emoji: getCategoryEmoji(data.category),
+      memberCount: 1,
+      postCount: 0,
+      isJoined: true,
+      isPrivate: group.isPrivate,
+      category: data.category,
+      createdBy: userId,
+    }
+
+    return { success: true, group: newGroup }
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : 'Failed to create group' }
+  }
+}
+
+function getCategoryEmoji(category: string): string {
+  const emojis: Record<string, string> = {
+    lucid: '✨',
+    nightmares: '👻',
+    recurring: '🔄',
+    prophetic: '🔮',
+    flying: '🦅',
+    interpretation: '🧠',
+    general: '🌙',
+  }
+  return emojis[category] || '🌙'
 }
 
 // ============= GIFT SUBSCRIPTION FUNCTIONS =============
@@ -356,58 +517,73 @@ export async function purchaseGiftSubscription(
   scheduledDate?: string
 ): Promise<{ success: boolean; giftCode?: string; checkoutUrl?: string; error?: string }> {
   try {
-    // In production, this would create a Stripe checkout session
-    // For now, we'll simulate the purchase
     const giftCode = generateGiftCode()
-    
-    const purchase: GiftPurchase = {
-      id: `gift-${Date.now()}`,
-      senderId,
-      recipientEmail,
-      tier,
-      duration,
-      message,
-      scheduledDate,
-      purchasedAt: new Date().toISOString(),
-      redeemed: false,
-      giftCode,
+    const durationMap: Record<string, string> = {
+      '1_month': 'monthly',
+      '3_months': 'monthly',
+      '6_months': 'monthly',
+      '12_months': 'yearly',
     }
-    
-    // Store gift in local storage (in production, this would be in the database)
-    const key = 'gift-purchases'
-    const purchases = JSON.parse(localStorage.getItem(key) || '[]')
-    purchases.push(purchase)
-    localStorage.setItem(key, JSON.stringify(purchases))
-    
-    // In production, send email to recipient
-    console.log(`Gift email would be sent to ${recipientEmail} with code ${giftCode}`)
-    
+
+    const { error } = await supabase
+      .from('gift_subscriptions')
+      .insert({
+        purchaser_id: senderId,
+        gift_code: giftCode,
+        tier,
+        duration: durationMap[duration],
+        recipient_email: recipientEmail,
+        message,
+        expires_at: scheduledDate ? new Date(scheduledDate).toISOString() : null,
+      })
+
+    if (error) throw error
+
+    // TODO: Send email notification to recipient
+
     return { success: true, giftCode }
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : 'Failed to purchase gift' }
   }
 }
 
-export function redeemGiftCode(giftCode: string, userId: string): { success: boolean; tier?: string; duration?: string; error?: string } {
+export async function redeemGiftCode(
+  giftCode: string, 
+  userId: string
+): Promise<{ success: boolean; tier?: string; duration?: string; error?: string }> {
   try {
-    const key = 'gift-purchases'
-    const purchases: GiftPurchase[] = JSON.parse(localStorage.getItem(key) || '[]')
-    
-    const giftIndex = purchases.findIndex(p => p.giftCode === giftCode && !p.redeemed)
-    
-    if (giftIndex === -1) {
+    // Find the gift code
+    const { data: gift, error: findError } = await supabase
+      .from('gift_subscriptions')
+      .select('*')
+      .eq('gift_code', giftCode)
+      .eq('redeemed', false)
+      .single()
+
+    if (findError || !gift) {
       return { success: false, error: 'Invalid or already redeemed gift code' }
     }
-    
-    purchases[giftIndex].redeemed = true
-    purchases[giftIndex].redeemedAt = new Date().toISOString()
-    localStorage.setItem(key, JSON.stringify(purchases))
-    
-    const gift = purchases[giftIndex]
-    
-    // In production, this would update the user's subscription in the database
-    console.log(`User ${userId} redeemed ${gift.tier} for ${gift.duration}`)
-    
+
+    // Mark as redeemed
+    const { error: updateError } = await supabase
+      .from('gift_subscriptions')
+      .update({
+        redeemed: true,
+        redeemed_by: userId,
+        redeemed_at: new Date().toISOString(),
+      })
+      .eq('id', gift.id)
+
+    if (updateError) throw updateError
+
+    // Update user's subscription tier
+    const { error: userError } = await supabase
+      .from('users')
+      .update({ subscription_tier: gift.tier })
+      .eq('id', userId)
+
+    if (userError) throw userError
+
     return { success: true, tier: gift.tier, duration: gift.duration }
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : 'Failed to redeem gift' }
@@ -417,6 +593,7 @@ export function redeemGiftCode(giftCode: string, userId: string): { success: boo
 // ============= CONTEST FUNCTIONS =============
 
 export interface ContestEntry {
+  id: string
   dreamId: string
   userId: string
   username: string
@@ -427,54 +604,179 @@ export interface ContestEntry {
   enteredAt: string
 }
 
-export function enterContest(dreamId: string, userId: string, username: string, dreamTitle: string): { success: boolean; error?: string } {
+export async function enterContest(
+  dreamId: string, 
+  userId: string, 
+  username: string, 
+  dreamTitle: string
+): Promise<{ success: boolean; error?: string }> {
   try {
-    const key = `contest-${new Date().toISOString().slice(0, 7)}` // Current month
-    const entries: ContestEntry[] = JSON.parse(localStorage.getItem(key) || '[]')
-    
+    // Get current contest ID (e.g., "2024-01" for January 2024)
+    const contestId = new Date().toISOString().slice(0, 7)
+
     // Check if already entered
-    if (entries.some(e => e.dreamId === dreamId)) {
+    const { data: existing } = await supabase
+      .from('contest_entries')
+      .select('id')
+      .eq('dream_id', dreamId)
+      .eq('contest_id', contestId)
+      .single()
+
+    if (existing) {
       return { success: false, error: 'This dream is already entered in the contest' }
     }
-    
-    entries.push({
-      dreamId,
-      userId,
-      username,
-      avatar: '🌙',
-      dreamTitle,
-      views: 0,
-      likes: 0,
-      enteredAt: new Date().toISOString(),
-    })
-    
-    localStorage.setItem(key, JSON.stringify(entries))
+
+    const { error } = await supabase
+      .from('contest_entries')
+      .insert({
+        dream_id: dreamId,
+        user_id: userId,
+        contest_id: contestId,
+      })
+
+    if (error) throw error
     return { success: true }
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : 'Failed to enter contest' }
   }
 }
 
-export function getContestEntries(): ContestEntry[] {
+export async function getContestEntries(): Promise<ContestEntry[]> {
   try {
-    const key = `contest-${new Date().toISOString().slice(0, 7)}`
-    return JSON.parse(localStorage.getItem(key) || '[]')
+    const contestId = new Date().toISOString().slice(0, 7)
+
+    const { data, error } = await supabase
+      .from('contest_entries')
+      .select(`
+        id,
+        dream_id,
+        user_id,
+        votes,
+        submitted_at,
+        dreams (text, style),
+        users (email)
+      `)
+      .eq('contest_id', contestId)
+      .order('votes', { ascending: false })
+      .limit(20)
+
+    if (error) throw error
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (data || []).map((e: any) => ({
+      id: e.id,
+      dreamId: e.dream_id,
+      userId: e.user_id,
+      username: e.users?.email?.split('@')[0] || 'Dreamer',
+      avatar: '🌙',
+      dreamTitle: e.dreams?.text?.slice(0, 50) + '...' || 'Untitled Dream',
+      views: 0,
+      likes: e.votes || 0,
+      enteredAt: e.submitted_at,
+    }))
   } catch {
     return []
   }
 }
 
-export function incrementDreamViews(dreamId: string): void {
+export async function voteForEntry(entryId: string): Promise<{ success: boolean; error?: string }> {
   try {
-    const key = `contest-${new Date().toISOString().slice(0, 7)}`
-    const entries: ContestEntry[] = JSON.parse(localStorage.getItem(key) || '[]')
-    
-    const entry = entries.find(e => e.dreamId === dreamId)
-    if (entry) {
-      entry.views++
-      localStorage.setItem(key, JSON.stringify(entries))
-    }
+    const { error } = await supabase.rpc('increment_contest_votes', { entry_id: entryId })
+    if (error) throw error
+    return { success: true }
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : 'Failed to vote' }
+  }
+}
+
+export async function incrementDreamViews(dreamId: string): Promise<void> {
+  try {
+    await supabase.rpc('increment_dream_views', { dream_id: dreamId })
   } catch {
-    // Ignore errors
+    // Silently fail - non-critical operation
+  }
+}
+
+// ============= COMMENTS FUNCTIONS =============
+
+export interface DreamComment {
+  id: string
+  dreamId: string
+  userId: string
+  username: string
+  content: string
+  createdAt: string
+}
+
+export async function addComment(
+  dreamId: string, 
+  userId: string, 
+  content: string
+): Promise<{ success: boolean; comment?: DreamComment; error?: string }> {
+  try {
+    const { data, error } = await supabase
+      .from('dream_comments')
+      .insert({
+        dream_id: dreamId,
+        user_id: userId,
+        content,
+      })
+      .select(`
+        id,
+        dream_id,
+        user_id,
+        content,
+        created_at,
+        users (email)
+      `)
+      .single()
+
+    if (error) throw error
+
+    return {
+      success: true,
+      comment: {
+        id: data.id,
+        dreamId: data.dream_id,
+        userId: data.user_id,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        username: (data.users as any)?.email?.split('@')[0] || 'Dreamer',
+        content: data.content,
+        createdAt: data.created_at,
+      },
+    }
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : 'Failed to add comment' }
+  }
+}
+
+export async function getComments(dreamId: string): Promise<DreamComment[]> {
+  try {
+    const { data, error } = await supabase
+      .from('dream_comments')
+      .select(`
+        id,
+        dream_id,
+        user_id,
+        content,
+        created_at,
+        users (email)
+      `)
+      .eq('dream_id', dreamId)
+      .order('created_at', { ascending: true })
+
+    if (error) throw error
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (data || []).map((c: any) => ({
+      id: c.id,
+      dreamId: c.dream_id,
+      userId: c.user_id,
+      username: c.users?.email?.split('@')[0] || 'Dreamer',
+      content: c.content,
+      createdAt: c.created_at,
+    }))
+  } catch {
+    return []
   }
 }

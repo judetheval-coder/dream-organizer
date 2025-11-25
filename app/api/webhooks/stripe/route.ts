@@ -73,8 +73,6 @@ export async function POST(req: NextRequest) {
             current_period_start: periodStart,
             current_period_end: periodEnd,
           })
-
-          console.log(`✅ User ${userId} upgraded to ${tier}`)
         }
         break
       }
@@ -110,8 +108,6 @@ export async function POST(req: NextRequest) {
               current_period_end: periodEnd,
             })
             .eq('stripe_subscription_id', subscription.id)
-
-          console.log(`✅ Subscription updated for user ${userId}: ${tier}`)
         }
         break
       }
@@ -132,8 +128,6 @@ export async function POST(req: NextRequest) {
             .from('subscriptions')
             .update({ status: 'canceled' })
             .eq('stripe_subscription_id', subscription.id)
-
-          console.log(`✅ User ${userId} subscription canceled, downgraded to free`)
         }
         break
       }
@@ -154,15 +148,14 @@ export async function POST(req: NextRequest) {
               .from('subscriptions')
               .update({ status: 'past_due' })
               .eq('stripe_subscription_id', subscriptionId)
-
-            console.log(`⚠️ Payment failed for user ${userId}`)
           }
         }
         break
       }
 
       default:
-        console.log(`Unhandled event type: ${event.type}`)
+        // Unhandled event types are silently ignored
+        break
     }
 
     return NextResponse.json({ received: true })

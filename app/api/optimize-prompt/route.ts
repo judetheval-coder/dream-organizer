@@ -39,8 +39,6 @@ export async function POST(req: NextRequest) {
 
     const { description, style, mood } = validation.data
 
-    console.log("🎨 Optimizing comic panel prompt...");
-
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -74,8 +72,6 @@ Output only the complete visual description prompt.`
     if (!optimized) {
       throw new Error("No optimized prompt returned");
     }
-
-    console.log("✓ Prompt ready");
 
     return NextResponse.json({ optimized }, { headers: rate.headers });
   } catch (error) {

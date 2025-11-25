@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ClerkProvider } from '@clerk/nextjs'
+import { Analytics } from '@vercel/analytics/next'
 import ErrorBoundary from '@/components/ErrorBoundary'
+import { ServiceWorkerRegistration } from '@/components/ServiceWorker'
 import { ToastProvider } from '@/contexts/ToastContext'
 import "./globals.css";
 
@@ -85,6 +87,8 @@ export default function RootLayout({
               {children}
             </ToastProvider>
           </ErrorBoundary>
+          <ServiceWorkerRegistration />
+          <Analytics />
         </body>
       </html>
     </ClerkProvider>

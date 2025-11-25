@@ -20,8 +20,6 @@ export async function POST(request) {
       )
     }
 
-    console.log(`[API] Generating image with Replicate for: "${prompt.substring(0, 50)}..."`)
-
     // Enhance prompt for comic style
     const enhancedPrompt = `${prompt}, comic book illustration, graphic novel style, vibrant colors, bold lines, professional art, highly detailed`
 
@@ -58,7 +56,6 @@ export async function POST(request) {
     }
 
     const prediction = await response.json()
-    console.log('[API] Prediction created:', prediction.id)
 
     // Poll for completion
     let result = prediction
@@ -80,14 +77,7 @@ export async function POST(request) {
 
       result = await pollResponse.json()
       attempts++
-      
-      if (result.status === 'processing' || result.status === 'starting') {
-        console.log(`[API] Generation progress: ${attempts}s elapsed...`)
-      }
     }
-
-    const elapsed = Date.now() - startTime
-    console.log(`[API] Generation completed in ${elapsed}ms with status: ${result.status}`)
 
     if (result.status === 'failed') {
       return NextResponse.json(

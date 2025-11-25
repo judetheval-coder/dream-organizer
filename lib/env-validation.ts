@@ -59,9 +59,6 @@ export function validateEnvironment() {
     warnings.forEach((v) => console.warn(`   - ${v}`))
   }
 
-  if (missing.length === 0 && warnings.length === 0) {
-    console.log('✅ All environment variables configured')
-  }
-
+  // All environment variables validated
   validated = true
 }

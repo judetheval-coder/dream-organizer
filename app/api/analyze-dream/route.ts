@@ -39,8 +39,6 @@ export async function POST(req: NextRequest) {
 
     const { dreams, analyzeCharacters } = validation.data
 
-    console.log(" Analyzing dreams...");
-
     const dreamTexts = dreams
       .map((dream, index) => {
         const dateLabel = dream.date || 'undated'
@@ -87,8 +85,6 @@ Be insightful but accessible. Focus on patterns across multiple dreams.`;
     if (!analysis) {
       throw new Error("No analysis returned");
     }
-
-    console.log(" Analysis complete");
 
     return NextResponse.json({ analysis }, { headers: rate.headers });
   } catch (error) {

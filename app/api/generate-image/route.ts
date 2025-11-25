@@ -55,7 +55,6 @@ export async function POST(req: NextRequest) {
     }
 
     const { prompt } = validation.data as { prompt: string }
-    console.log('🎨 Generating image with DALL-E 3:', prompt.substring(0, 80))
 
     const response = await openai.images.generate({
       model: 'dall-e-3',
@@ -71,8 +70,6 @@ export async function POST(req: NextRequest) {
     if (!imageUrl) {
       throw new Error('No image URL returned from OpenAI')
     }
-
-    console.log('✅ Image generated successfully')
 
     return NextResponse.json({ image: imageUrl }, { headers })
   } catch (error) {
