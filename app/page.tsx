@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useUser } from '@clerk/nextjs'
 import Link from 'next/link'
+import SignUpModal from '@/components/SignUpModal'
 import { colors, gradients, shadows } from '@/lib/design'
 import { SUBSCRIPTION_TIERS } from '@/lib/subscription-tiers'
 import Footer from '@/components/Footer'
@@ -64,6 +65,7 @@ const TESTIMONIALS = [
 
 export default function LandingPage() {
   const { isSignedIn } = useUser()
+  const [signupOpen, setSignupOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   return (
@@ -240,13 +242,23 @@ export default function LandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-            <Link
-              href={isSignedIn ? '/dashboard' : '/sign-up'}
-              className="px-8 py-4 rounded-xl font-bold text-lg transition-all hover:scale-105 hover:shadow-2xl"
-              style={{ background: gradients.button, color: colors.white, boxShadow: shadows.glow }}
-            >
-              Start Creating Free ✨
-            </Link>
+            {isSignedIn ? (
+              <Link
+                href="/dashboard"
+                className="px-8 py-4 rounded-xl font-bold text-lg transition-all hover:scale-105 hover:shadow-2xl"
+                style={{ background: gradients.button, color: colors.white, boxShadow: shadows.glow }}
+              >
+                Start Creating Free ✨
+              </Link>
+            ) : (
+              <button
+                onClick={() => setSignupOpen(true)}
+                className="px-8 py-4 rounded-xl font-bold text-lg transition-all hover:scale-105 hover:shadow-2xl"
+                style={{ background: gradients.button, color: colors.white, boxShadow: shadows.glow }}
+              >
+                Start Creating Free ✨
+              </button>
+            )}
             <a
               href="#features"
               className="px-8 py-4 rounded-xl font-semibold text-lg transition-all hover:scale-105"
@@ -277,6 +289,7 @@ export default function LandingPage() {
                   </div>
                 ))}
               </div>
+              <SignUpModal open={signupOpen} onClose={() => setSignupOpen(false)} />
             </div>
             <div className="absolute bottom-4 left-4 right-4 text-center">
               <p className="text-sm" style={{ color: colors.textMuted }}>
