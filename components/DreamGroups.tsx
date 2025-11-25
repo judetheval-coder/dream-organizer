@@ -17,39 +17,42 @@ export default function DreamGroups({ groups: initialGroups = DEFAULT_GROUPS }: 
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [newGroup, setNewGroup] = useState({ name: '', description: '', emoji: '✨', isPrivate: false, category: 'general' })
 
-  // Load joined status from local storage
+  // Load joined status from Supabase
   useEffect(() => {
-    const joinedIds = getJoinedGroups(userId)
-    setGroups(prev => prev.map(g => ({ ...g, isJoined: joinedIds.includes(g.id) })))
+    if (!userId) return
+    getJoinedGroups(userId).then(joinedIds => {
+      setGroups(prev => prev.map(g => ({ ...g, isJoined: joinedIds.includes(g.id) })))
+    })
   }, [userId])
 
-  const handleJoin = (groupId: string) => {
-    const result = joinGroup(groupId, userId)
+  const handleJoin = async (groupId: string) => {
+    const result = await joinGroup(groupId, userId)
     if (result.success) {
       setGroups(prev => prev.map(g => g.id === groupId ? { ...g, isJoined: true, memberCount: g.memberCount + 1 } : g))
     }
   }
 
-  const handleLeave = (groupId: string) => {
-    const result = leaveGroup(groupId, userId)
+  const handleLeave = async (groupId: string) => {
+    const result = await leaveGroup(groupId, userId)
     if (result.success) {
       setGroups(prev => prev.map(g => g.id === groupId ? { ...g, isJoined: false, memberCount: Math.max(0, g.memberCount - 1) } : g))
     }
   }
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!newGroup.name.trim()) return
-    const created = createGroup({
+    const result = await createGroup({
       name: newGroup.name,
       description: newGroup.description,
-      emoji: newGroup.emoji,
-      isPrivate: newGroup.isPrivate,
       category: newGroup.category,
-      coverGradient: `linear-gradient(135deg, ${colors.purple} 0%, ${colors.cyan} 100%)`,
+      isPrivate: newGroup.isPrivate,
     }, userId)
-    setGroups(prev => [created, ...prev])
-    setShowCreateModal(false)
-    setNewGroup({ name: '', description: '', emoji: '✨', isPrivate: false, category: 'general' })
+    
+    if (result.success && result.group) {
+      setGroups(prev => [result.group!, ...prev])
+      setShowCreateModal(false)
+      setNewGroup({ name: '', description: '', emoji: '✨', isPrivate: false, category: 'general' })
+    }
   }
 
   const handleViewGroup = (groupId: string) => {
