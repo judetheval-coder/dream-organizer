@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { SUBSCRIPTION_TIERS, type SubscriptionTier } from '@/lib/subscription-tiers'
 
 interface UpgradePromptProps {
@@ -7,6 +8,38 @@ interface UpgradePromptProps {
 
 export default function UpgradePrompt({ currentTier, onClose }: UpgradePromptProps) {
   const tiers: SubscriptionTier[] = ['free', 'pro', 'premium']
+  const [loading, setLoading] = useState<string | null>(null)
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly')
+
+  const handleUpgrade = async (tier: SubscriptionTier) => {
+    if (tier === 'free') return
+    
+    setLoading(tier)
+    try {
+      const priceKey = tier === 'pro' 
+        ? (billingPeriod === 'monthly' ? 'PRO_MONTHLY' : 'PRO_YEARLY')
+        : (billingPeriod === 'monthly' ? 'PREMIUM_MONTHLY' : 'PREMIUM_YEARLY')
+
+      const response = await fetch('/api/create-checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ priceKey }),
+      })
+
+      const data = await response.json()
+      
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        throw new Error(data.error || 'Failed to create checkout session')
+      }
+    } catch (error) {
+      console.error('Checkout error:', error)
+      alert('Failed to start checkout. Please try again.')
+    } finally {
+      setLoading(null)
+    }
+  }
   
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -27,6 +60,32 @@ export default function UpgradePrompt({ currentTier, onClose }: UpgradePromptPro
           >
             ×
           </button>
+        </div>
+
+        {/* Billing Toggle */}
+        <div className="flex justify-center mb-8">
+          <div className="bg-black/30 rounded-full p-1 flex gap-1">
+            <button
+              onClick={() => setBillingPeriod('monthly')}
+              className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${
+                billingPeriod === 'monthly' 
+                  ? 'bg-purple-500 text-white' 
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingPeriod('yearly')}
+              className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${
+                billingPeriod === 'yearly' 
+                  ? 'bg-purple-500 text-white' 
+                  : 'text-gray-400 hover:text-white'
+              }`}
+            >
+              Yearly <span className="text-cyan-400 text-xs">Save 17%</span>
+            </button>
+          </div>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
@@ -50,9 +109,18 @@ export default function UpgradePrompt({ currentTier, onClose }: UpgradePromptPro
                     {tierData.name}
                   </h3>
                   <div className="text-4xl font-bold bg-gradient-to-r from-purple-300 to-cyan-300 bg-clip-text text-transparent">
-                    ${tierData.price}
-                    <span className="text-sm text-gray-400">/mo</span>
+                    ${billingPeriod === 'yearly' && tier !== 'free' 
+                      ? (tierData.price * 10).toFixed(0) 
+                      : tierData.price}
+                    <span className="text-sm text-gray-400">
+                      /{billingPeriod === 'yearly' ? 'year' : 'mo'}
+                    </span>
                   </div>
+                  {billingPeriod === 'yearly' && tier !== 'free' && (
+                    <p className="text-xs text-cyan-400 mt-1">
+                      (${(tierData.price * 10 / 12).toFixed(2)}/mo)
+                    </p>
+                  )}
                 </div>
 
                 <ul className="space-y-3 mb-6">
@@ -82,13 +150,11 @@ export default function UpgradePrompt({ currentTier, onClose }: UpgradePromptPro
                   </button>
                 ) : (
                   <button
-                    onClick={() => {
-                      alert(`Stripe integration coming soon! You selected ${tierData.name} - $${tierData.price}/mo`)
-                      onClose()
-                    }}
-                    className="w-full py-3 rounded-lg bg-gradient-to-r from-purple-500 to-cyan-500 text-white font-semibold hover:from-purple-600 hover:to-cyan-600 transition-all shadow-lg hover:shadow-purple-500/50"
+                    onClick={() => handleUpgrade(tier)}
+                    disabled={loading === tier}
+                    className="w-full py-3 rounded-lg bg-gradient-to-r from-purple-500 to-cyan-500 text-white font-semibold hover:from-purple-600 hover:to-cyan-600 transition-all shadow-lg hover:shadow-purple-500/50 disabled:opacity-50"
                   >
-                    Upgrade to {tierData.name}
+                    {loading === tier ? 'Loading...' : `Upgrade to ${tierData.name}`}
                   </button>
                 )}
               </div>
