@@ -17,8 +17,8 @@ export default function UpgradePrompt({ currentTier, onClose }: UpgradePromptPro
     setLoading(tier)
     try {
       const priceKey = tier === 'pro' 
-        ? (billingPeriod === 'monthly' ? 'PRO_MONTHLY' : 'PRO_YEARLY')
-        : (billingPeriod === 'monthly' ? 'PREMIUM_MONTHLY' : 'PREMIUM_YEARLY')
+        ? (billingPeriod === 'monthly' ? 'pro_monthly' : 'pro_yearly')
+        : (billingPeriod === 'monthly' ? 'premium_monthly' : 'premium_yearly')
 
       const response = await fetch('/api/create-checkout', {
         method: 'POST',
