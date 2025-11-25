@@ -9,6 +9,12 @@ const COLS = [
   { title: 'Built With', items: ['⚡ Next.js 16', '🤖 DALL-E 3', '🔐 Clerk Auth', '💳 Stripe'] },
 ]
 
+const SOCIAL_LINKS = [
+  { href: 'https://twitter.com/intent/tweet?text=Check%20out%20The%20Dream%20Machine%20-%20turn%20your%20dreams%20into%20comics!', icon: '🐦', label: 'Twitter' },
+  { href: 'https://www.facebook.com/sharer/sharer.php?u=https://thedreammachine.app', icon: '📘', label: 'Facebook' },
+  { href: 'https://www.reddit.com/submit?title=The%20Dream%20Machine%20-%20AI%20Dream%20Comics', icon: '🔴', label: 'Reddit' },
+]
+
 export default function Footer() {
   return (
     <footer className="mt-auto py-8 px-8 border-t" style={{ background: colors.backgroundDark, borderColor: colors.border }}>
@@ -30,10 +36,17 @@ export default function Footer() {
         </div>
         <div className="pt-6 border-t flex flex-col md:flex-row justify-between items-center gap-4" style={{ borderColor: colors.border }}>
           <p className="text-sm" style={{ color: colors.textMuted }}>© {new Date().getFullYear()} The Dream Machine. Made with 💜 for dreamers everywhere.</p>
-          <div className="flex gap-6 text-sm">
-            {[{ href: '/privacy', label: 'Privacy' }, { href: '/terms', label: 'Terms' }, { href: 'mailto:support@dreamorganizer.app', label: 'Contact' }].map(l => (
-              <Link key={l.href} href={l.href} className="hover:opacity-80 transition-opacity" style={{ color: colors.textMuted }}>{l.label}</Link>
-            ))}
+          <div className="flex items-center gap-4">
+            <div className="flex gap-3">
+              {SOCIAL_LINKS.map(s => (
+                <a key={s.label} href={s.href} target="_blank" rel="noopener noreferrer" className="text-xl hover:scale-125 transition-transform" title={s.label}>{s.icon}</a>
+              ))}
+            </div>
+            <div className="flex gap-6 text-sm">
+              {[{ href: '/privacy', label: 'Privacy' }, { href: '/terms', label: 'Terms' }, { href: 'mailto:support@dreamorganizer.app', label: 'Contact' }].map(l => (
+                <Link key={l.href} href={l.href} className="hover:opacity-80 transition-opacity" style={{ color: colors.textMuted }}>{l.label}</Link>
+              ))}
+            </div>
           </div>
         </div>
       </div>

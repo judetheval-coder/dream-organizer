@@ -1,17 +1,53 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useUser } from '@clerk/nextjs'
 import { colors, gradients, shadows } from '@/lib/design'
 import { Card, Chip, Button } from '@/components/ui/primitives'
 import { LEADERBOARD, PRIZES, RULES, PAST_WINNERS } from '@/lib/mock-data'
+import { enterContest, getContestEntries, type ContestEntry } from '@/lib/social'
 
 const MEDAL = ['🥇', '🥈', '🥉']
 const MEDAL_BG = ['linear-gradient(135deg, #ffd700, #ffed4a)', 'linear-gradient(135deg, #c0c0c0, #e8e8e8)', 'linear-gradient(135deg, #cd7f32, #daa06d)']
 
 export default function EventsContest() {
+  const { user } = useUser()
   const [tab, setTab] = useState<'leaderboard' | 'prizes' | 'rules'>('leaderboard')
+  const [entries, setEntries] = useState<ContestEntry[]>([])
+  const [showEnterModal, setShowEnterModal] = useState(false)
+  const [dreamTitle, setDreamTitle] = useState('')
+  
   const now = new Date()
   const daysLeft = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate()
+
+  useEffect(() => {
+    // Load contest entries
+    const loadedEntries = getContestEntries()
+    setEntries(loadedEntries)
+  }, [])
+
+  // Combine mock leaderboard with real entries
+  const leaderboardData = entries.length > 0 
+    ? entries.sort((a, b) => b.views - a.views).map((e, i) => ({ ...e, rank: i + 1 }))
+    : LEADERBOARD
+
+  const handleEnterContest = () => {
+    if (!user || !dreamTitle.trim()) return
+    const result = enterContest(
+      `dream-${Date.now()}`,
+      user.id,
+      user.firstName || user.username || 'Dreamer',
+      dreamTitle
+    )
+    if (result.success) {
+      setShowEnterModal(false)
+      setDreamTitle('')
+      setEntries(getContestEntries())
+      alert('🎉 Successfully entered the contest! Share your dream in the Gallery to get views.')
+    } else {
+      alert(result.error)
+    }
+  }
 
   return (
     <div className="space-y-6 max-w-5xl">
@@ -49,8 +85,8 @@ export default function EventsContest() {
       {tab === 'leaderboard' && (
         <Card>
           <div className="space-y-3">
-            {LEADERBOARD.map((e, i) => (
-              <div key={e.id} className="flex items-center gap-4 p-4 rounded-xl transition-all hover:scale-[1.01]" style={{ background: i < 3 ? `${MEDAL_BG[i].replace(')', ', 0.1)')}` : colors.backgroundDark, border: `1px solid ${i < 3 ? ['#ffd700', '#c0c0c0', '#cd7f32'][i] : colors.border}` }}>
+            {leaderboardData.map((e, i) => (
+              <div key={('dreamId' in e ? e.dreamId : e.id) || i} className="flex items-center gap-4 p-4 rounded-xl transition-all hover:scale-[1.01]" style={{ background: i < 3 ? `${MEDAL_BG[i].replace(')', ', 0.1)')}` : colors.backgroundDark, border: `1px solid ${i < 3 ? ['#ffd700', '#c0c0c0', '#cd7f32'][i] : colors.border}` }}>
                 <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl" style={{ background: i < 3 ? MEDAL_BG[i] : colors.surface, color: i < 3 ? colors.backgroundDark : colors.textMuted }}>{e.rank}</div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
@@ -58,7 +94,7 @@ export default function EventsContest() {
                     <span className="font-bold" style={{ color: colors.textPrimary }}>{e.username}</span>
                     {i < 3 && <span className="text-lg">{MEDAL[i]}</span>}
                   </div>
-                  <p className="text-sm" style={{ color: colors.textMuted }}>"{e.dreamTitle}"</p>
+                  <p className="text-sm" style={{ color: colors.textMuted }}>&quot;{e.dreamTitle}&quot;</p>
                 </div>
                 <div className="text-right">
                   <p className="text-xl font-bold" style={{ color: colors.cyan }}>{e.views.toLocaleString()} <span className="text-sm font-normal">views</span></p>
@@ -68,10 +104,40 @@ export default function EventsContest() {
             ))}
           </div>
           <div className="mt-6 text-center">
-            <Button>🌟 Enter Contest - Share Your Dream</Button>
+            <Button onClick={() => setShowEnterModal(true)}>🌟 Enter Contest - Share Your Dream</Button>
             <p className="mt-2 text-sm" style={{ color: colors.textMuted }}>Share a dream publicly in the Gallery to compete</p>
           </div>
         </Card>
+      )}
+
+      {/* Enter Contest Modal */}
+      {showEnterModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="rounded-2xl p-6 max-w-md w-full" style={{ background: colors.surface, border: `2px solid ${colors.purple}` }}>
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold" style={{ color: colors.textPrimary }}>🏆 Enter Contest</h3>
+              <button onClick={() => setShowEnterModal(false)} className="text-2xl" style={{ color: colors.textMuted }}>×</button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: colors.textSecondary }}>Dream Title</label>
+                <input 
+                  type="text" 
+                  value={dreamTitle} 
+                  onChange={e => setDreamTitle(e.target.value)} 
+                  placeholder="My Epic Flying Dream" 
+                  className="w-full px-4 py-3 rounded-xl border outline-none" 
+                  style={{ background: colors.background, borderColor: colors.border, color: colors.textPrimary }} 
+                />
+              </div>
+              <p className="text-sm" style={{ color: colors.textMuted }}>
+                Your dream will be shared publicly in the Gallery where other users can view it. 
+                The more views you get, the higher you&apos;ll rank!
+              </p>
+              <Button onClick={handleEnterContest} className="w-full">Submit Entry</Button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Prizes */}

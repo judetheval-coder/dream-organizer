@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from "react"
 import Image from "next/image"
 import { colors, shadows, typography } from "@/lib/design"
 import { optimizePromptForDalle } from "@/lib/gpt-helpers"
+import { shareDream } from "@/lib/social"
 import { Button } from "./ui/primitives"
 
 const FRAMES = {
@@ -33,6 +34,7 @@ export default function Panel({ description, style, mood, onImageReady, generate
   const [tilt, setTilt] = useState({ x: 0, y: 0 })
   const [scale, setScale] = useState(1)
   const [isDragging, setIsDragging] = useState(false)
+  const [showShareMenu, setShowShareMenu] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const touchDist = useRef<number | null>(null)
 
@@ -138,6 +140,16 @@ export default function Panel({ description, style, mood, onImageReady, generate
             <div className="flex gap-2 flex-wrap justify-center">
               <button onClick={() => { const a = document.createElement('a'); a.href = image; a.download = `dream-panel-${Date.now()}.png`; a.click() }} className="px-3 py-2 font-semibold rounded-lg text-sm backdrop-blur-sm hover:scale-105 transition-all" style={btnStyle(`${colors.cyan}dd`)}>📥 Download</button>
               <button onClick={() => navigator.clipboard.writeText(image).then(() => alert('Copied!'), () => alert('Failed'))} className="px-3 py-2 font-semibold rounded-lg text-sm backdrop-blur-sm hover:scale-105 transition-all" style={btnStyle(`${colors.purple}dd`)}>📋 Copy</button>
+              <div className="relative">
+                <button onClick={() => setShowShareMenu(!showShareMenu)} className="px-3 py-2 font-semibold rounded-lg text-sm backdrop-blur-sm hover:scale-105 transition-all" style={btnStyle(`${colors.pink}dd`)}>📤 Share</button>
+                {showShareMenu && (
+                  <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 p-2 rounded-lg flex gap-2" style={{ background: colors.surface }}>
+                    <button onClick={() => { shareDream('twitter', { title: 'My Dream Comic', description, imageUrl: image }); setShowShareMenu(false) }} className="p-2 rounded-lg hover:scale-110 transition-all" title="Share on Twitter">🐦</button>
+                    <button onClick={() => { shareDream('facebook', { title: 'My Dream Comic', description, imageUrl: image }); setShowShareMenu(false) }} className="p-2 rounded-lg hover:scale-110 transition-all" title="Share on Facebook">📘</button>
+                    <button onClick={() => { shareDream('pinterest', { title: 'My Dream Comic', description, imageUrl: image }); setShowShareMenu(false) }} className="p-2 rounded-lg hover:scale-110 transition-all" title="Share on Pinterest">📌</button>
+                  </div>
+                )}
+              </div>
               <button onClick={del} className="px-3 py-2 font-semibold rounded-lg text-sm backdrop-blur-sm hover:scale-105 transition-all" style={btnStyle('#dc2626dd')}>🗑️ Delete</button>
             </div>
             <Button onClick={generate}>🔄 Regenerate</Button>

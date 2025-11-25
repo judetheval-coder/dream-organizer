@@ -1,18 +1,25 @@
 "use client"
 
 import { useState } from 'react'
+import { useUser } from '@clerk/nextjs'
 import { colors, gradients } from '@/lib/design'
 import { Card, Chip, Button } from '@/components/ui/primitives'
 import { SUBSCRIPTION_TIERS } from '@/lib/subscription-tiers'
 import { GIFT_OPTIONS, type GiftDuration } from '@/lib/mock-data'
+import { purchaseGiftSubscription } from '@/lib/social'
 
-export default function GiftSubscriptions({ onPurchase }: { onPurchase?: (tier: string, duration: GiftDuration, email: string, msg: string) => void }) {
+export default function GiftSubscriptions() {
+  const { user } = useUser()
+  const userId = user?.id || 'anonymous'
+
   const [tier, setTier] = useState<'pro' | 'premium'>('pro')
   const [duration, setDuration] = useState<GiftDuration>('3_months')
   const [email, setEmail] = useState('')
   const [msg, setMsg] = useState('')
   const [delivery, setDelivery] = useState<'now' | 'scheduled'>('now')
   const [schedDate, setSchedDate] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState<{ giftCode: string } | null>(null)
 
   const opt = GIFT_OPTIONS.find(o => o.duration === duration)!
   const base = (tier === 'pro' ? SUBSCRIPTION_TIERS.pro : SUBSCRIPTION_TIERS.premium).price * opt.months
@@ -20,6 +27,44 @@ export default function GiftSubscriptions({ onPurchase }: { onPurchase?: (tier: 
   const total = base - savings
 
   const inp = { background: colors.background, borderColor: colors.border, color: colors.textPrimary }
+
+  const handlePurchase = async () => {
+    if (!email) return
+    setLoading(true)
+    try {
+      const result = await purchaseGiftSubscription(
+        userId,
+        email,
+        tier,
+        duration,
+        msg,
+        delivery === 'scheduled' ? schedDate : undefined
+      )
+      if (result.success && result.giftCode) {
+        setSuccess({ giftCode: result.giftCode })
+      } else {
+        alert(result.error || 'Failed to purchase gift')
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (success) {
+    return (
+      <div className="max-w-md mx-auto text-center space-y-6">
+        <span className="text-6xl block">🎉</span>
+        <h2 className="text-3xl font-bold" style={{ color: colors.textPrimary }}>Gift Purchased!</h2>
+        <p style={{ color: colors.textSecondary }}>Your gift has been sent to <strong>{email}</strong></p>
+        <div className="p-6 rounded-xl" style={{ background: colors.surface, border: `2px solid ${colors.cyan}` }}>
+          <p className="text-sm mb-2" style={{ color: colors.textMuted }}>Gift Code</p>
+          <p className="text-2xl font-mono font-bold tracking-wider" style={{ color: colors.cyan }}>{success.giftCode}</p>
+        </div>
+        <p className="text-sm" style={{ color: colors.textMuted }}>The recipient will receive an email with instructions to redeem their gift.</p>
+        <Button onClick={() => { setSuccess(null); setEmail(''); setMsg('') }}>Send Another Gift</Button>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-8 max-w-4xl mx-auto">
@@ -109,7 +154,9 @@ export default function GiftSubscriptions({ onPurchase }: { onPurchase?: (tier: 
             <span className="font-bold text-xl" style={{ color: colors.purple }}>${total.toFixed(2)}</span>
           </div>
         </div>
-        <button onClick={() => onPurchase?.(tier, duration, email, msg)} disabled={!email} className="w-full mt-6 py-4 rounded-xl font-bold text-lg transition-all hover:scale-[1.02] disabled:opacity-50" style={{ background: gradients.button, color: colors.white }}>🎁 Purchase Gift</button>
+        <button onClick={handlePurchase} disabled={!email || loading} className="w-full mt-6 py-4 rounded-xl font-bold text-lg transition-all hover:scale-[1.02] disabled:opacity-50" style={{ background: gradients.button, color: colors.white }}>
+          {loading ? '⏳ Processing...' : '🎁 Purchase Gift'}
+        </button>
         <p className="text-xs text-center mt-3" style={{ color: colors.textMuted }}>Gift codes never expire. Recipient will receive an email with redemption instructions.</p>
       </Card>
     </div>

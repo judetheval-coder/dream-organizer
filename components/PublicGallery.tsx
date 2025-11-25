@@ -1,40 +1,21 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useUser } from '@clerk/nextjs'
 import Image from 'next/image'
 import { colors, gradients } from '@/lib/design'
 import Card from '@/components/ui/Card'
-
-export type PublicDream = {
-  id: string
-  userId: string
-  username: string
-  avatar?: string
-  dreamText: string
-  panels: Array<{
-    id: string
-    imageUrl: string
-    description: string
-  }>
-  style: string
-  mood: string
-  createdAt: string
-  reactions: {
-    like: number
-    wow: number
-    scary: number
-    funny: number
-  }
-  comments: number
-  isFollowing?: boolean
-}
+import { 
+  fetchPublicDreams, 
+  reactToDream, 
+  followUser, 
+  unfollowUser, 
+  getFollowing,
+  type PublicDream 
+} from '@/lib/social'
 
 interface PublicGalleryProps {
-  dreams: PublicDream[]
-  onReact?: (dreamId: string, reaction: keyof PublicDream['reactions']) => void
-  onFollow?: (userId: string) => void
-  onComment?: (dreamId: string) => void
-  currentUserId?: string
+  initialDreams?: PublicDream[]
 }
 
 const REACTION_EMOJIS = {
@@ -44,17 +25,95 @@ const REACTION_EMOJIS = {
   funny: '😂',
 }
 
-export default function PublicGallery({ 
-  dreams, 
-  onReact, 
-  onFollow, 
-  onComment,
-  currentUserId 
-}: PublicGalleryProps) {
+export default function PublicGallery({ initialDreams = [] }: PublicGalleryProps) {
+  const { user } = useUser()
+  const currentUserId = user?.id
+  
+  const [dreams, setDreams] = useState<PublicDream[]>(initialDreams)
   const [selectedDream, setSelectedDream] = useState<string | null>(null)
   const [filter, setFilter] = useState<'trending' | 'recent' | 'following'>('trending')
+  const [loading, setLoading] = useState(true)
+  const [following, setFollowing] = useState<string[]>([])
 
-  const filteredDreams = dreams // Would filter based on 'filter' state in real implementation
+  // Load public dreams on mount
+  useEffect(() => {
+    const loadDreams = async () => {
+      setLoading(true)
+      const publicDreams = await fetchPublicDreams()
+      if (publicDreams.length > 0) {
+        setDreams(publicDreams)
+      }
+      setLoading(false)
+    }
+    loadDreams()
+  }, [])
+
+  // Load following list
+  useEffect(() => {
+    if (currentUserId) {
+      setFollowing(getFollowing(currentUserId))
+    }
+  }, [currentUserId])
+
+  // Update dreams with following status
+  useEffect(() => {
+    setDreams(prev => prev.map(d => ({
+      ...d,
+      isFollowing: following.includes(d.userId)
+    })))
+  }, [following])
+
+  const handleReact = async (dreamId: string, reaction: keyof PublicDream['reactions']) => {
+    if (!currentUserId) return
+    const result = await reactToDream(dreamId, currentUserId, reaction)
+    if (result.success) {
+      setDreams(prev => prev.map(d => {
+        if (d.id === dreamId) {
+          return {
+            ...d,
+            reactions: {
+              ...d.reactions,
+              [reaction]: d.reactions[reaction] + 1
+            }
+          }
+        }
+        return d
+      }))
+    }
+  }
+
+  const handleFollow = async (userId: string) => {
+    if (!currentUserId) return
+    const isCurrentlyFollowing = following.includes(userId)
+    
+    if (isCurrentlyFollowing) {
+      const result = await unfollowUser(currentUserId, userId)
+      if (result.success) {
+        setFollowing(prev => prev.filter(id => id !== userId))
+      }
+    } else {
+      const result = await followUser(currentUserId, userId)
+      if (result.success) {
+        setFollowing(prev => [...prev, userId])
+      }
+    }
+  }
+
+  const handleComment = (dreamId: string) => {
+    alert(`Comments for dream ${dreamId} coming soon!`)
+  }
+
+  const filteredDreams = dreams.filter(d => {
+    if (filter === 'following') return following.includes(d.userId)
+    return true
+  }).sort((a, b) => {
+    if (filter === 'trending') {
+      const aScore = Object.values(a.reactions).reduce((sum, v) => sum + v, 0)
+      const bScore = Object.values(b.reactions).reduce((sum, v) => sum + v, 0)
+      return bScore - aScore
+    }
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  })
 
   return (
     <div className="space-y-6">
@@ -164,7 +223,7 @@ export default function PublicGallery({
                   <button
                     onClick={(e) => {
                       e.stopPropagation()
-                      onFollow?.(dream.userId)
+                      handleFollow(dream.userId)
                     }}
                     className="px-3 py-1 rounded-full text-xs font-medium transition-all"
                     style={{
@@ -191,7 +250,7 @@ export default function PublicGallery({
                       key={type}
                       onClick={(e) => {
                         e.stopPropagation()
-                        onReact?.(dream.id, type as keyof PublicDream['reactions'])
+                        handleReact(dream.id, type as keyof PublicDream['reactions'])
                       }}
                       className="px-2 py-1 rounded-full text-xs flex items-center gap-1 transition-all hover:scale-110"
                       style={{ background: colors.surface }}
@@ -205,7 +264,7 @@ export default function PublicGallery({
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
-                    onComment?.(dream.id)
+                    handleComment(dream.id)
                   }}
                   className="text-xs flex items-center gap-1"
                   style={{ color: colors.textMuted }}
