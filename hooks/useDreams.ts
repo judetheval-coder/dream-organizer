@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { useUser } from '@clerk/nextjs'
 import {
   supabase,
@@ -13,6 +13,10 @@ import {
 } from '@/lib/supabase'
 import { uploadImageFromDataURL, deleteDreamImages } from '@/lib/supabase-storage'
 import type { SubscriptionTier } from '@/lib/subscription-tiers'
+
+// Simple in-memory cache
+const CACHE_TTL = 60 * 1000 // 1 minute
+const dreamCache = new Map<string, { data: DreamWithPanels[]; timestamp: number; cursor: string | null }>()
 
 type PanelInput = {
   description: string
@@ -50,8 +54,28 @@ export function useDreams(): UseDreamsResult {
   const [cursor, setCursor] = useState<string | null>(null)
   const [hasMore, setHasMore] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
+  const fetchIdRef = useRef(0) // Prevent race conditions
 
   const PAGE_SIZE = 10
+
+  // Check cache validity
+  const getCachedDreams = useCallback((userId: string) => {
+    const cached = dreamCache.get(userId)
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL) {
+      return cached
+    }
+    return null
+  }, [])
+
+  // Update cache
+  const updateCache = useCallback((userId: string, data: DreamWithPanels[], newCursor: string | null) => {
+    dreamCache.set(userId, { data, timestamp: Date.now(), cursor: newCursor })
+  }, [])
+
+  // Invalidate cache
+  const invalidateCache = useCallback((userId: string) => {
+    dreamCache.delete(userId)
+  }, [])
 
   // Sync user to Supabase on first load
   useEffect(() => {
@@ -67,13 +91,27 @@ export function useDreams(): UseDreamsResult {
     syncUser()
   }, [user])
 
-  const fetchDreams = async (reset = false) => {
+  const fetchDreams = async (reset = false, skipCache = false) => {
     if (!user) {
       setLoading(false)
       return
     }
+
+    const fetchId = ++fetchIdRef.current
         
     try {
+      // Check cache on initial load
+      if (reset && !skipCache) {
+        const cached = getCachedDreams(user.id)
+        if (cached) {
+          setDreams(cached.data)
+          setCursor(cached.cursor)
+          setHasMore(Boolean(cached.cursor))
+          setLoading(false)
+          return
+        }
+      }
+
       if (reset) {
         setLoading(true)
       } else {
@@ -85,9 +123,18 @@ export function useDreams(): UseDreamsResult {
         cursor: reset ? undefined : cursor ?? undefined,
       })
 
-      setDreams(prev => (reset ? fetchedDreams : [...prev, ...fetchedDreams]))
+      // Prevent race conditions
+      if (fetchId !== fetchIdRef.current) return
+
+      const newDreams = reset ? fetchedDreams : [...dreams, ...fetchedDreams]
+      setDreams(newDreams)
       setCursor(newCursor || null)
       setHasMore(Boolean(newCursor))
+
+      // Update cache on reset
+      if (reset) {
+        updateCache(user.id, fetchedDreams, newCursor || null)
+      }
 
       // Fetch user tier on reset only
       if (reset) {
@@ -123,11 +170,12 @@ export function useDreams(): UseDreamsResult {
 
   const loadMoreDreams = async () => {
     if (!hasMore || loadingMore) return
-    await fetchDreams(false)
+    await fetchDreams(false, true) // Skip cache for pagination
   }
 
   const refreshDreams = async () => {
-    await fetchDreams(true)
+    if (user) invalidateCache(user.id)
+    await fetchDreams(true, true) // Skip cache on manual refresh
   }
 
   const saveDream = async (dreamData: SaveDreamInput) => {
@@ -144,9 +192,10 @@ export function useDreams(): UseDreamsResult {
       // Create panels
       const panels = await createPanels(dream.id, dreamData.panels)
 
-      // Update local state
+      // Update local state and invalidate cache
       const newDream = { ...dream, panels }
       setDreams(prev => [newDream, ...prev])
+      invalidateCache(user.id)
 
       return newDream
     } catch (err) {
@@ -189,7 +238,8 @@ export function useDreams(): UseDreamsResult {
       
       // Then delete dream from database
       await deleteDream(dreamId, user.id)
-        setDreams(prev => prev.filter(d => d.id !== dreamId))
+      setDreams(prev => prev.filter(d => d.id !== dreamId))
+      invalidateCache(user.id)
     } catch (err) {
       console.error('Error deleting dream:', err)
       throw err

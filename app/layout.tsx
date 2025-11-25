@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ClerkProvider } from '@clerk/nextjs'
 import ErrorBoundary from '@/components/ErrorBoundary'
+import { ToastProvider } from '@/contexts/ToastContext'
 import "./globals.css";
 
 const inter = Inter({
@@ -80,7 +81,9 @@ export default function RootLayout({
       <html lang="en">
         <body className={`${inter.variable} font-sans antialiased`}>
           <ErrorBoundary>
-            {children}
+            <ToastProvider>
+              {children}
+            </ToastProvider>
           </ErrorBoundary>
         </body>
       </html>

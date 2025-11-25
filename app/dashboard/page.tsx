@@ -28,6 +28,7 @@ import DreamGroups from '@/components/DreamGroups'
 import GiftSubscriptions from '@/components/GiftSubscriptions'
 import EventsContest from '@/components/EventsContest'
 import { useDreams } from '@/hooks/useDreams'
+import { useToast } from '@/contexts/ToastContext'
 import { canCreateDream, getTierName, getTierFeatures, SUBSCRIPTION_TIERS } from '@/lib/subscription-tiers'
 import type { DreamRecord } from '@/components/dashboard/DreamList'
 import type { DreamWithPanels, Panel } from '@/lib/supabase'
@@ -63,6 +64,7 @@ function DashboardPageContent() {
     removeDream,
     loadMoreDreams,
   } = useDreams()
+  const { showToast } = useToast()
 
   const [dreamText, setDreamText] = useState('')
   const [style, setStyle] = useState('Anime')
@@ -230,8 +232,10 @@ function DashboardPageContent() {
         })),
       })
       setLastCreatedDreamId(createdDream.id)
+      showToast('Dream created! Generating panels...', 'success')
     } catch (err) {
       console.error('Error saving dream:', err)
+      showToast('Failed to create dream', 'error')
     }
   }
 
@@ -314,12 +318,13 @@ function DashboardPageContent() {
     <>
       <DashboardLayout currentTab={currentTab} onTabChange={handleTabChange}>
         {error && (
-          <ErrorBanner title="We couldn’t load your dreams" onRetry={refreshDreams}>
+          <ErrorBanner title="We couldn't load your dreams" onRetry={refreshDreams}>
             {error}
           </ErrorBanner>
         )}
 
-        {currentTab === 'Dashboard' && (
+        <div key={currentTab} className="animate-fadeInUp">
+          {currentTab === 'Dashboard' && (
           <>
             <section aria-labelledby="stats-heading" className="space-y-6">
               <h3 id="stats-heading" className="text-lg font-semibold" style={{ color: colors.textPrimary }}>
@@ -378,8 +383,10 @@ function DashboardPageContent() {
             onRemove={async (dreamId) => {
               try {
                 await removeDream(dreamId)
+                showToast('Dream deleted successfully', 'success')
               } catch (err) {
                 console.error('Error deleting dream:', err)
+                showToast('Failed to delete dream', 'error')
               }
             }}
           />
@@ -781,6 +788,7 @@ function DashboardPageContent() {
         {currentTab === 'Gift' && (
           <GiftSubscriptions />
         )}
+        </div>
 
         <Footer />
       </DashboardLayout>
