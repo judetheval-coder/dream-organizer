@@ -82,7 +82,7 @@ export interface PublicDream {
   style: string
   mood: string
   createdAt: string
-  reactions: { like: number; wow: number; scary: number; funny: number }
+  reactions: { like: number; love: number; wow: number; dream: number; insightful: number }
   comments: number
   isFollowing?: boolean
   isPublic?: boolean
@@ -170,7 +170,7 @@ export async function fetchPublicDreams(currentUserId?: string): Promise<PublicD
       style: d.dreams?.style || '',
       mood: d.dreams?.mood || '',
       createdAt: d.dreams?.created_at || d.published_at,
-      reactions: { like: d.like_count || 0, wow: 0, scary: 0, funny: 0 },
+      reactions: { like: d.like_count || 0, love: 0, wow: 0, dream: 0, insightful: 0 },
       comments: d.comment_count || 0,
       isPublic: true,
       isFollowing: followingList.includes(d.user_id),

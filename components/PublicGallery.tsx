@@ -11,18 +11,20 @@ import {
   followUser, 
   unfollowUser, 
   getFollowing,
-  type PublicDream 
+  type PublicDream,
+  type ReactionType
 } from '@/lib/social'
 
 interface PublicGalleryProps {
   initialDreams?: PublicDream[]
 }
 
-const REACTION_EMOJIS = {
+const REACTION_EMOJIS: Record<ReactionType, string> = {
   like: '❤️',
+  love: '😍',
   wow: '😮',
-  scary: '😱',
-  funny: '😂',
+  dream: '🌙',
+  insightful: '💡',
 }
 
 export default function PublicGallery({ initialDreams = [] }: PublicGalleryProps) {
@@ -51,7 +53,7 @@ export default function PublicGallery({ initialDreams = [] }: PublicGalleryProps
   // Load following list
   useEffect(() => {
     if (currentUserId) {
-      setFollowing(getFollowing(currentUserId))
+      getFollowing(currentUserId).then(setFollowing)
     }
   }, [currentUserId])
 
@@ -63,7 +65,7 @@ export default function PublicGallery({ initialDreams = [] }: PublicGalleryProps
     })))
   }, [following])
 
-  const handleReact = async (dreamId: string, reaction: keyof PublicDream['reactions']) => {
+  const handleReact = async (dreamId: string, reaction: ReactionType) => {
     if (!currentUserId) return
     const result = await reactToDream(dreamId, currentUserId, reaction)
     if (result.success) {
@@ -250,12 +252,12 @@ export default function PublicGallery({ initialDreams = [] }: PublicGalleryProps
                       key={type}
                       onClick={(e) => {
                         e.stopPropagation()
-                        handleReact(dream.id, type as keyof PublicDream['reactions'])
+                        handleReact(dream.id, type as ReactionType)
                       }}
                       className="px-2 py-1 rounded-full text-xs flex items-center gap-1 transition-all hover:scale-110"
                       style={{ background: colors.surface }}
                     >
-                      {REACTION_EMOJIS[type as keyof typeof REACTION_EMOJIS]}
+                      {REACTION_EMOJIS[type as ReactionType]}
                       {count > 0 && <span style={{ color: colors.textMuted }}>{count}</span>}
                     </button>
                   ))}

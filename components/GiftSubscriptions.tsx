@@ -13,7 +13,7 @@ export default function GiftSubscriptions() {
   const userId = user?.id || 'anonymous'
 
   const [tier, setTier] = useState<'pro' | 'premium'>('pro')
-  const [duration, setDuration] = useState<GiftDuration>('3_months')
+  const [duration, setDuration] = useState<'1_month' | '3_months' | '6_months' | '12_months'>('3_months')
   const [email, setEmail] = useState('')
   const [msg, setMsg] = useState('')
   const [delivery, setDelivery] = useState<'now' | 'scheduled'>('now')

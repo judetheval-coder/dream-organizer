@@ -22,8 +22,9 @@ export default function EventsContest() {
 
   useEffect(() => {
     // Load contest entries
-    const loadedEntries = getContestEntries()
-    setEntries(loadedEntries)
+    getContestEntries().then(loadedEntries => {
+      setEntries(loadedEntries)
+    })
   }, [])
 
   // Combine mock leaderboard with real entries
@@ -31,9 +32,9 @@ export default function EventsContest() {
     ? entries.sort((a, b) => b.views - a.views).map((e, i) => ({ ...e, rank: i + 1 }))
     : LEADERBOARD
 
-  const handleEnterContest = () => {
+  const handleEnterContest = async () => {
     if (!user || !dreamTitle.trim()) return
-    const result = enterContest(
+    const result = await enterContest(
       `dream-${Date.now()}`,
       user.id,
       user.firstName || user.username || 'Dreamer',
@@ -42,7 +43,8 @@ export default function EventsContest() {
     if (result.success) {
       setShowEnterModal(false)
       setDreamTitle('')
-      setEntries(getContestEntries())
+      const updated = await getContestEntries()
+      setEntries(updated)
       alert('🎉 Successfully entered the contest! Share your dream in the Gallery to get views.')
     } else {
       alert(result.error)
@@ -86,7 +88,7 @@ export default function EventsContest() {
         <Card>
           <div className="space-y-3">
             {leaderboardData.map((e, i) => (
-              <div key={('dreamId' in e ? e.dreamId : e.id) || i} className="flex items-center gap-4 p-4 rounded-xl transition-all hover:scale-[1.01]" style={{ background: i < 3 ? `${MEDAL_BG[i].replace(')', ', 0.1)')}` : colors.backgroundDark, border: `1px solid ${i < 3 ? ['#ffd700', '#c0c0c0', '#cd7f32'][i] : colors.border}` }}>
+              <div key={String('dreamId' in e ? e.dreamId : e.id) || String(i)} className="flex items-center gap-4 p-4 rounded-xl transition-all hover:scale-[1.01]" style={{ background: i < 3 ? `${MEDAL_BG[i].replace(')', ', 0.1)')}` : colors.backgroundDark, border: `1px solid ${i < 3 ? ['#ffd700', '#c0c0c0', '#cd7f32'][i] : colors.border}` }}>
                 <div className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-xl" style={{ background: i < 3 ? MEDAL_BG[i] : colors.surface, color: i < 3 ? colors.backgroundDark : colors.textMuted }}>{e.rank}</div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">

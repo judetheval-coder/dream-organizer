@@ -42,7 +42,7 @@ export const GIFT_OPTIONS = [
   { duration: '1_month', label: '1 Month', months: 1, discount: 0, popular: false },
   { duration: '3_months', label: '3 Months', months: 3, discount: 10, popular: false },
   { duration: '6_months', label: '6 Months', months: 6, discount: 15, popular: true },
-  { duration: '1_year', label: '1 Year', months: 12, discount: 20, popular: false },
+  { duration: '12_months', label: '1 Year', months: 12, discount: 20, popular: false },
 ] as const
 
 export type GiftDuration = typeof GIFT_OPTIONS[number]['duration']
