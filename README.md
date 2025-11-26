@@ -19,6 +19,16 @@ AI-powered dream tracking and comic generation platform that transforms your dre
 - Python 3.8+ (for local Stable Diffusion server)
 - ~15GB disk space for AI model
 
+## Developer UX: Avoid 'Keep Edits' prompts in VS Code
+
+If you edit files in the repository while the workspace is running external scripts, VS Code may show the "This file has changed on disk" banner with "Keep" and "Undo" buttons. To avoid needing to click "Keep" every time:
+
+- Enable Auto Save in VS Code (File -> Auto Save) or set the following in user/workspace settings:
+  - "files.autoSave": "afterDelay"
+  - "files.autoSaveDelay": 500
+- We added a recommended workspace setting at `.vscode/settings.json` to enable auto-save and hot exit behavior. Please accept or merge this into your workspace settings if you want the behavior applied.
+  - Note: If you prefer different behavior, adjust your VS Code user settings instead.
+
 ### Installation
 
 1. **Install Dependencies**
