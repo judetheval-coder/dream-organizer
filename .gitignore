@@ -69,3 +69,6 @@ app/page-old-backup.jsx
 
 # Vercel
 .vercel
+
+# Environment (do not commit production secrets)
+.env.production
