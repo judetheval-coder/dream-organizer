@@ -68,17 +68,8 @@ function DashboardPageContent() {
     demoCreated,
   } = useDreams()
   const { showToast } = useToast()
-  const [showDevPanel, setShowDevPanel] = useState(false)
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.ctrlKey && e.shiftKey && e.key === '7') {
-        setShowDevPanel(true)
-      }
-    }
-    window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [])
   useEffect(() => {
     // Detect subscription success/cancel after Stripe redirect
     const tab = searchParams.get('tab')
@@ -860,14 +851,6 @@ function DashboardPageContent() {
           currentTier={userTier}
           onClose={() => setShowUpgrade(false)}
         />
-      )}
-
-      {showDevPanel && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="w-full max-w-4xl">
-            <DevPanel onClose={() => setShowDevPanel(false)} />
-          </div>
-        </div>
       )}
     </>
   )
