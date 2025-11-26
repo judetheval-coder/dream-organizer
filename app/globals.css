@@ -23,34 +23,39 @@
 
 body {
   background: var(--dark-bg);
+  /* toned down background to reduce visual noise */
   background-image: 
-    radial-gradient(at 0% 0%, rgba(91,44,252,0.2) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(3,218,198,0.15) 0px, transparent 50%);
+    radial-gradient(at 0% 0%, rgba(91,44,252,0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(3,218,198,0.06) 0px, transparent 50%);
   background-attachment: fixed;
   color: var(--text-primary);
   font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
   min-height: 100vh;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Glassmorphic panel styling */
 .comic-frame {
-  background: rgba(30, 30, 30, 0.7);
-  backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(30, 30, 30, 0.78);
+  /* subtle blur for better clarity */
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   box-shadow: 
-    0 8px 32px rgba(91, 44, 252, 0.2),
-    0 0 0 1px rgba(138, 43, 226, 0.1),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    0 6px 18px rgba(91, 44, 252, 0.12),
+    0 0 0 1px rgba(138, 43, 226, 0.06),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .comic-frame:hover {
   transform: translateY(-2px);
   box-shadow: 
-    0 12px 48px rgba(91, 44, 252, 0.3),
-    0 0 0 1px rgba(138, 43, 226, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
-  border-color: rgba(138, 43, 226, 0.3);
+    0 10px 30px rgba(91, 44, 252, 0.16),
+    0 0 0 1px rgba(138, 43, 226, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  border-color: rgba(138, 43, 226, 0.18);
 }
 
 /* Dragging visual */
@@ -65,6 +70,13 @@ body {
 /* Smooth animations */
 * {
   transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Accessible focus outlines for interactive elements */
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: 3px solid rgba(124, 58, 237, 0.18);
+  outline-offset: 3px;
+  border-radius: 0.5rem;
 }
 
 /* Custom scrollbar */
@@ -203,6 +215,15 @@ button:active:not(:disabled) {
 
 .btn-hover:hover::after {
   transform: translateX(100%);
+}
+
+/* Utility container for consistent page padding */
+.container {
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
 /* Card hover lift */

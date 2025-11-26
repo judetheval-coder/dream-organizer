@@ -54,7 +54,7 @@ export async function syncUserToSupabase(userId: string, email: string): Promise
   }
 
   // If the user is newly created and demo onboarding is enabled, create a sample dream
-  let demoCreated = false
+  const demoCreated = false
   if (!existingUser && process.env.ENABLE_DEMO_DREAM) {
     try {
       const demoText = process.env.DEMO_DREAM_TEXT || 'I was on a mountaintop that felt like the inside of a crystal.'

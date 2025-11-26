@@ -65,7 +65,7 @@ export function Button({ variant = 'primary', size = 'md', icon, className = '',
   return (
     <button
       {...props}
-      className={`rounded-xl font-semibold transition-all hover:scale-105 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[rgba(6,182,212,0.25)] ${BTN_SIZES[size]} ${className}`}
+      className={`rounded-xl font-semibold transition-all disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[rgba(6,182,212,0.25)] hover:opacity-95 ${BTN_SIZES[size]} ${className}`}
       style={BTN_STYLES[variant]}
     >
       {icon && <span className="mr-2">{icon}</span>}{children}
