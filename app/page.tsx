@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { analytics } from '@/lib/analytics'
 import { useUser } from '@clerk/nextjs'
 import Link from 'next/link'
 import SignUpModal from '@/components/SignUpModal'
@@ -252,7 +253,7 @@ export default function LandingPage() {
               </Link>
             ) : (
               <button
-                onClick={() => setSignupOpen(true)}
+                onClick={() => { analytics.track('signup_prompt_opened'); setSignupOpen(true) }}
                 className="px-8 py-4 rounded-xl font-bold text-lg transition-all hover:scale-105 hover:shadow-2xl"
                 style={{ background: gradients.button, color: colors.white, boxShadow: shadows.glow }}
               >

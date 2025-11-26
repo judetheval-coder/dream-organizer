@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe'
+import { captureException } from '@/lib/sentry'
 import { supabase } from '@/lib/supabase'
 import type { SubscriptionTier } from '@/lib/subscription-tiers'
+import { checkRateLimit } from '@/lib/rate-limiter'
 
-const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!
+export const runtime = 'nodejs'
+
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET
 
 // Map Stripe price IDs to subscription tiers
 function getTierFromPriceId(priceId: string): SubscriptionTier {
@@ -25,8 +29,22 @@ export async function POST(req: NextRequest) {
   const body = await req.text()
   const signature = req.headers.get('stripe-signature')
 
+  if (!webhookSecret) {
+    return NextResponse.json({ error: 'Server misconfigured: missing STRIPE_WEBHOOK_SECRET' }, { status: 500 })
+  }
+
   if (!signature) {
     return NextResponse.json({ error: 'Missing signature' }, { status: 400 })
+  }
+
+  // lightweight rate limit based on Stripe event ID or IP
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || '0.0.0.0'
+  const { allowed, headers } = checkRateLimit(`stripe_webhook:${ip}`, 60, 60_000)
+  if (!allowed) {
+    return new NextResponse(JSON.stringify({ error: 'Too Many Requests' }), {
+      status: 429,
+      headers,
+    })
   }
 
   const stripe = getStripe()
@@ -35,6 +53,7 @@ export async function POST(req: NextRequest) {
   try {
     event = stripe.webhooks.constructEvent(body, signature, webhookSecret)
   } catch (err) {
+    captureException(err)
     console.error('Webhook signature verification failed:', err)
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
@@ -158,8 +177,11 @@ export async function POST(req: NextRequest) {
         break
     }
 
-    return NextResponse.json({ received: true })
+    const res = NextResponse.json({ received: true })
+    Object.entries(headers).forEach(([k, v]) => res.headers.set(k, v))
+    return res
   } catch (error) {
+    captureException(error)
     console.error('Webhook handler error:', error)
     return NextResponse.json(
       { error: 'Webhook handler failed' },

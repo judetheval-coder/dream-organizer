@@ -13,6 +13,7 @@ const STATIC_ASSETS = [
   '/icon-512.png',
   '/apple-touch-icon.png',
   '/favicon.ico',
+  '/offline.html',
 ]
 
 // API routes that should use network-first strategy
@@ -47,6 +48,21 @@ self.addEventListener('activate', (event) => {
 })
 
 // Fetch event - serve from cache, fallback to network
+// Helper to respond with offline fallback
+async function offlineResponse(request) {
+  if (request.mode === 'navigate') {
+    const cache = await caches.open(STATIC_CACHE)
+    return cache.match('/offline.html') || new Response('Offline', { status: 503 })
+  }
+
+  if (request.destination === 'image') {
+    const cache = await caches.open(STATIC_CACHE)
+    return cache.match('/icon-192.png') || new Response('', { status: 503 })
+  }
+
+  return new Response('Offline', { status: 503 })
+}
+
 self.addEventListener('fetch', (event) => {
   const { request } = event
   const url = new URL(request.url)
@@ -57,8 +73,18 @@ self.addEventListener('fetch', (event) => {
   // Skip external requests
   if (url.origin !== location.origin) return
 
-  // Skip API routes - always use network
+  // Use network-first for API routes to always try the server first
   if (API_ROUTES.some(route => url.pathname.startsWith(route))) {
+    event.respondWith(
+      fetch(request).then((networkResponse) => {
+        // cache successful GET responses for later
+        if (request.method === 'GET' && networkResponse.ok) {
+          const clone = networkResponse.clone()
+          caches.open(DYNAMIC_CACHE).then(cache => cache.put(request, clone))
+        }
+        return networkResponse
+      }).catch(() => caches.match(request).then(r => r || offlineResponse(request)))
+    )
     return
   }
 
@@ -92,13 +118,7 @@ self.addEventListener('fetch', (event) => {
           })
         }
         return networkResponse
-      }).catch(() => {
-        // Return offline fallback for navigation requests
-        if (request.mode === 'navigate') {
-          return caches.match('/') || new Response('Offline', { status: 503 })
-        }
-        return new Response('Offline', { status: 503 })
-      })
+      }).catch(() => offlineResponse(request))
     })
   )
 })
@@ -107,6 +127,14 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('sync', (event) => {
   if (event.tag === 'sync-dreams') {
     event.waitUntil(syncDreams())
+  }
+})
+
+// Listen for skip waiting messages from clients
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    // @ts-ignore
+    self.skipWaiting()
   }
 })
 

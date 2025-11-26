@@ -21,11 +21,14 @@ type PanelProps = {
   generateDelay?: number; shouldGenerate?: boolean; image?: string; frameStyle?: FrameStyle
   enableEffects?: boolean; draggable?: boolean; onDragStart?: (e: React.DragEvent) => void
   onDragOver?: (e: React.DragEvent) => void; onDrop?: (e: React.DragEvent) => void; dragIndex?: number
+  // Optional dream id (either as dreamId or legacy dream_id when props are spread)
+  dreamId?: string | number;
+  dream_id?: string | number;
 }
 
 const IMG_STORE = "dream-organizer-panel-images"
 
-export default function Panel({ description, style, mood, onImageReady, generateDelay = 0, shouldGenerate = true, image: initialImage = "", frameStyle = 'glow', enableEffects = true, draggable = false, onDragStart, onDragOver, onDrop, dragIndex }: PanelProps) {
+export default function Panel({ description, style, mood, onImageReady, generateDelay = 0, shouldGenerate = true, image: initialImage = "", frameStyle = 'glow', enableEffects = true, draggable = false, onDragStart, onDragOver, onDrop, dragIndex, dreamId, dream_id }: PanelProps) {
   const [image, setImage] = useState(initialImage)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -93,6 +96,7 @@ export default function Panel({ description, style, mood, onImageReady, generate
   }
 
   const btnStyle = (bg: string) => ({ background: bg, color: bg.includes('dc2626') ? 'white' : colors.background })
+  const internalDreamId = dreamId ?? dream_id
 
   return (
     <div
@@ -144,9 +148,9 @@ export default function Panel({ description, style, mood, onImageReady, generate
                 <button onClick={() => setShowShareMenu(!showShareMenu)} className="px-3 py-2 font-semibold rounded-lg text-sm backdrop-blur-sm hover:scale-105 transition-all" style={btnStyle(`${colors.pink}dd`)}>📤 Share</button>
                 {showShareMenu && (
                   <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 p-2 rounded-lg flex gap-2" style={{ background: colors.surface }}>
-                    <button onClick={() => { shareDream('twitter', { title: 'My Dream Comic', description, imageUrl: image }); setShowShareMenu(false) }} className="p-2 rounded-lg hover:scale-110 transition-all" title="Share on Twitter">🐦</button>
-                    <button onClick={() => { shareDream('facebook', { title: 'My Dream Comic', description, imageUrl: image }); setShowShareMenu(false) }} className="p-2 rounded-lg hover:scale-110 transition-all" title="Share on Facebook">📘</button>
-                    <button onClick={() => { shareDream('pinterest', { title: 'My Dream Comic', description, imageUrl: image }); setShowShareMenu(false) }} className="p-2 rounded-lg hover:scale-110 transition-all" title="Share on Pinterest">📌</button>
+                    <button onClick={() => { shareDream('twitter', { title: 'My Dream Comic', description, imageUrl: image, dreamId: internalDreamId?.toString() }); setShowShareMenu(false) }} className="p-2 rounded-lg hover:scale-110 transition-all" title="Share on Twitter">🐦</button>
+                    <button onClick={() => { shareDream('facebook', { title: 'My Dream Comic', description, imageUrl: image, dreamId: internalDreamId?.toString() }); setShowShareMenu(false) }} className="p-2 rounded-lg hover:scale-110 transition-all" title="Share on Facebook">📘</button>
+                    <button onClick={() => { shareDream('pinterest', { title: 'My Dream Comic', description, imageUrl: image, dreamId: internalDreamId?.toString() }); setShowShareMenu(false) }} className="p-2 rounded-lg hover:scale-110 transition-all" title="Share on Pinterest">📌</button>
                   </div>
                 )}
               </div>

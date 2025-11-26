@@ -10,17 +10,21 @@ export interface ShareOptions {
   title: string
   description: string
   imageUrl?: string
+  dreamId?: string
   url?: string
 }
 
 export async function shareDream(platform: SharePlatform, options: ShareOptions): Promise<boolean> {
-  const { title, description, imageUrl, url = window.location.href } = options
+  const { title, description, imageUrl, url, dreamId } = options
+  const envBase = typeof window !== 'undefined' && (window.location?.origin) ? window.location.origin : process.env.NEXT_PUBLIC_APP_URL || ''
+  const canonical = url || (dreamId ? `${envBase}/public/dreams/${dreamId}` : window.location.href)
+  const finalUrl = canonical
   const text = `${title}\n\n${description}`
 
   switch (platform) {
     case 'twitter':
       window.open(
-        `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`,
+        `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(finalUrl)}`,
         '_blank',
         'width=600,height=400'
       )
@@ -28,7 +32,7 @@ export async function shareDream(platform: SharePlatform, options: ShareOptions)
 
     case 'facebook':
       window.open(
-        `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}&quote=${encodeURIComponent(text)}`,
+        `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(finalUrl)}&quote=${encodeURIComponent(text)}`,
         '_blank',
         'width=600,height=400'
       )
@@ -37,7 +41,7 @@ export async function shareDream(platform: SharePlatform, options: ShareOptions)
     case 'pinterest':
       if (imageUrl) {
         window.open(
-          `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(url)}&media=${encodeURIComponent(imageUrl)}&description=${encodeURIComponent(text)}`,
+          `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(finalUrl)}&media=${encodeURIComponent(imageUrl)}&description=${encodeURIComponent(text)}`,
           '_blank',
           'width=600,height=400'
         )
@@ -47,7 +51,7 @@ export async function shareDream(platform: SharePlatform, options: ShareOptions)
 
     case 'copy':
       try {
-        await navigator.clipboard.writeText(`${text}\n\n${url}`)
+        await navigator.clipboard.writeText(`${text}\n\n${finalUrl}`)
         return true
       } catch {
         return false
@@ -177,6 +181,22 @@ export async function fetchPublicDreams(currentUserId?: string): Promise<PublicD
     }))
   } catch {
     return []
+  }
+}
+
+// Check published state for a dream
+export async function isDreamPublished(dreamId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('published_dreams')
+      .select('id')
+      .eq('dream_id', dreamId)
+      .limit(1)
+      .single()
+    if (error) return false
+    return !!data
+  } catch {
+    return false
   }
 }
 

@@ -5,6 +5,8 @@ import { validateImageGenerationInput } from '@/lib/validation'
 import { checkRateLimit } from '@/lib/rate-limiter'
 import { captureException } from '@/lib/sentry'
 
+export const runtime = 'nodejs'
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });

@@ -1,11 +1,16 @@
-import type { Metadata } from "next";
+but import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { ClerkProvider } from '@clerk/nextjs'
+import { validateEnvironment } from '@/lib/env-validation'
+import { PostHogProvider } from '@/lib/analytics'
 import { Analytics } from '@vercel/analytics/next'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import { ServiceWorkerRegistration } from '@/components/ServiceWorker'
 import { ToastProvider } from '@/contexts/ToastContext'
 import "./globals.css";
+
+const CLERK_ENABLED = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY)
+const MaybeClerk: any = CLERK_ENABLED ? ClerkProvider : (({ children }: any) => <>{children}</>)
 
 const inter = Inter({
   subsets: ["latin"],
@@ -22,7 +27,7 @@ export const metadata: Metadata = {
   authors: [{ name: "The Dream Machine" }],
   creator: "The Dream Machine",
   publisher: "The Dream Machine",
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://dream-organizer.vercel.app"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://lucidlaboratories.net"),
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -78,19 +83,28 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Run environment validation (server-side) to catch missing/invalid config early
+  validateEnvironment()
+
   return (
-    <ClerkProvider>
+    <MaybeClerk>
       <html lang="en">
+        <head>
+          {/* Performance preconnects */}
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+          <link rel="preconnect" href="https://app.posthog.com" />
+        </head>
         <body className={`${inter.variable} font-sans antialiased`}>
           <ErrorBoundary>
             <ToastProvider>
-              {children}
+              <PostHogProvider>{children}</PostHogProvider>
             </ToastProvider>
           </ErrorBoundary>
           <ServiceWorkerRegistration />
           <Analytics />
         </body>
       </html>
-    </ClerkProvider>
+    </MaybeClerk>
   );
 }

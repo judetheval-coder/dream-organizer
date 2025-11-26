@@ -1,6 +1,8 @@
 "use client"
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
+import { useUser } from '@clerk/nextjs'
+import { isDreamPublished, publishDreamToGallery, unpublishDreamFromGallery } from '@/lib/social'
 import Card from '@/components/ui/Card'
 import Chip from '@/components/ui/Chip'
 import Skeleton from '@/components/ui/Skeleton'
@@ -41,6 +43,27 @@ interface DreamListProps {
 export function DreamList({ dreams, loading = false, loadingMore = false, hasMore = false, onLoadMore, onRemove }: DreamListProps) {
   const [sort, setSort] = useState<SortOption>('newest')
   const [filter, setFilter] = useState<FilterOption>('all')
+  const { user } = useUser()
+  const [publishedMap, setPublishedMap] = useState<Record<string, boolean>>({})
+
+  useEffect(() => {
+    let mounted = true
+    const loadPublished = async () => {
+      try {
+        const ids = dreams.map(d => d.id)
+        const map: Record<string, boolean> = {}
+        await Promise.all(ids.map(async id => {
+          const published = await isDreamPublished(id)
+          map[id] = published
+        }))
+        if (mounted) setPublishedMap(map)
+      } catch (e) {
+        // noop
+      }
+    }
+    loadPublished()
+    return () => { mounted = false }
+  }, [dreams])
 
   const processedDreams = useMemo(() => {
     let records = [...dreams]
@@ -145,7 +168,28 @@ export function DreamList({ dreams, loading = false, loadingMore = false, hasMor
             </span>
             {dream.mood && <span>• Mood: {dream.mood}</span>}
           </div>
-          {onRemove && (
+            <div className="flex gap-2">
+              {user?.id && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    const id = dream.id
+                    const wasPublished = publishedMap[id]
+                    if (wasPublished) {
+                      const resp = await unpublishDreamFromGallery(id, user.id)
+                      if (resp.success) setPublishedMap(prev => ({ ...prev, [id]: false }))
+                    } else {
+                      const resp = await publishDreamToGallery(id, user.id)
+                      if (resp.success) setPublishedMap(prev => ({ ...prev, [id]: true }))
+                    }
+                  }}
+                  className="text-sm font-semibold underline underline-offset-4"
+                  style={{ color: publishedMap[dream.id] ? '#f87171' : colors.cyan }}
+                >
+                  {publishedMap[dream.id] ? 'Unpublish' : 'Publish'}
+                </button>
+              )}
+              {onRemove && (
             <button
               type="button"
               onClick={() => dream.id && onRemove(dream.id)}
@@ -154,7 +198,8 @@ export function DreamList({ dreams, loading = false, loadingMore = false, hasMor
             >
               Delete dream
             </button>
-          )}
+              )}
+            </div>
         </Card>
       ))}
 

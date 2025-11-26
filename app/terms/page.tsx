@@ -226,8 +226,8 @@ export default function TermsPage() {
             <p>
               For questions about these terms, contact us at:
             </p>
-            <p style={{ color: colors.cyan }}>
-              legal@dreamorganizer.app
+              <p style={{ color: colors.cyan }}>
+                support@lucidlaboratories.net
             </p>
           </section>
         </div>

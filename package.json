@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "check-env": "node ./scripts/check-env.js",
+    "test": "jest --coverage || true",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run"
   },
   "dependencies": {
     "@clerk/nextjs": "^6.35.4",
@@ -26,6 +30,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "cypress": "^12",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

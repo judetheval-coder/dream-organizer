@@ -1,6 +1,8 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 
+const CLERK_ENABLED = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY)
+
 // Routes that require authentication
 const isProtectedRoute = createRouteMatcher([
   '/dashboard(.*)',
@@ -27,6 +29,11 @@ const isPublicRoute = createRouteMatcher([
 ])
 
 export default clerkMiddleware(async (auth, req) => {
+  // If Clerk is not configured, skip auth logic to avoid breaking deploy previews
+  if (!CLERK_ENABLED) {
+    return
+  }
+
   // Allow public routes without auth
   if (isPublicRoute(req)) {
     return

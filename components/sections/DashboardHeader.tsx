@@ -40,10 +40,6 @@ const HEADLINES: Record<DashboardTab, { title: string; subtitle: string }> = {
     title: '✨ Dream Insights',
     subtitle: 'Analyze patterns in your dreams',
   },
-  'Gift': {
-    title: '🎁 Gift a Subscription',
-    subtitle: 'Share the magic of dreams with someone special',
-  },
   'Subscription': {
     title: '💎 Subscription Plans',
     subtitle: 'Manage your plan and features',

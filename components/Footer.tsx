@@ -11,7 +11,7 @@ const COLS = [
 
 const SOCIAL_LINKS = [
   { href: 'https://twitter.com/intent/tweet?text=Check%20out%20The%20Dream%20Machine%20-%20turn%20your%20dreams%20into%20comics!', icon: '🐦', label: 'Twitter' },
-  { href: 'https://www.facebook.com/sharer/sharer.php?u=https://thedreammachine.app', icon: '📘', label: 'Facebook' },
+  { href: 'https://www.facebook.com/sharer/sharer.php?u=https://lucidlaboratories.net', icon: '📘', label: 'Facebook' },
   { href: 'https://www.reddit.com/submit?title=The%20Dream%20Machine%20-%20AI%20Dream%20Comics', icon: '🔴', label: 'Reddit' },
 ]
 
@@ -43,7 +43,7 @@ export default function Footer() {
               ))}
             </div>
             <div className="flex gap-6 text-sm">
-              {[{ href: '/privacy', label: 'Privacy' }, { href: '/terms', label: 'Terms' }, { href: 'mailto:support@dreamorganizer.app', label: 'Contact' }].map(l => (
+              {[{ href: '/privacy', label: 'Privacy' }, { href: '/terms', label: 'Terms' }, { href: 'mailto:support@lucidlaboratories.net', label: 'Contact' }].map(l => (
                 <Link key={l.href} href={l.href} className="hover:opacity-80 transition-opacity" style={{ color: colors.textMuted }}>{l.label}</Link>
               ))}
             </div>

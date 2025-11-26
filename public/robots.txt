@@ -1,10 +1,10 @@
-# Dream Organizer - Sitemap
-# https://dream-organizer.vercel.app
+# Dream Machine - Sitemap
+# https://lucidlaboratories.net
 
 User-agent: *
 Allow: /
 
-Sitemap: https://dream-organizer.vercel.app/sitemap.xml
+Sitemap: https://lucidlaboratories.net/sitemap.xml
 
 # Disallow dashboard and API routes
 Disallow: /dashboard

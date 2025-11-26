@@ -14,6 +14,7 @@ import {
   type PublicDream,
   type ReactionType
 } from '@/lib/social'
+import { shareDream } from '@/lib/social'
 
 interface PublicGalleryProps {
   initialDreams?: PublicDream[]
@@ -237,6 +238,26 @@ export default function PublicGallery({ initialDreams = [] }: PublicGalleryProps
                     {dream.isFollowing ? 'Following' : 'Follow'}
                   </button>
                 )}
+              {/* View / share actions */}
+              <div className="flex items-center gap-2">
+                <a
+                  href={`/public/dreams/${dream.id}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="px-3 py-1 rounded-full text-xs font-medium"
+                  style={{ background: colors.surface, color: colors.textMuted }}
+                >
+                  🔍 View
+                </a>
+                <button
+                  onClick={(e) => { e.stopPropagation(); shareDream('twitter', { title: `${dream.username}'s Dream`, description: dream.dreamText, imageUrl: dream.panels[0]?.imageUrl, dreamId: dream.id }) }}
+                  className="px-3 py-1 rounded-full text-xs font-medium"
+                  style={{ background: colors.purple, color: colors.white }}
+                >
+                  📤 Share
+                </button>
+              </div>
               </div>
 
               {/* Dream text preview */}

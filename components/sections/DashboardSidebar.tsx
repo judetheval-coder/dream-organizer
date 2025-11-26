@@ -13,7 +13,6 @@ export const DASHBOARD_TABS = [
   { key: 'Groups', label: 'Dream Groups', icon: '👥' },
   { key: 'Events', label: 'Events & Contests', icon: '🏆' },
   { key: 'Insights', label: 'Insights', icon: '✨' },
-  { key: 'Gift', label: 'Gift a Sub', icon: '🎁' },
   { key: 'Subscription', label: 'Subscription', icon: '💎' },
   { key: 'Settings', label: 'Settings', icon: '⚙️' },
 ] as const

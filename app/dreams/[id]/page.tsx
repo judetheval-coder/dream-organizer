@@ -5,6 +5,6 @@ interface DreamDetailParams {
 }
 
 export default function DreamDetailRedirect({ params }: DreamDetailParams) {
-  const searchParams = new URLSearchParams({ tab: 'My Dreams', dreamId: params.id })
-  redirect(`/?${searchParams.toString()}`)
+  // Redirect to public dream page for sharing and social previews
+  redirect(`/public/dreams/${params.id}`)
 }

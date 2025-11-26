@@ -5,6 +5,8 @@ import { validateOptimizePromptInput } from '@/lib/validation'
 import { checkRateLimit } from '@/lib/rate-limiter'
 import { captureException } from '@/lib/sentry'
 
+export const runtime = 'nodejs'
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -24,6 +26,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { error: `Too many prompt optimizations. Try again in ${rate.resetTime}s.` },
         { status: 429, headers: rate.headers },
+      )
+    }
+
+    if (!process.env.OPENAI_API_KEY) {
+      console.error('❌ OpenAI API key not configured')
+      return NextResponse.json(
+        { error: 'Prompt optimization service not configured' },
+        { status: 500, headers: rate.headers },
       )
     }
 

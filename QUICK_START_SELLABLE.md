@@ -271,7 +271,7 @@ import { Resend } from 'resend'
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 await resend.emails.send({
-  from: 'Dream Organizer <hello@yourdomain.com>',
+  from: 'Dream Organizer <hello@lucidlaboratories.net>',
   to: user.email,
   subject: 'Welcome to Dream Organizer! ✨',
   html: '<h1>Welcome!</h1><p>Start creating your first dream comic...</p>'
@@ -332,7 +332,7 @@ OPENAI_API_KEY=
 RESEND_API_KEY=
 
 # App
-NEXT_PUBLIC_URL=https://yourdomain.com
+NEXT_PUBLIC_URL=https://lucidlaboratories.net
 ```
 
 ---

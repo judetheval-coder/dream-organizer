@@ -1,7 +1,8 @@
 'use client'
 
-import { Suspense, useMemo, useState } from 'react'
+import { Suspense, useMemo, useState, useEffect } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
+import { analytics } from '@/lib/analytics'
 import { useUser, SignOutButton } from '@clerk/nextjs'
 import { colors, gradients } from '@/lib/design'
 import { enhanceDreamStory, analyzeDreams } from '@/lib/gpt-helpers'
@@ -63,8 +64,39 @@ function DashboardPageContent() {
     updatePanel,
     removeDream,
     loadMoreDreams,
+    demoCreated,
   } = useDreams()
   const { showToast } = useToast()
+  useEffect(() => {
+    // Detect subscription success/cancel after Stripe redirect
+    const tab = searchParams.get('tab')
+    const success = searchParams.get('success')
+    const canceled = searchParams.get('canceled')
+    if (tab === 'Subscription' && success === 'true') {
+      analytics.events.subscriptionUpgraded({ plan: 'unknown', price: 0 })
+      showToast('Subscription successful! Thank you.', 'success')
+    }
+    if (tab === 'Subscription' && canceled === 'true') {
+      analytics.track('checkout_canceled', {})
+      showToast('Subscription canceled. You were not charged.', 'info')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
+
+  useEffect(() => {
+    if (isLoaded && user) {
+      analytics.identify(user.id, { email: user.emailAddresses?.[0]?.emailAddress, name: user.firstName })
+      analytics.track('user_loaded', { userId: user.id })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoaded, user])
+
+  useEffect(() => {
+    if (demoCreated) {
+      showToast("Welcome! We created a demo dream for you — check the dashboard.", 'success')
+    }
+  }, [demoCreated])
+
 
   const [dreamText, setDreamText] = useState('')
   const [style, setStyle] = useState('Anime')
@@ -233,6 +265,7 @@ function DashboardPageContent() {
       })
       setLastCreatedDreamId(createdDream.id)
       showToast('Dream created! Generating panels...', 'success')
+      analytics.events.dreamCreated({ style: currentStyle, mood: currentMood, panelCount: newPanels.length })
     } catch (err) {
       console.error('Error saving dream:', err)
       showToast('Failed to create dream', 'error')
@@ -253,6 +286,7 @@ function DashboardPageContent() {
       if (supabasePanel) {
         try {
           await updatePanel(supabasePanel.id, imageUrl, currentDream.id, panelIndex)
+          analytics.events.panelGenerated({ style: currentDream?.style ?? 'unknown', sceneNumber: panelIndex })
         } catch (err) {
           console.error('Error updating panel image:', err)
         }
@@ -426,7 +460,7 @@ function DashboardPageContent() {
         )}
 
         {currentTab === 'Subscription' && isLoaded && (
-          <div className="max-w-6xl w-full">
+          <div className="max-w-6xl w-full space-y-8">
             <div
               className="rounded-xl p-8"
               style={{
@@ -568,6 +602,10 @@ function DashboardPageContent() {
                   </div>
                 )}
               </div>
+            </div>
+            {/* GiftSubscriptions moved here */}
+            <div className="mt-8">
+              <GiftSubscriptions />
             </div>
           </div>
         )}
@@ -785,9 +823,7 @@ function DashboardPageContent() {
           <EventsContest />
         )}
 
-        {currentTab === 'Gift' && (
-          <GiftSubscriptions />
-        )}
+
         </div>
 
         <Footer />

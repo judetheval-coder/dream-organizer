@@ -16,6 +16,7 @@ const OPTIONAL_ENV_VARS = [
   'SD_SERVER_URL',
   'SD_MODEL_ID',
   'REPLICATE_API_TOKEN',
+    'SUPPORT_EMAIL',
 ]
 
 let validated = false
@@ -34,6 +35,25 @@ export function validateEnvironment() {
     }
   })
 
+  // Additional required variables for production
+  const extraRequired = ['NEXT_PUBLIC_APP_URL', 'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET']
+  extraRequired.forEach((envVar) => {
+    if (!process.env[envVar]) {
+      missing.push(envVar)
+    }
+  })
+
+  // Validate NEXT_PUBLIC_APP_URL formatting
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  if (appUrl) {
+    try {
+      // will throw if invalid
+      new URL(appUrl)
+    } catch (e) {
+      missing.push('NEXT_PUBLIC_APP_URL (invalid URL)')
+    }
+  }
+
   // Check optional vars
   OPTIONAL_ENV_VARS.forEach((envVar) => {
     if (!process.env[envVar]) {
@@ -41,15 +61,24 @@ export function validateEnvironment() {
     }
   })
 
+  // Ensure optional demo onboarding flag exists (recommended)
+  if (!process.env.ENABLE_DEMO_DREAM) {
+    warnings.push('ENABLE_DEMO_DREAM')
+  }
+
   // Report errors
   if (missing.length > 0) {
     console.error('❌ CRITICAL: Missing required environment variables:')
     missing.forEach((v) => console.error(`   - ${v}`))
     console.error('📄 Copy .env.example to .env.local and fill in the values')
-    
-    // Only throw in production or when explicitly checking
-    if (process.env.NODE_ENV === 'production') {
+
+    // In hosted environments like Vercel, avoid hard failing builds by default.
+    // Set STRICT_ENV=true to enforce throwing on missing envs.
+    const shouldThrow = process.env.STRICT_ENV === 'true'
+    if (shouldThrow) {
       throw new Error(`Missing env vars: ${missing.join(', ')}`)
+    } else {
+      console.warn('Proceeding without throwing due to STRICT_ENV not enabled. This may limit functionality in production.')
     }
   }
 

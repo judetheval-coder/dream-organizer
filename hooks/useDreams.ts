@@ -43,6 +43,7 @@ interface UseDreamsResult {
   updatePanel: (panelId: string, imageDataURL: string, dreamId: string, sceneNumber: number) => Promise<string>
   removeDream: (dreamId: string) => Promise<void>
   loadMoreDreams: () => Promise<void>
+  demoCreated: boolean
 }
 
 export function useDreams(): UseDreamsResult {
@@ -54,6 +55,7 @@ export function useDreams(): UseDreamsResult {
   const [cursor, setCursor] = useState<string | null>(null)
   const [hasMore, setHasMore] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
+  const [demoCreated, setDemoCreated] = useState(false)
   const fetchIdRef = useRef(0) // Prevent race conditions
 
   const PAGE_SIZE = 10
@@ -82,7 +84,15 @@ export function useDreams(): UseDreamsResult {
     async function syncUser() {
       if (user) {
         try {
-          await fetch('/api/sync-user', { method: 'POST' })
+          const res = await fetch('/api/sync-user', { method: 'POST' })
+          try {
+            const json = await res.json()
+            if (json?.demoCreated) {
+              setDemoCreated(true)
+            }
+          } catch (e) {
+            // Not JSON or no demo flag; ignore
+          }
         } catch (err) {
           console.error('Error syncing user:', err)
         }
@@ -258,6 +268,7 @@ export function useDreams(): UseDreamsResult {
     updatePanel,
     removeDream,
     loadMoreDreams,
+    demoCreated,
   }
 }
 

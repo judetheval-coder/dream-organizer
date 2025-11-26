@@ -1,4 +1,5 @@
 import { auth, currentUser } from '@clerk/nextjs/server'
+import { captureException } from '@/lib/sentry'
 import { syncUserToSupabase } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
 
@@ -17,10 +18,11 @@ export async function POST() {
       return NextResponse.json({ error: 'No email found' }, { status: 400 })
     }
 
-    await syncUserToSupabase(userId, email)
+    const result = await syncUserToSupabase(userId, email)
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true, demoCreated: (result as any)?.demoCreated ?? false })
   } catch (error) {
+    captureException(error)
     console.error('Error syncing user:', error)
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }

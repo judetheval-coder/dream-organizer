@@ -102,6 +102,7 @@ export async function POST(request) {
     const base64Image = Buffer.from(imageBuffer).toString('base64')
     const dataUri = `data:image/png;base64,${base64Image}`
 
+    const elapsed = Date.now() - startTime
     return NextResponse.json({ 
       image: dataUri,
       metadata: {

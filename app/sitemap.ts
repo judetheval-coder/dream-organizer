@@ -1,7 +1,7 @@
 import { MetadataRoute } from 'next'
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://dream-organizer.vercel.app'
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://lucidlaboratories.net'
 
   return [
     {

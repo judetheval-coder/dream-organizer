@@ -1,0 +1,33 @@
+name: Lighthouse CI
+
+on:
+  schedule:
+    - cron: '0 3 * * *' # run daily
+  workflow_dispatch:
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install
+        run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Start
+        run: npm start &
+      - name: Wait for server
+        uses: jakejarvis/wait-for-netlify-action@v1
+        with:
+          url: http://localhost:3000
+          timeout: 60
+      - name: Run Lighthouse
+        uses: treosh/lighthouse-ci-action@v9
+        with:
+          urls: 'http://localhost:3000'
+          lhci_server_base_url: ''
+          performanceBudget: false

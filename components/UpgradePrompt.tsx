@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { SUBSCRIPTION_TIERS, type SubscriptionTier } from '@/lib/subscription-tiers'
+import { analytics } from '@/lib/analytics'
 
 interface UpgradePromptProps {
   currentTier: SubscriptionTier
@@ -20,6 +21,7 @@ export default function UpgradePrompt({ currentTier, onClose }: UpgradePromptPro
         ? (billingPeriod === 'monthly' ? 'pro_monthly' : 'pro_yearly')
         : (billingPeriod === 'monthly' ? 'premium_monthly' : 'premium_yearly')
 
+      analytics.track('checkout_started', { plan: tier, billingPeriod })
       const response = await fetch('/api/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -29,13 +31,14 @@ export default function UpgradePrompt({ currentTier, onClose }: UpgradePromptPro
       const data = await response.json()
       
       if (data.url) {
+        analytics.track('checkout_redirect', { plan: tier })
         window.location.href = data.url
       } else {
         throw new Error(data.error || 'Failed to create checkout session')
       }
     } catch (error) {
       console.error('Checkout error:', error)
-      alert('Failed to start checkout. Please try again.')
+      alert('Failed to start checkout. Please try again. (Please contact support if the issue persists)')
     } finally {
       setLoading(null)
     }

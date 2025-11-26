@@ -187,7 +187,7 @@ export default function PricingPage() {
               Still have questions?
             </p>
             <a
-              href="mailto:support@dreamorganizer.app"
+              href="mailto:support@lucidlaboratories.net"
               className="inline-block px-8 py-3 rounded-xl font-semibold transition-all hover:scale-105"
               style={{ background: colors.surface, color: colors.cyan, border: `1px solid ${colors.cyan}` }}
             >
