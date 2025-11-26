@@ -1,0 +1,16 @@
+{
+    // Automatically save files after a short delay to avoid "file changed on disk" conflicts
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 500,
+    // Keep unsaved changes in hot-exit so users can restore them if they close VS Code
+    "files.hotExit": "onExitAndWindowClose",
+    // Disable preview editors to reduce accidental editor swaps
+    "workbench.editor.enablePreview": false,
+    // Suggest formatting on save for consistency
+    "editor.formatOnSave": true,
+    // Helpful: automatically trim trailing whitespace on save
+    "files.trimTrailingWhitespace": true
+}
+{
+    "codium.codeCompletion.enable": false
+}
