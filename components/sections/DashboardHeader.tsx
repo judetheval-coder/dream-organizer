@@ -1,6 +1,6 @@
 "use client"
 
-import { colors } from '@/lib/design'
+import { colors, gradients } from '@/lib/design'
 import type { DashboardTab } from './DashboardSidebar'
 
 const HEADLINES: Record<DashboardTab, { title: string; subtitle: string }> = {
@@ -59,10 +59,11 @@ export function DashboardHeader({ tab }: HeaderProps) {
 
   return (
     <div className="mb-8">
-      <h2 className="text-4xl font-bold mb-2" style={{ color: colors.textPrimary }}>
+      <h2 className="text-4xl font-bold mb-2 bg-clip-text text-transparent" style={{ background: gradients.purpleCyan }}>
         {headline.title}
       </h2>
-      <p style={{ color: colors.textMuted }}>{headline.subtitle}</p>
+      <div className="h-1 w-40 rounded-full mb-2" style={{ background: gradients.purpleCyan, opacity: 0.15 }} />
+      <p className="text-base" style={{ color: colors.textMuted }}>{headline.subtitle}</p>
     </div>
   )
 }

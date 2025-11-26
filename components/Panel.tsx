@@ -6,6 +6,7 @@ import { colors, shadows, typography } from "@/lib/design"
 import { optimizePromptForDalle } from "@/lib/gpt-helpers"
 import { shareDream } from "@/lib/social"
 import { Button } from "./ui/primitives"
+import { useToast } from "@/contexts/ToastContext"
 
 const FRAMES = {
   classic: { border: `3px solid ${colors.border}`, borderRadius: '12px' },
@@ -36,6 +37,7 @@ export default function Panel({ description, style, mood, onImageReady, generate
   const [isHovered, setIsHovered] = useState(false)
   const [tilt, setTilt] = useState({ x: 0, y: 0 })
   const [scale, setScale] = useState(1)
+  const [hoverScale, setHoverScale] = useState(1)
   const [isDragging, setIsDragging] = useState(false)
   const [showShareMenu, setShowShareMenu] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -43,6 +45,7 @@ export default function Panel({ description, style, mood, onImageReady, generate
 
   const sceneLabel = description.match(/Scene \d+/)?.[0] || "Scene"
   const key = `${description}-${style}-${mood}`
+  const frameShadow = (FRAMES[frameStyle] as any).boxShadow as string | undefined
 
   const handleMouse = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!enableEffects || !ref.current) return
@@ -102,10 +105,10 @@ export default function Panel({ description, style, mood, onImageReady, generate
     <div
       ref={ref}
       className={`relative w-full overflow-hidden transition-all duration-300 ${isDragging ? 'opacity-50' : ''}`}
-      style={{ aspectRatio: "2/1", minHeight: '300px', ...FRAMES[frameStyle], transform: enableEffects ? `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale(${scale})` : `scale(${scale})`, cursor: draggable ? 'grab' : 'default' }}
+      style={{ aspectRatio: "2/1", minHeight: '300px', ...FRAMES[frameStyle], transform: enableEffects ? `perspective(1000px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) scale(${scale * hoverScale})` : `scale(${scale * hoverScale})`, cursor: draggable ? 'grab' : 'default', transition: 'transform 250ms ease, box-shadow 250ms ease' }}
       onMouseMove={handleMouse}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => { setIsHovered(false); setTilt({ x: 0, y: 0 }) }}
+      onMouseEnter={() => { setIsHovered(true); setHoverScale(1.03) }}
+      onMouseLeave={() => { setIsHovered(false); setTilt({ x: 0, y: 0 }); setHoverScale(1) }}
       onTouchMove={handleTouch}
       onTouchEnd={() => { touchDist.current = null; setTimeout(() => setScale(1), 300) }}
       draggable={draggable}
@@ -135,8 +138,8 @@ export default function Panel({ description, style, mood, onImageReady, generate
       )}
 
       {!loading && image && (
-        <div className="relative w-full h-full group">
-          <div className="absolute inset-0 transition-transform duration-300" style={{ transform: enableEffects && isHovered ? `translateX(${tilt.y * 0.5}px) translateY(${tilt.x * 0.5}px)` : 'none' }}>
+          <div className="relative w-full h-full group" style={{ boxShadow: enableEffects && isHovered ? shadows.glowCyan : frameShadow }}>
+            <div className="absolute inset-0 transition-transform duration-300" style={{ transform: enableEffects && isHovered ? `translateX(${tilt.y * 0.5}px) translateY(${tilt.x * 0.5}px)` : 'none' }}>
             <Image src={image} alt={description} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" unoptimized loading="lazy" />
           </div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-end gap-3 p-4 z-20">

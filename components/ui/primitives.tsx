@@ -45,7 +45,7 @@ export function Chip({ active, className = '', children, ...props }: ChipProps) 
 }
 
 // ============= BUTTON =============
-type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger'
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'contrast'
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant
   size?: 'sm' | 'md' | 'lg'
@@ -53,10 +53,11 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const BTN_STYLES: Record<ButtonVariant, CSSProperties> = {
-  primary: { background: gradients.button, color: colors.white, boxShadow: shadows.glow },
+  primary: { background: gradients.button, color: colors.white, boxShadow: shadows.glowCyan || shadows.glow },
   secondary: { background: colors.surface, color: colors.textPrimary, border: `1px solid ${colors.border}` },
   ghost: { background: 'transparent', color: colors.textMuted },
   danger: { background: '#dc2626', color: 'white' },
+  contrast: { background: colors.white, color: colors.purple, border: `2px solid ${colors.purple}`, boxShadow: shadows.glow },
 }
 const BTN_SIZES = { sm: 'px-3 py-1.5 text-sm', md: 'px-4 py-2', lg: 'px-6 py-3 text-lg' }
 
@@ -64,7 +65,7 @@ export function Button({ variant = 'primary', size = 'md', icon, className = '',
   return (
     <button
       {...props}
-      className={`rounded-xl font-semibold transition-all hover:scale-105 disabled:opacity-50 ${BTN_SIZES[size]} ${className}`}
+      className={`rounded-xl font-semibold transition-all hover:scale-105 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[rgba(6,182,212,0.25)] ${BTN_SIZES[size]} ${className}`}
       style={BTN_STYLES[variant]}
     >
       {icon && <span className="mr-2">{icon}</span>}{children}
