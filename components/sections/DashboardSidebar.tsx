@@ -2,7 +2,6 @@
 
 import { colors } from '@/lib/design'
 import Logo from '@/components/Logo'
-import { DevPanel } from '../DevPanel'
 
 export const DASHBOARD_TABS = [
   { key: 'Dashboard', label: 'Dashboard', icon: '📊' },
@@ -59,7 +58,6 @@ export function DashboardSidebar({ currentTab, onTabChange }: SidebarProps) {
         <p className="text-xs" style={{ color: colors.textMuted }}>
           v1.0 • The Dream Machine
         </p>
-        <DevPanel />
       </div>
     </div>
   )

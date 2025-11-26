@@ -33,6 +33,7 @@ import { useToast } from '@/contexts/ToastContext'
 import { canCreateDream, getTierName, getTierFeatures, SUBSCRIPTION_TIERS } from '@/lib/subscription-tiers'
 import type { DreamRecord } from '@/components/dashboard/DreamList'
 import type { DreamWithPanels, Panel } from '@/lib/supabase'
+import { DevPanel } from '@/components/DevPanel'
 
 const TAB_QUERY_KEY = 'tab'
 const DEFAULT_TAB: DashboardTab = DASHBOARD_TABS[0].key
@@ -67,6 +68,17 @@ function DashboardPageContent() {
     demoCreated,
   } = useDreams()
   const { showToast } = useToast()
+  const [showDevPanel, setShowDevPanel] = useState(false)
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === '7') {
+        setShowDevPanel(true)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
   useEffect(() => {
     // Detect subscription success/cancel after Stripe redirect
     const tab = searchParams.get('tab')
@@ -848,6 +860,14 @@ function DashboardPageContent() {
           currentTier={userTier}
           onClose={() => setShowUpgrade(false)}
         />
+      )}
+
+      {showDevPanel && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 p-6 rounded-lg max-w-md w-full mx-4">
+            <DevPanel onClose={() => setShowDevPanel(false)} />
+          </div>
+        </div>
       )}
     </>
   )
