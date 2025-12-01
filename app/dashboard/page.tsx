@@ -783,6 +783,32 @@ function DashboardPageContent() {
                         </div>
                       </div>
                       <button
+                        onClick={() => {
+                          if (dreams.length === 0) {
+                            showToast('No dreams to export', 'info')
+                            return
+                          }
+                          const exportData = {
+                            exportedAt: new Date().toISOString(),
+                            totalCount: dreams.length,
+                            dreams: dreams.map(d => ({
+                              id: d.id,
+                              text: d.text,
+                              style: d.style,
+                              mood: d.mood,
+                              createdAt: d.created_at,
+                              panels: d.panels?.map(p => ({ description: p.description, imageUrl: p.image_url })) || []
+                            }))
+                          }
+                          const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+                          const url = URL.createObjectURL(blob)
+                          const a = document.createElement('a')
+                          a.href = url
+                          a.download = 'dream-organizer-export.json'
+                          a.click()
+                          URL.revokeObjectURL(url)
+                          showToast('Dream data exported!', 'success')
+                        }}
                         className="w-full p-3 rounded-lg text-left transition-colors hover:bg-opacity-80"
                         style={{
                           background: colors.backgroundDark,

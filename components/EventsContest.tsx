@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { useDreams } from '@/hooks/useDreams'
+import { useToast } from '@/contexts/ToastContext'
 import { colors, gradients, shadows } from '@/lib/design'
 import { Card, Chip, Button } from '@/components/ui/primitives'
 import { LEADERBOARD, PRIZES, RULES, PAST_WINNERS } from '@/lib/mock-data'
@@ -13,6 +14,7 @@ const MEDAL_BG = ['linear-gradient(135deg, #ffd700, #ffed4a)', 'linear-gradient(
 
 export default function EventsContest() {
   const { user } = useUser()
+  const { showToast } = useToast()
   const [tab, setTab] = useState<'leaderboard' | 'prizes' | 'rules'>('leaderboard')
   const [entries, setEntries] = useState<ContestEntry[]>([])
   const [showEnterModal, setShowEnterModal] = useState(false)
@@ -59,7 +61,7 @@ export default function EventsContest() {
     // Ensure dream is published
     const published = await isDreamPublished(dreamId)
     if (!published) {
-      alert('Please publish your dream to the public Gallery before entering the contest.')
+      showToast('Please publish your dream to the Gallery first', 'info')
       return
     }
     const selected = dreams?.find(d => d.id === dreamId)
@@ -76,9 +78,9 @@ export default function EventsContest() {
       setSelectedDreamId(null)
       const updated = await getContestEntries()
       setEntries(updated)
-      alert('🎉 Successfully entered the contest! Share your dream in the Gallery to get views.')
+      showToast('🎉 Successfully entered the contest!', 'success')
     } else {
-      alert(result.error)
+      showToast(result.error || 'Failed to enter contest', 'error')
     }
   }
 
@@ -197,12 +199,12 @@ export default function EventsContest() {
                         setShowEnterModal(false)
                         const updated = await getContestEntries()
                         setEntries(updated)
-                        alert('🎉 Dream published and entered into the contest!')
+                        showToast('🎉 Dream published and entered!', 'success')
                       } else {
-                        alert(res.error)
+                        showToast(res.error || 'Failed to enter contest', 'error')
                       }
                     } else {
-                      alert(publishedRes.error || 'Failed to publish dream')
+                      showToast(publishedRes.error || 'Failed to publish dream', 'error')
                     }
                   }} className="flex-1 text-sm py-3 rounded-2xl">Publish & Enter</Button>
                 )}

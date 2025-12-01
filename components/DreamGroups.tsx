@@ -47,7 +47,7 @@ export default function DreamGroups({ groups: initialGroups = DEFAULT_GROUPS }: 
     if (!newGroup.name.trim()) return
     // Ensure signed-in and premium tier
     if (!userId) {
-      alert('You must be signed in to create a group')
+      // User must be signed in - modal won't open without auth
       return
     }
     if (userTier !== 'premium') {
@@ -70,9 +70,9 @@ export default function DreamGroups({ groups: initialGroups = DEFAULT_GROUPS }: 
     }
   }
 
-  const handleViewGroup = (groupId: string) => {
-    // In a full implementation, this would navigate to the group page
-    alert(`Viewing group ${groupId} - Group pages coming soon!`)
+  const handleViewGroup = (_groupId: string) => {
+    // Group detail pages will be implemented in a future release
+    // For now, clicking a group card shows join/leave button
   }
 
   const filtered = groups.filter(g => {
@@ -92,7 +92,7 @@ export default function DreamGroups({ groups: initialGroups = DEFAULT_GROUPS }: 
           <div className="px-4 py-2 rounded-full shadow-sm text-sm font-semibold" style={{ background: colors.surface, color: colors.textPrimary }}>✓ Joined {joinedCount}</div>
           <Button onClick={() => {
             if (!user) {
-              alert('Please sign in to create a group')
+              // User needs to sign in - button should be hidden for non-auth users
               return
             }
             if (userTier !== 'premium') {
@@ -152,7 +152,7 @@ export default function DreamGroups({ groups: initialGroups = DEFAULT_GROUPS }: 
         <p className="font-extrabold text-lg" style={{ color: colors.textPrimary }}>Can&apos;t find your community?</p>
         <p className="text-base mt-1 mb-5 font-medium" style={{ color: colors.textMuted }}>Create your own dream group and invite others!</p>
         <Button onClick={() => {
-          if (!user) { alert('Please sign in to create a group'); return }
+          if (!user) { return } // User needs to sign in
           if (userTier !== 'premium') { setShowUpgradePrompt(true); return }
           setShowCreateModal(true)
         }} className="text-lg font-bold px-6 py-3 rounded-2xl shadow">Create a Group</Button>

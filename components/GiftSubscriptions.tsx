@@ -20,6 +20,7 @@ export default function GiftSubscriptions() {
   const [schedDate, setSchedDate] = useState('')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState<{ giftCode: string } | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   const opt = GIFT_OPTIONS.find(o => o.duration === duration)!
   const base = (tier === 'pro' ? SUBSCRIPTION_TIERS.pro : SUBSCRIPTION_TIERS.premium).price * opt.months
@@ -43,7 +44,7 @@ export default function GiftSubscriptions() {
       if (result.success && result.giftCode) {
         setSuccess({ giftCode: result.giftCode })
       } else {
-        alert(result.error || 'Failed to purchase gift')
+        setError(result.error || 'Failed to purchase gift')
       }
     } finally {
       setLoading(false)
@@ -72,6 +73,9 @@ export default function GiftSubscriptions() {
         <span className="text-5xl mb-4 block">🎁</span>
         <h2 className="text-3xl font-bold" style={{ color: colors.textPrimary }}>Gift a Dream Subscription</h2>
         <p className="text-lg mt-2" style={{ color: colors.textMuted }}>Help someone turn their dreams into beautiful comics</p>
+        {error && (
+          <p className="text-red-400 text-sm mt-2">{error}</p>
+        )}
       </div>
 
       {/* Tier */}
@@ -79,7 +83,7 @@ export default function GiftSubscriptions() {
         <h3 className="text-lg font-semibold mb-4" style={{ color: colors.textPrimary }}>1. Choose a Plan</h3>
         <div className="grid gap-4 md:grid-cols-2">
           {[{ key: 'pro', icon: '⭐', price: SUBSCRIPTION_TIERS.pro.price, features: SUBSCRIPTION_TIERS.pro.features, desc: '50 dreams/month • Priority generation' },
-            { key: 'premium', icon: '💎', price: SUBSCRIPTION_TIERS.premium.price, features: SUBSCRIPTION_TIERS.premium.features, desc: 'Unlimited dreams • All features' }].map(t => (
+          { key: 'premium', icon: '💎', price: SUBSCRIPTION_TIERS.premium.price, features: SUBSCRIPTION_TIERS.premium.features, desc: 'Unlimited dreams • All features' }].map(t => (
             <Card key={t.key} className={tier === t.key ? `ring-2 ring-${t.key === 'pro' ? 'purple' : 'cyan'}-500` : ''} interactive onClick={() => setTier(t.key as 'pro' | 'premium')} style={t.key === 'premium' ? { background: `linear-gradient(135deg, ${colors.purple}20, ${colors.cyan}20)` } : {}}>
               <div className="flex items-start justify-between">
                 <div>

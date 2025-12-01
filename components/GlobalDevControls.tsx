@@ -12,6 +12,7 @@ export function GlobalDevControls() {
   const [showDevPanel, setShowDevPanel] = useState(false)
   const [unlockSecret, setUnlockSecret] = useState('')
   const [isAuthorizing, setIsAuthorizing] = useState(false)
+  const [unlockError, setUnlockError] = useState<string | null>(null)
   const { unlock } = useDevMode()
 
   const handleUnlock = async () => {
@@ -23,10 +24,10 @@ export function GlobalDevControls() {
         setShowDevPanel(true)
         setUnlockSecret('')
       } else {
-        alert(result.error || 'Invalid authorization code')
+        setUnlockError(result.error || 'Invalid authorization code')
       }
     } catch (err) {
-      alert('Error during authorization')
+      setUnlockError('Error during authorization')
     } finally {
       setIsAuthorizing(false)
     }
@@ -75,7 +76,10 @@ export function GlobalDevControls() {
               type="password"
               placeholder="Enter authorization code"
               value={unlockSecret}
-              onChange={(e) => setUnlockSecret(e.target.value)}
+              onChange={(e) => {
+                setUnlockSecret(e.target.value)
+                setUnlockError(null)
+              }}
               className="mb-3 p-3 bg-gray-800 text-white rounded border border-gray-600 w-full focus:border-purple-500 focus:outline-none"
               aria-label="Developer authorization code"
               onKeyDown={(e) => {
@@ -84,6 +88,9 @@ export function GlobalDevControls() {
                 }
               }}
             />
+            {unlockError && (
+              <p className="text-red-400 text-sm mb-3">{unlockError}</p>
+            )}
             <div className="flex gap-2">
               <button
                 onClick={handleUnlock}

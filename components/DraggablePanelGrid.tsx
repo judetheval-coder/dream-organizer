@@ -67,7 +67,7 @@ export default function DraggablePanelGrid({
 
   const handleDrop = useCallback((e: React.DragEvent, dropIndex: number) => {
     e.preventDefault()
-    
+
     if (dragIndex === null || dragIndex === dropIndex || !onReorder) {
       setDragIndex(null)
       setDragOverIndex(null)
@@ -77,7 +77,7 @@ export default function DraggablePanelGrid({
     const newPanels = [...panels]
     const [draggedPanel] = newPanels.splice(dragIndex, 1)
     newPanels.splice(dropIndex, 0, draggedPanel)
-    
+
     onReorder(newPanels)
     setDragIndex(null)
     setDragOverIndex(null)
@@ -90,7 +90,7 @@ export default function DraggablePanelGrid({
 
   if (panels.length === 0) {
     return (
-      <div 
+      <div
         className="flex items-center justify-center p-12 rounded-2xl"
         style={{ background: colors.surface, border: `2px dashed ${colors.border}` }}
       >
@@ -100,7 +100,7 @@ export default function DraggablePanelGrid({
   }
 
   return (
-    <div 
+    <div
       className="space-y-6"
       {...swipeHandlers}
     >
@@ -111,7 +111,7 @@ export default function DraggablePanelGrid({
             {panels.length} panel{panels.length !== 1 ? 's' : ''}
           </span>
           {enableDrag && onReorder && (
-            <span 
+            <span
               className="text-xs px-2 py-1 rounded-full"
               style={{ background: colors.surface, color: colors.textMuted }}
             >
@@ -134,16 +134,16 @@ export default function DraggablePanelGrid({
               ${dragOverIndex === index && dragIndex !== index ? 'ring-2 ring-purple-500 ring-offset-2 ring-offset-transparent' : ''}
             `}
             style={{
-              transform: dragOverIndex === index && dragIndex !== index 
-                ? 'translateY(8px)' 
+              transform: dragOverIndex === index && dragIndex !== index
+                ? 'translateY(8px)'
                 : 'none',
             }}
           >
             {/* Panel number badge */}
-            <div 
+            <div
               className="absolute -top-3 -left-3 z-30 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
-              style={{ 
-                background: colors.purple, 
+              style={{
+                background: colors.purple,
                 color: colors.white,
                 boxShadow: `0 0 10px ${colors.purple}80`,
               }}
@@ -162,7 +162,7 @@ export default function DraggablePanelGrid({
               onDragStart={(e) => handleDragStart(e, index)}
               onDragOver={(e) => handleDragOver(e, index)}
               onDrop={(e) => handleDrop(e, index)}
-                onDragEnd={() => handleDragEnd()}
+              onDragEnd={() => handleDragEnd()}
               dragIndex={index}
               onImageReady={(url) => onImageReady?.(panel.id, url)}
             />

@@ -197,27 +197,43 @@ export function useDreams(): UseDreamsResult {
   }
 
   const saveDream = async (dreamData: SaveDreamInput) => {
-    if (!user) throw new Error('Not authenticated')
+    if (!user) {
+      console.error('[saveDream] No authenticated user')
+      throw new Error('Not authenticated')
+    }
+
+    console.log('[saveDream] Starting save for user:', user.id, 'Data:', {
+      textLength: dreamData.text.length,
+      style: dreamData.style,
+      mood: dreamData.mood,
+      panelCount: dreamData.panels.length
+    })
 
     try {
       // Create dream
+      console.log('[saveDream] Creating dream record...')
       const dream = await createDream(user.id, {
         text: dreamData.text,
         style: dreamData.style,
         mood: dreamData.mood
       })
+      console.log('[saveDream] Dream created with ID:', dream.id)
 
       // Create panels
+      console.log('[saveDream] Creating', dreamData.panels.length, 'panels...')
       const panels = await createPanels(dream.id, dreamData.panels)
+      console.log('[saveDream] Panels created:', panels.length)
 
       // Update local state and invalidate cache
       const newDream = { ...dream, panels }
       setDreams(prev => [newDream, ...prev])
       invalidateCache(user.id)
 
+      console.log('[saveDream] Success! Dream saved and state updated')
       return newDream
     } catch (err) {
-      console.error('Error saving dream:', err)
+      console.error('[saveDream] Error saving dream:', err)
+      console.error('[saveDream] Error details:', JSON.stringify(err, null, 2))
       throw err
     }
   }

@@ -11,13 +11,14 @@ export default function UpgradePrompt({ currentTier, onClose }: UpgradePromptPro
   const tiers: SubscriptionTier[] = ['free', 'pro', 'premium']
   const [loading, setLoading] = useState<string | null>(null)
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly')
+  const [checkoutError, setCheckoutError] = useState<string | null>(null)
 
   const handleUpgrade = async (tier: SubscriptionTier) => {
     if (tier === 'free') return
-    
+
     setLoading(tier)
     try {
-      const priceKey = tier === 'pro' 
+      const priceKey = tier === 'pro'
         ? (billingPeriod === 'monthly' ? 'pro_monthly' : 'pro_yearly')
         : (billingPeriod === 'monthly' ? 'premium_monthly' : 'premium_yearly')
 
@@ -29,7 +30,7 @@ export default function UpgradePrompt({ currentTier, onClose }: UpgradePromptPro
       })
 
       const data = await response.json()
-      
+
       if (data.url) {
         analytics.track('checkout_redirect', { plan: tier })
         window.location.href = data.url
@@ -38,15 +39,15 @@ export default function UpgradePrompt({ currentTier, onClose }: UpgradePromptPro
       }
     } catch (error) {
       console.error('Checkout error:', error)
-      alert('Failed to start checkout. Please try again. (Please contact support if the issue persists)')
+      setCheckoutError('Failed to start checkout. Please try again.')
     } finally {
       setLoading(null)
     }
   }
-  
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div 
+      <div
         className="bg-gradient-to-br from-purple-900/90 to-blue-900/90 rounded-2xl p-8 max-w-5xl w-full border border-purple-500/30 shadow-2xl"
         style={{ maxHeight: '90vh', overflowY: 'auto' }}
       >
@@ -56,6 +57,9 @@ export default function UpgradePrompt({ currentTier, onClose }: UpgradePromptPro
               Upgrade Your Plan
             </h2>
             <p className="text-gray-300 mt-2">Unlock more dreams and premium features</p>
+            {checkoutError && (
+              <p className="text-red-400 text-sm mt-2">{checkoutError}</p>
+            )}
           </div>
           <button
             onClick={onClose}
@@ -70,21 +74,19 @@ export default function UpgradePrompt({ currentTier, onClose }: UpgradePromptPro
           <div className="bg-black/30 rounded-full p-1 flex gap-1">
             <button
               onClick={() => setBillingPeriod('monthly')}
-              className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${
-                billingPeriod === 'monthly' 
-                  ? 'bg-purple-500 text-white' 
+              className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${billingPeriod === 'monthly'
+                  ? 'bg-purple-500 text-white'
                   : 'text-gray-400 hover:text-white'
-              }`}
+                }`}
             >
               Monthly
             </button>
             <button
               onClick={() => setBillingPeriod('yearly')}
-              className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${
-                billingPeriod === 'yearly' 
-                  ? 'bg-purple-500 text-white' 
+              className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${billingPeriod === 'yearly'
+                  ? 'bg-purple-500 text-white'
                   : 'text-gray-400 hover:text-white'
-              }`}
+                }`}
             >
               Yearly <span className="text-cyan-400 text-xs">Save 17%</span>
             </button>
@@ -95,14 +97,14 @@ export default function UpgradePrompt({ currentTier, onClose }: UpgradePromptPro
           {tiers.map((tier) => {
             const tierData = SUBSCRIPTION_TIERS[tier]
             const isCurrent = tier === currentTier
-            
+
             return (
               <div
                 key={tier}
                 className={`
                   rounded-xl p-6 border-2 transition-all
-                  ${isCurrent 
-                    ? 'border-cyan-400 bg-cyan-400/10 scale-105' 
+                  ${isCurrent
+                    ? 'border-cyan-400 bg-cyan-400/10 scale-105'
                     : 'border-purple-500/30 bg-black/20 hover:border-purple-400/50'
                   }
                 `}
@@ -112,8 +114,8 @@ export default function UpgradePrompt({ currentTier, onClose }: UpgradePromptPro
                     {tierData.name}
                   </h3>
                   <div className="text-4xl font-bold bg-gradient-to-r from-purple-300 to-cyan-300 bg-clip-text text-transparent">
-                    ${billingPeriod === 'yearly' && tier !== 'free' 
-                      ? (tierData.price * 10).toFixed(0) 
+                    ${billingPeriod === 'yearly' && tier !== 'free'
+                      ? (tierData.price * 10).toFixed(0)
                       : tierData.price}
                     <span className="text-sm text-gray-400">
                       /{billingPeriod === 'yearly' ? 'year' : 'mo'}

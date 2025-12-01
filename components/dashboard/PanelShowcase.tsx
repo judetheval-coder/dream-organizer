@@ -78,9 +78,9 @@ export function PanelShowcase({ panels, currentGeneratingIndex, onImageReady, on
       </div>
 
       {/* Frame Style Selector */}
-      <FrameStyleSelector 
-        value={frameStyle} 
-        onChange={setFrameStyle} 
+      <FrameStyleSelector
+        value={frameStyle}
+        onChange={setFrameStyle}
       />
 
       {/* Panels Grid with drag/drop and swipe */}
