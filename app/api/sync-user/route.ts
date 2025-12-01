@@ -20,7 +20,8 @@ export async function POST() {
 
     const result = await syncUserToSupabase(userId, email)
 
-    return NextResponse.json({ success: true, demoCreated: (result as any)?.demoCreated ?? false })
+    const demoCreated = (result as unknown as { demoCreated?: boolean })?.demoCreated ?? false
+    return NextResponse.json({ success: true, demoCreated })
   } catch (error) {
     captureException(error)
     console.error('Error syncing user:', error)

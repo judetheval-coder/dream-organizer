@@ -1,5 +1,5 @@
 // Mock data for feature components - keeps main components lean
-import { colors, gradients } from '@/lib/design'
+import { colors } from '@/lib/design'
 
 // EventsContest data
 export const LEADERBOARD = [

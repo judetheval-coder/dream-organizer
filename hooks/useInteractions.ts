@@ -219,19 +219,42 @@ export function useDragReorder<T>(
 }
 
 // Voice recording hook
+interface ISpeechRecognition {
+  continuous?: boolean
+  interimResults?: boolean
+  lang?: string
+  start?: () => void
+  stop?: () => void
+  onresult?: (e: { resultIndex: number; results: Array<{ isFinal: boolean; 0: { transcript: string } }> }) => void
+  onerror?: (e: { error: string }) => void
+  onend?: () => void
+}
+
 export function useVoiceRecording() {
   const [isRecording, setIsRecording] = useState(false)
   const [transcript, setTranscript] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [isSupported, setIsSupported] = useState(false)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const recognitionRef = useRef<any>(null)
+  const [isSupported] = useState(() => {
+    if (typeof window === 'undefined') return false
+    const w = window as unknown as Record<string, unknown>
+    return !!(w['SpeechRecognition'] || w['webkitSpeechRecognition'])
+  })
+  const recognitionRef = useRef<ISpeechRecognition | null>(null)
 
   useEffect(() => {
     // Check for browser support
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const SpeechRecognitionAPI = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition
-    setIsSupported(!!SpeechRecognitionAPI)
+    type SRConstructor = new () => {
+      continuous?: boolean
+      interimResults?: boolean
+      lang?: string
+      onresult?: (e: { resultIndex: number; results: Array<{ isFinal: boolean; 0: { transcript: string } }> }) => void
+      onerror?: (e: { error: string }) => void
+      onend?: () => void
+      start?: () => void
+      stop?: () => void
+    }
+    const w = window as unknown as { SpeechRecognition?: SRConstructor; webkitSpeechRecognition?: SRConstructor }
+    const SpeechRecognitionAPI = w.SpeechRecognition || w.webkitSpeechRecognition
 
     if (SpeechRecognitionAPI) {
       const recognition = new SpeechRecognitionAPI()
@@ -239,8 +262,7 @@ export function useVoiceRecording() {
       recognition.interimResults = true
       recognition.lang = 'en-US'
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      recognition.onresult = (event: any) => {
+      recognition.onresult = (event: { resultIndex: number; results: Array<{ isFinal: boolean; 0: { transcript: string } }> }) => {
         let finalTranscript = ''
 
         for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -253,8 +275,7 @@ export function useVoiceRecording() {
         setTranscript(prev => prev + finalTranscript)
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      recognition.onerror = (event: any) => {
+      recognition.onerror = (event: { error: string }) => {
         setError(`Speech recognition error: ${event.error}`)
         setIsRecording(false)
       }
@@ -263,18 +284,18 @@ export function useVoiceRecording() {
         setIsRecording(false)
       }
 
-      recognitionRef.current = recognition
+      recognitionRef.current = recognition as ISpeechRecognition
     }
 
-    return () => {
-      if (recognitionRef.current) {
+      return () => {
+      if (recognitionRef.current && recognitionRef.current.stop) {
         recognitionRef.current.stop()
       }
     }
   }, [])
 
   const startRecording = useCallback(() => {
-    if (!recognitionRef.current) {
+    if (!recognitionRef.current || !recognitionRef.current.start) {
       setError('Speech recognition not supported')
       return
     }
@@ -285,7 +306,7 @@ export function useVoiceRecording() {
   }, [])
 
   const stopRecording = useCallback(() => {
-    if (recognitionRef.current) {
+    if (recognitionRef.current && recognitionRef.current.stop) {
       recognitionRef.current.stop()
     }
     setIsRecording(false)

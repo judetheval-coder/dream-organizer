@@ -29,8 +29,8 @@ export default function NewDreamModal({ isOpen, onClose, onSave }: { isOpen: boo
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
-      <div className="bg-[#1E1E1E] border border-[rgba(138,43,226,0.3)] rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn" onClick={onClose}>
+      <div className="bg-[#1E1E1E] border border-[rgba(138,43,226,0.3)] rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-modalIn" onClick={e => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-3xl font-bold bg-gradient-to-r from-[#5B2CFC] to-[#03DAC6] bg-clip-text text-transparent">✨ Record New Dream</h2>
           <button onClick={onClose} className="text-[#B0B0B0] hover:text-white text-2xl">×</button>

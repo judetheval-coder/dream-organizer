@@ -3,9 +3,9 @@
 import { useState } from 'react'
 import { useUser } from '@clerk/nextjs'
 import { colors, gradients } from '@/lib/design'
-import { Card, Chip, Button } from '@/components/ui/primitives'
+import { Card, Button } from '@/components/ui/primitives'
 import { SUBSCRIPTION_TIERS } from '@/lib/subscription-tiers'
-import { GIFT_OPTIONS, type GiftDuration } from '@/lib/mock-data'
+import { GIFT_OPTIONS } from '@/lib/mock-data'
 import { purchaseGiftSubscription } from '@/lib/social'
 
 export default function GiftSubscriptions() {

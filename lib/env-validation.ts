@@ -49,7 +49,7 @@ export function validateEnvironment() {
     try {
       // will throw if invalid
       new URL(appUrl)
-    } catch (e) {
+    } catch {
       missing.push('NEXT_PUBLIC_APP_URL (invalid URL)')
     }
   }

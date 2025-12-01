@@ -5,11 +5,11 @@ import { useUser } from '@clerk/nextjs'
 import Image from 'next/image'
 import { colors, gradients } from '@/lib/design'
 import Card from '@/components/ui/Card'
-import { 
-  fetchPublicDreams, 
-  reactToDream, 
-  followUser, 
-  unfollowUser, 
+import {
+  fetchPublicDreams,
+  reactToDream,
+  followUser,
+  unfollowUser,
   getFollowing,
   type PublicDream,
   type ReactionType
@@ -31,22 +31,19 @@ const REACTION_EMOJIS: Record<ReactionType, string> = {
 export default function PublicGallery({ initialDreams = [] }: PublicGalleryProps) {
   const { user } = useUser()
   const currentUserId = user?.id
-  
+
   const [dreams, setDreams] = useState<PublicDream[]>(initialDreams)
   const [selectedDream, setSelectedDream] = useState<string | null>(null)
   const [filter, setFilter] = useState<'trending' | 'recent' | 'following'>('trending')
-  const [loading, setLoading] = useState(true)
   const [following, setFollowing] = useState<string[]>([])
 
   // Load public dreams on mount
   useEffect(() => {
     const loadDreams = async () => {
-      setLoading(true)
       const publicDreams = await fetchPublicDreams()
       if (publicDreams.length > 0) {
         setDreams(publicDreams)
       }
-      setLoading(false)
     }
     loadDreams()
   }, [])
@@ -58,13 +55,8 @@ export default function PublicGallery({ initialDreams = [] }: PublicGalleryProps
     }
   }, [currentUserId])
 
-  // Update dreams with following status
-  useEffect(() => {
-    setDreams(prev => prev.map(d => ({
-      ...d,
-      isFollowing: following.includes(d.userId)
-    })))
-  }, [following])
+  // Avoid mutating `dreams` in an effect; compute following status on-the-fly
+  const enrichedDreams = dreams.map(d => ({ ...d, isFollowing: following.includes(d.userId) }))
 
   const handleReact = async (dreamId: string, reaction: ReactionType) => {
     if (!currentUserId) return
@@ -88,7 +80,7 @@ export default function PublicGallery({ initialDreams = [] }: PublicGalleryProps
   const handleFollow = async (userId: string) => {
     if (!currentUserId) return
     const isCurrentlyFollowing = following.includes(userId)
-    
+
     if (isCurrentlyFollowing) {
       const result = await unfollowUser(currentUserId, userId)
       if (result.success) {
@@ -106,7 +98,7 @@ export default function PublicGallery({ initialDreams = [] }: PublicGalleryProps
     alert(`Comments for dream ${dreamId} coming soon!`)
   }
 
-  const filteredDreams = dreams.filter(d => {
+  const filteredDreams = enrichedDreams.filter(d => {
     if (filter === 'following') return following.includes(d.userId)
     return true
   }).sort((a, b) => {
@@ -119,25 +111,25 @@ export default function PublicGallery({ initialDreams = [] }: PublicGalleryProps
   })
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
         <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2" style={{ color: colors.textPrimary }}>
+          <h2 className="text-3xl font-extrabold flex items-center gap-3 tracking-tight mb-1" style={{ color: colors.textPrimary }}>
             🌟 Dream Gallery
           </h2>
-          <p className="text-sm mt-1" style={{ color: colors.textMuted }}>
+          <p className="text-base mt-1 font-medium" style={{ color: colors.textMuted }}>
             Explore dreams shared by the community
           </p>
         </div>
 
         {/* Filter tabs */}
-        <div className="flex gap-2 p-1 rounded-xl" style={{ background: colors.surface }}>
+        <div className="flex gap-2 p-1 rounded-2xl shadow-sm" style={{ background: colors.surface }}>
           {(['trending', 'recent', 'following'] as const).map(tab => (
             <button
               key={tab}
               onClick={() => setFilter(tab)}
-              className="px-4 py-2 rounded-lg text-sm font-medium transition-all capitalize"
+              className={`px-5 py-2 rounded-xl text-base font-semibold transition-all capitalize focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7c3aed] focus-visible:ring-offset-2 ${filter === tab ? 'shadow bg-gradient-to-r from-[#5B2CFC] to-[#8A2BE2] text-white scale-[1.04]' : 'text-[#B0B0B0] hover:text-white hover:bg-[rgba(255,255,255,0.07)] hover:scale-[1.02]'}`}
               style={{
                 background: filter === tab ? colors.purple : 'transparent',
                 color: filter === tab ? colors.white : colors.textSecondary,
@@ -153,11 +145,11 @@ export default function PublicGallery({ initialDreams = [] }: PublicGalleryProps
       </div>
 
       {/* Dreams Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
         {filteredDreams.map(dream => (
-          <Card 
-            key={dream.id} 
-            className="overflow-hidden group cursor-pointer"
+          <Card
+            key={dream.id}
+            className="overflow-hidden group cursor-pointer hover:shadow-xl hover:scale-[1.01] transition-all"
             interactive
             padding="p-0"
             onClick={() => setSelectedDream(selectedDream === dream.id ? null : dream.id)}
@@ -173,18 +165,18 @@ export default function PublicGallery({ initialDreams = [] }: PublicGalleryProps
                   sizes="(max-width: 768px) 100vw, 33vw"
                 />
               ) : (
-                <div 
+                <div
                   className="w-full h-full flex items-center justify-center"
                   style={{ background: gradients.card }}
                 >
                   <span className="text-4xl">💭</span>
                 </div>
               )}
-              
+
               {/* Panel count badge */}
               {dream.panels.length > 1 && (
-                <div 
-                  className="absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-bold"
+                <div
+                  className="absolute top-2 right-2 px-2 py-1 rounded-full text-xs font-bold shadow"
                   style={{ background: 'rgba(0,0,0,0.7)', color: colors.white }}
                 >
                   {dream.panels.length} panels
@@ -192,7 +184,7 @@ export default function PublicGallery({ initialDreams = [] }: PublicGalleryProps
               )}
 
               {/* Style badge */}
-              <div 
+              <div
                 className="absolute bottom-2 left-2 px-2 py-1 rounded-full text-xs"
                 style={{ background: colors.purple, color: colors.white }}
               >
@@ -205,7 +197,7 @@ export default function PublicGallery({ initialDreams = [] }: PublicGalleryProps
               {/* User info */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <div 
+                  <div
                     className="w-8 h-8 rounded-full flex items-center justify-center text-sm"
                     style={{ background: colors.surface }}
                   >
@@ -238,26 +230,26 @@ export default function PublicGallery({ initialDreams = [] }: PublicGalleryProps
                     {dream.isFollowing ? 'Following' : 'Follow'}
                   </button>
                 )}
-              {/* View / share actions */}
-              <div className="flex items-center gap-2">
-                <a
-                  href={`/public/dreams/${dream.id}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="px-3 py-1 rounded-full text-xs font-medium"
-                  style={{ background: colors.surface, color: colors.textMuted }}
-                >
-                  🔍 View
-                </a>
-                <button
-                  onClick={(e) => { e.stopPropagation(); shareDream('twitter', { title: `${dream.username}'s Dream`, description: dream.dreamText, imageUrl: dream.panels[0]?.imageUrl, dreamId: dream.id }) }}
-                  className="px-3 py-1 rounded-full text-xs font-medium"
-                  style={{ background: colors.purple, color: colors.white }}
-                >
-                  📤 Share
-                </button>
-              </div>
+                {/* View / share actions */}
+                <div className="flex items-center gap-2">
+                  <a
+                    href={`/public/dreams/${dream.id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="px-3 py-1 rounded-full text-xs font-medium"
+                    style={{ background: colors.surface, color: colors.textMuted }}
+                  >
+                    🔍 View
+                  </a>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); shareDream('twitter', { title: `${dream.username}'s Dream`, description: dream.dreamText, imageUrl: dream.panels[0]?.imageUrl, dreamId: dream.id }) }}
+                    className="px-3 py-1 rounded-full text-xs font-medium"
+                    style={{ background: colors.purple, color: colors.white }}
+                  >
+                    📤 Share
+                  </button>
+                </div>
               </div>
 
               {/* Dream text preview */}

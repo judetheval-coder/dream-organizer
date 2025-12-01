@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react"
 import Image from "next/image"
-import { colors, shadows, typography } from "@/lib/design"
+import { colors, shadows } from "@/lib/design"
 import { optimizePromptForDalle } from "@/lib/gpt-helpers"
 import { shareDream } from "@/lib/social"
 import { Button } from "./ui/primitives"
@@ -21,7 +21,7 @@ type PanelProps = {
   description: string; style: string; mood: string; onImageReady?: (url: string) => void
   generateDelay?: number; shouldGenerate?: boolean; image?: string; frameStyle?: FrameStyle
   enableEffects?: boolean; draggable?: boolean; onDragStart?: (e: React.DragEvent) => void
-  onDragOver?: (e: React.DragEvent) => void; onDrop?: (e: React.DragEvent) => void; dragIndex?: number
+  onDragOver?: (e: React.DragEvent) => void; onDrop?: (e: React.DragEvent) => void; onDragEnd?: (e: React.DragEvent) => void; dragIndex?: number
   // Optional dream id (either as dreamId or legacy dream_id when props are spread)
   dreamId?: string | number;
   dream_id?: string | number;
@@ -29,7 +29,8 @@ type PanelProps = {
 
 const IMG_STORE = "dream-organizer-panel-images"
 
-export default function Panel({ description, style, mood, onImageReady, generateDelay = 0, shouldGenerate = true, image: initialImage = "", frameStyle = 'glow', enableEffects = true, draggable = false, onDragStart, onDragOver, onDrop, dragIndex, dreamId, dream_id }: PanelProps) {
+export default function Panel({ description, style, mood, onImageReady, generateDelay = 0, shouldGenerate = true, image: initialImage = "", frameStyle = 'glow', enableEffects = true, draggable = false, onDragStart, onDragOver, onDrop, onDragEnd, dragIndex, dreamId, dream_id }: PanelProps) {
+  const { showToast } = useToast()
   const [image, setImage] = useState(initialImage)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
@@ -40,12 +41,13 @@ export default function Panel({ description, style, mood, onImageReady, generate
   const [hoverScale, setHoverScale] = useState(1)
   const [isDragging, setIsDragging] = useState(false)
   const [showShareMenu, setShowShareMenu] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const touchDist = useRef<number | null>(null)
 
   const sceneLabel = description.match(/Scene \d+/)?.[0] || "Scene"
   const key = `${description}-${style}-${mood}`
-  const frameShadow = (FRAMES[frameStyle] as any).boxShadow as string | undefined
+  const frameShadow = (FRAMES[frameStyle] as { boxShadow?: string }).boxShadow
 
   const handleMouse = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
     if (!enableEffects || !ref.current) return
@@ -62,7 +64,7 @@ export default function Panel({ description, style, mood, onImageReady, generate
   }, [])
 
   const persist = useCallback((img: string) => {
-    try { const s = JSON.parse(localStorage.getItem(IMG_STORE) || "{}"); s[key] = img; localStorage.setItem(IMG_STORE, JSON.stringify(s)) } catch {}
+    try { const s = JSON.parse(localStorage.getItem(IMG_STORE) || "{}"); s[key] = img; localStorage.setItem(IMG_STORE, JSON.stringify(s)) } catch { }
   }, [key])
 
   const generate = useCallback(async () => {
@@ -82,7 +84,7 @@ export default function Panel({ description, style, mood, onImageReady, generate
 
   useEffect(() => {
     if (initialImage) { setImage(initialImage); onImageReady?.(initialImage); return }
-    try { const s = JSON.parse(localStorage.getItem(IMG_STORE) || "{}"); if (s[key]) { setImage(s[key]); onImageReady?.(s[key]) } } catch {}
+    try { const s = JSON.parse(localStorage.getItem(IMG_STORE) || "{}"); if (s[key]) { setImage(s[key]); onImageReady?.(s[key]) } } catch { }
   }, [initialImage, key, onImageReady])
 
   useEffect(() => {
@@ -92,10 +94,9 @@ export default function Panel({ description, style, mood, onImageReady, generate
     }
   }, [description, generateDelay, generate, image, loading, shouldGenerate])
 
-  const del = () => {
-    if (!confirm('Delete this image?')) return
+  const performDelete = () => {
     setImage(''); setError('')
-    try { const s = JSON.parse(localStorage.getItem(IMG_STORE) || '{}'); delete s[key]; localStorage.setItem(IMG_STORE, JSON.stringify(s)) } catch {}
+    try { const s = JSON.parse(localStorage.getItem(IMG_STORE) || '{}'); delete s[key]; localStorage.setItem(IMG_STORE, JSON.stringify(s)) } catch { }
   }
 
   const btnStyle = (bg: string) => ({ background: bg, color: bg.includes('dc2626') ? 'white' : colors.background })
@@ -113,7 +114,7 @@ export default function Panel({ description, style, mood, onImageReady, generate
       onTouchEnd={() => { touchDist.current = null; setTimeout(() => setScale(1), 300) }}
       draggable={draggable}
       onDragStart={e => { setIsDragging(true); e.dataTransfer.setData('text/plain', String(dragIndex)); onDragStart?.(e) }}
-      onDragEnd={() => setIsDragging(false)}
+      onDragEnd={e => { setIsDragging(false); onDragEnd?.(e) }}
       onDragOver={onDragOver}
       onDrop={onDrop}
     >
@@ -138,15 +139,15 @@ export default function Panel({ description, style, mood, onImageReady, generate
       )}
 
       {!loading && image && (
-          <div className="relative w-full h-full group" style={{ boxShadow: enableEffects && isHovered ? shadows.glowCyan : frameShadow }}>
-            <div className="absolute inset-0 transition-transform duration-300" style={{ transform: enableEffects && isHovered ? `translateX(${tilt.y * 0.5}px) translateY(${tilt.x * 0.5}px)` : 'none' }}>
+        <div className="relative w-full h-full group" style={{ boxShadow: enableEffects && isHovered ? shadows.glowCyan : frameShadow }}>
+          <div className="absolute inset-0 transition-transform duration-300" style={{ transform: enableEffects && isHovered ? `translateX(${tilt.y * 0.5}px) translateY(${tilt.x * 0.5}px)` : 'none' }}>
             <Image src={image} alt={description} fill sizes="(max-width: 768px) 100vw, 50vw" className="object-cover" unoptimized loading="lazy" />
           </div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col items-center justify-end gap-3 p-4 z-20">
             {draggable && <div className="absolute top-2 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-xs font-medium" style={{ background: colors.surface, color: colors.textMuted }}>⋮⋮ Drag to reorder</div>}
             <div className="flex gap-2 flex-wrap justify-center">
               <button onClick={() => { const a = document.createElement('a'); a.href = image; a.download = `dream-panel-${Date.now()}.png`; a.click() }} className="px-3 py-2 font-semibold rounded-lg text-sm backdrop-blur-sm hover:scale-105 transition-all" style={btnStyle(`${colors.cyan}dd`)}>📥 Download</button>
-              <button onClick={() => navigator.clipboard.writeText(image).then(() => alert('Copied!'), () => alert('Failed'))} className="px-3 py-2 font-semibold rounded-lg text-sm backdrop-blur-sm hover:scale-105 transition-all" style={btnStyle(`${colors.purple}dd`)}>📋 Copy</button>
+              <button onClick={() => navigator.clipboard.writeText(image).then(() => showToast('Image URL copied to clipboard', 'success'), () => showToast('Failed to copy', 'error'))} className="px-3 py-2 font-semibold rounded-lg text-sm backdrop-blur-sm hover:scale-105 transition-all" style={btnStyle(`${colors.purple}dd`)} aria-label="Copy image URL">📋 Copy</button>
               <div className="relative">
                 <button onClick={() => setShowShareMenu(!showShareMenu)} className="px-3 py-2 font-semibold rounded-lg text-sm backdrop-blur-sm hover:scale-105 transition-all" style={btnStyle(`${colors.pink}dd`)}>📤 Share</button>
                 {showShareMenu && (
@@ -157,7 +158,16 @@ export default function Panel({ description, style, mood, onImageReady, generate
                   </div>
                 )}
               </div>
-              <button onClick={del} className="px-3 py-2 font-semibold rounded-lg text-sm backdrop-blur-sm hover:scale-105 transition-all" style={btnStyle('#dc2626dd')}>🗑️ Delete</button>
+              <div className="relative">
+                {!confirmDelete ? (
+                  <button onClick={() => setConfirmDelete(true)} className="px-3 py-2 font-semibold rounded-lg text-sm backdrop-blur-sm hover:scale-105 transition-all" style={btnStyle('#dc2626dd')} aria-label="Delete image">🗑️ Delete</button>
+                ) : (
+                  <div className="flex gap-2">
+                    <button onClick={() => { performDelete(); setConfirmDelete(false); showToast('Image deleted', 'success') }} className="px-3 py-2 font-semibold rounded-lg text-sm" style={btnStyle('#dc2626dd')}>Confirm</button>
+                    <button onClick={() => setConfirmDelete(false)} className="px-3 py-2 font-semibold rounded-lg text-sm" style={btnStyle('#6b7280')}>Cancel</button>
+                  </div>
+                )}
+              </div>
             </div>
             <Button onClick={generate}>🔄 Regenerate</Button>
           </div>

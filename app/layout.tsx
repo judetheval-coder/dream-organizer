@@ -8,10 +8,13 @@ import ErrorBoundary from '@/components/ErrorBoundary'
 import { ServiceWorkerRegistration } from '@/components/ServiceWorker'
 import { ToastProvider } from '@/contexts/ToastContext'
 import { GlobalDevControls } from '@/components/GlobalDevControls'
+import { devRoutesEnabled } from '@/lib/dev-utils'
 import "./globals.css";
 
 const CLERK_ENABLED = Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY)
-const MaybeClerk: any = CLERK_ENABLED ? ClerkProvider : (({ children }: any) => <>{children}</>)
+const NoClerk: React.FC<{ children?: React.ReactNode }> = ({ children }) => <>{children}</>
+// ClerkProvider has a slightly different type signature in some setups; cast to any to avoid a compile-time mismatch while still providing the wrapper.
+const MaybeClerk: React.ComponentType<{ children?: React.ReactNode }> = CLERK_ENABLED ? (ClerkProvider as React.ComponentType<Record<string, unknown>>) : NoClerk
 
 const inter = Inter({
   subsets: ["latin"],
@@ -102,7 +105,7 @@ export default function RootLayout({
               <PostHogProvider>{children}</PostHogProvider>
             </ToastProvider>
           </ErrorBoundary>
-          <GlobalDevControls />
+          {devRoutesEnabled() && <GlobalDevControls />}
           <ServiceWorkerRegistration />
           <Analytics />
         </body>

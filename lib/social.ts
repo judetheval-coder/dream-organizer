@@ -205,8 +205,8 @@ export async function isDreamPublished(dreamId: string): Promise<boolean> {
 export type ReactionType = 'like' | 'love' | 'wow' | 'dream' | 'insightful'
 
 export async function reactToDream(
-  dreamId: string, 
-  userId: string, 
+  dreamId: string,
+  userId: string,
   reaction: ReactionType
 ): Promise<{ success: boolean; added: boolean; error?: string }> {
   try {
@@ -270,7 +270,7 @@ export async function getDreamReactions(dreamId: string): Promise<Record<Reactio
 // ============= FOLLOW FUNCTIONS =============
 
 export async function followUser(
-  followerId: string, 
+  followerId: string,
   followingId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
@@ -289,7 +289,7 @@ export async function followUser(
 }
 
 export async function unfollowUser(
-  followerId: string, 
+  followerId: string,
   followingId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
@@ -444,10 +444,21 @@ export async function fetchGroups(userId?: string): Promise<DreamGroup[]> {
 }
 
 export async function createGroup(
-  group: { name: string; description: string; category: string; isPrivate: boolean }, 
+  group: { name: string; description: string; category: string; isPrivate: boolean },
   userId: string
 ): Promise<{ success: boolean; group?: DreamGroup; error?: string }> {
   try {
+    // Server-side check: ensure the user is premium
+    const { data: userRow, error: userErr } = await supabase
+      .from('users')
+      .select('subscription_tier')
+      .eq('id', userId)
+      .single()
+
+    if (userErr) throw userErr
+    if (!userRow || userRow.subscription_tier !== 'premium') {
+      return { success: false, error: 'Only premium users can create groups' }
+    }
     const { data, error } = await supabase
       .from('dream_groups')
       .insert({
@@ -568,7 +579,7 @@ export async function purchaseGiftSubscription(
 }
 
 export async function redeemGiftCode(
-  giftCode: string, 
+  giftCode: string,
   userId: string
 ): Promise<{ success: boolean; tier?: string; duration?: string; error?: string }> {
   try {
@@ -625,9 +636,9 @@ export interface ContestEntry {
 }
 
 export async function enterContest(
-  dreamId: string, 
-  userId: string, 
-  username: string, 
+  dreamId: string,
+  userId: string,
+  username: string,
   dreamTitle: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
@@ -655,6 +666,8 @@ export async function enterContest(
       })
 
     if (error) throw error
+    // Keep a small audit log for contest entries to help debug issues
+    console.info(`[contest] Entry: dreamId=${dreamId} userId=${userId} username=${username} title=${dreamTitle}`)
     return { success: true }
   } catch (e) {
     return { success: false, error: e instanceof Error ? e.message : 'Failed to enter contest' }
@@ -729,8 +742,8 @@ export interface DreamComment {
 }
 
 export async function addComment(
-  dreamId: string, 
-  userId: string, 
+  dreamId: string,
+  userId: string,
   content: string
 ): Promise<{ success: boolean; comment?: DreamComment; error?: string }> {
   try {

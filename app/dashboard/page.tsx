@@ -5,7 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { analytics } from '@/lib/analytics'
 import { useUser, SignOutButton } from '@clerk/nextjs'
 import { colors, gradients } from '@/lib/design'
-import { enhanceDreamStory, analyzeDreams } from '@/lib/gpt-helpers'
+import { enhanceDreamStory } from '@/lib/gpt-helpers'
 import WelcomeScreen from '@/components/WelcomeScreen'
 import Footer from '@/components/Footer'
 import UpgradePrompt from '@/components/UpgradePrompt'
@@ -28,12 +28,14 @@ import PublicGallery from '@/components/PublicGallery'
 import DreamGroups from '@/components/DreamGroups'
 import GiftSubscriptions from '@/components/GiftSubscriptions'
 import EventsContest from '@/components/EventsContest'
+import CommunityPage from '@/components/CommunityPage'
+import ToolsPage from '@/components/ToolsPage'
+import AccountPage from '@/components/AccountPage'
 import { useDreams } from '@/hooks/useDreams'
 import { useToast } from '@/contexts/ToastContext'
 import { canCreateDream, getTierName, getTierFeatures, SUBSCRIPTION_TIERS } from '@/lib/subscription-tiers'
 import type { DreamRecord } from '@/components/dashboard/DreamList'
 import type { DreamWithPanels, Panel } from '@/lib/supabase'
-import { DevPanel } from '@/components/DevPanel'
 
 const TAB_QUERY_KEY = 'tab'
 const DEFAULT_TAB: DashboardTab = DASHBOARD_TABS[0].key
@@ -45,8 +47,6 @@ type LocalPanel = {
   mood: string
   image?: string
 }
-
-type DreamWithOptionalDate = DreamWithPanels & { date?: string | null }
 
 function DashboardPageContent() {
   const router = useRouter()
@@ -66,10 +66,13 @@ function DashboardPageContent() {
     removeDream,
     loadMoreDreams,
     demoCreated,
+    insights,
+    analyzing,
+    analyzeDreams,
+    analysisError,
   } = useDreams()
   const { showToast } = useToast()
 
-  useEffect(() => {
   useEffect(() => {
     // Detect subscription success/cancel after Stripe redirect
     const tab = searchParams.get('tab')
@@ -83,22 +86,21 @@ function DashboardPageContent() {
       analytics.track('checkout_canceled', {})
       showToast('Subscription canceled. You were not charged.', 'info')
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams])
+  }, [searchParams, showToast])
 
   useEffect(() => {
     if (isLoaded && user) {
       analytics.identify(user.id, { email: user.emailAddresses?.[0]?.emailAddress, name: user.firstName })
       analytics.track('user_loaded', { userId: user.id })
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [isLoaded, user])
 
   useEffect(() => {
     if (demoCreated) {
       showToast("Welcome! We created a demo dream for you — check the dashboard.", 'success')
     }
-  }, [demoCreated])
+  }, [demoCreated, showToast])
 
 
   const [dreamText, setDreamText] = useState('')
@@ -106,17 +108,14 @@ function DashboardPageContent() {
   const [mood, setMood] = useState('Dreamy')
   const [panels, setPanels] = useState<LocalPanel[]>([])
   const [enhancing, setEnhancing] = useState(false)
-  const [analyzing, setAnalyzing] = useState(false)
-  const [insights, setInsights] = useState<string | null>(null)
-  const [analysisError, setAnalysisError] = useState<string | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [currentGeneratingIndex, setCurrentGeneratingIndex] = useState(-1)
-  const [showWelcome, setShowWelcome] = useState(() => {
-    if (typeof window === 'undefined') {
-      return true
+  const [showWelcome, setShowWelcome] = useState(true)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setShowWelcome(!window.localStorage.getItem('has-visited'))
     }
-    return !window.localStorage.getItem('has-visited')
-  })
+  }, [])
   const [lastCreatedDreamId, setLastCreatedDreamId] = useState<string | null>(null)
   const [showUpgrade, setShowUpgrade] = useState(false)
 
@@ -141,7 +140,7 @@ function DashboardPageContent() {
     updateTabInUrl(tab)
   }
 
-  const getDreamTimestamp = (dream: DreamWithOptionalDate) => dream?.created_at || dream?.date || null
+  const getDreamTimestamp = (dream: DreamWithPanels | DreamRecord) => dream?.created_at || (dream as { date?: string })?.date || null
 
   const normalizedDreamsForList: DreamRecord[] = useMemo(
     () =>
@@ -253,7 +252,7 @@ function DashboardPageContent() {
     setCurrentGeneratingIndex(0)
     setDreamText('')
     setShowCreateModal(false)
-    updateTabInUrl('Comics')
+    updateTabInUrl('Dreams')
 
     try {
       const createdDream = await saveDream({
@@ -315,27 +314,7 @@ function DashboardPageContent() {
 
   const handleAnalyze = async () => {
     if (!dreams.length) return
-    setAnalyzing(true)
-    setAnalysisError(null)
-    try {
-      const analysisPayload = dreams.map(dream => {
-        const panelDescriptions = dream.panels?.map(panel => panel.description).filter(Boolean) ?? []
-        const description = panelDescriptions.length ? panelDescriptions.join(' ') : dream.text || 'Untitled dream'
-
-        return {
-          description,
-          text: dream.text ?? '',
-          date: getDreamTimestamp(dream) ?? undefined,
-        }
-      })
-
-      const result = await analyzeDreams(analysisPayload, false)
-      setInsights(result)
-    } catch (err) {
-      console.error('Analysis failed:', err)
-      setAnalysisError('Please try again in a moment.')
-    }
-    setAnalyzing(false)
+    await analyzeDreams()
   }
 
   if (showWelcome) {
@@ -362,107 +341,74 @@ function DashboardPageContent() {
 
         <div key={currentTab} className="animate-fadeInUp">
           {currentTab === 'Dashboard' && (
-          <>
-            <section aria-labelledby="stats-heading" className="space-y-6">
-              <h3 id="stats-heading" className="text-lg font-semibold" style={{ color: colors.textPrimary }}>
-                Overview
-              </h3>
-              <StatsOverview stats={stats} loading={loading} />
-              <ActionBar
-                onCreate={() => setShowCreateModal(true)}
-                onAnalyze={handleAnalyze}
-                disableAnalysis={!hasDreams || analyzing}
-                analyzing={analyzing}
-              />
-            </section>
-
-            <section className="grid gap-6 lg:grid-cols-[2fr,1fr]" aria-label="Activity and Insights">
-              <ActivityFeed items={activityItems} loading={loading} />
-              <InsightsPreview
-                insights={insights}
-                analyzing={analyzing}
-                onAnalyze={handleAnalyze}
-                hasDreams={hasDreams}
-                error={analysisError}
-              />
-            </section>
-
-            {!!panels.length && (
-              <section aria-label="Current generation">
-                <PanelShowcase
-                  panels={panels}
-                  currentGeneratingIndex={currentGeneratingIndex}
-                  onImageReady={handlePanelImageReady}
+            <>
+              <section aria-labelledby="stats-heading" className="space-y-6">
+                <h3 id="stats-heading" className="text-lg font-semibold" style={{ color: colors.textPrimary }}>
+                  Overview
+                </h3>
+                <StatsOverview stats={stats} loading={loading} />
+                <ActionBar
+                  onCreate={() => setShowCreateModal(true)}
+                  onAnalyze={handleAnalyze}
+                  disableAnalysis={!hasDreams || analyzing}
+                  analyzing={analyzing}
                 />
               </section>
-            )}
 
-            {!panels.length && !hasDreams && (
-              <Card>
-                <EmptyState
-                  icon="💤"
-                  title="Ready for your first dream?"
-                  description="Use the New Dream button to start your first comic."
-                  action={{ label: 'Create dream', onClick: () => setShowCreateModal(true) }}
+              <section className="grid gap-6 lg:grid-cols-[2fr,1fr]" aria-label="Activity and Insights">
+                <ActivityFeed items={activityItems} loading={loading} />
+                <InsightsPreview
+                  insights={insights}
+                  analyzing={analyzing}
+                  onAnalyze={handleAnalyze}
+                  hasDreams={hasDreams}
+                  error={analysisError}
                 />
-              </Card>
-            )}
-          </>
-        )}
+              </section>
 
-        {currentTab === 'My Dreams' && (
-          <DreamList
-            dreams={normalizedDreamsForList}
-            loading={loading}
-            loadingMore={loadingMore}
-            hasMore={hasMore}
-            onLoadMore={loadMoreDreams}
-            onRemove={async (dreamId) => {
-              try {
-                await removeDream(dreamId)
-                showToast('Dream deleted successfully', 'success')
-              } catch (err) {
-                console.error('Error deleting dream:', err)
-                showToast('Failed to delete dream', 'error')
-              }
-            }}
-          />
-        )}
+              {!!panels.length && (
+                <section aria-label="Current generation">
+                  <PanelShowcase
+                    panels={panels}
+                    currentGeneratingIndex={currentGeneratingIndex}
+                    onImageReady={handlePanelImageReady}
+                  />
+                </section>
+              )}
 
-        {currentTab === 'Comics' && (
-          <div className="space-y-8">
-            {!!panels.length && (
-              <PanelShowcase
-                panels={panels}
-                currentGeneratingIndex={currentGeneratingIndex}
-                onImageReady={handlePanelImageReady}
-              />
-            )}
-            {!panels.length && !dreamsWithPanels.length && (
-              <Card>
-                <EmptyState
-                  icon="📚"
-                  title="No comic panels yet"
-                  description="Generate a new dream on the Dashboard to fill this gallery."
-                  action={{ label: 'Start a dream', onClick: () => setShowCreateModal(true) }}
-                />
-              </Card>
-            )}
-            <DreamPanelsGallery dreams={dreamsWithPanels} />
-          </div>
-        )}
+              {!panels.length && !hasDreams && (
+                <Card>
+                  <EmptyState
+                    icon="💤"
+                    title="Ready for your first dream?"
+                    description="Use the New Dream button to start your first comic."
+                    action={{ label: 'Create dream', onClick: () => setShowCreateModal(true) }}
+                  />
+                </Card>
+              )}
+            </>
+          )}
 
-        {currentTab === 'Insights' && (
-          <InsightsPreview
-            insights={insights}
-            analyzing={analyzing}
-            onAnalyze={handleAnalyze}
-            hasDreams={hasDreams}
-            error={analysisError}
-          />
-        )}
+          {currentTab === 'Dreams' && (
+            <DreamList
+              dreams={normalizedDreamsForList}
+              loading={loading}
+              loadingMore={loadingMore}
+              hasMore={hasMore}
+              onLoadMore={loadMoreDreams}
+              onRemove={async (dreamId) => {
+                try {
+                  await removeDream(dreamId)
+                  showToast('Dream deleted successfully', 'success')
+                } catch (err) {
+                  console.error('Error deleting dream:', err)
+                  showToast('Failed to delete dream', 'error')
+                }
+              }}
+            />
+          )}
 
-        {currentTab === 'Subscription' && isLoaded && (
+          {/* Subscription tab removed - now part of Account */}
           <div className="max-w-6xl w-full space-y-8">
             <div
               className="rounded-xl p-8"
@@ -611,220 +557,201 @@ function DashboardPageContent() {
               <GiftSubscriptions />
             </div>
           </div>
-        )}
 
-        {currentTab === 'Settings' && isLoaded && (
-          <div className="max-w-4xl w-full space-y-6">
-            <div
-              className="rounded-xl p-8"
-              style={{
-                background: colors.surface,
-                border: `2px solid ${colors.purple}`,
-              }}
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold" style={{ color: colors.textPrimary }}>
-                  Account
-                </h2>
-                <SignOutButton>
-                  <button
-                    className="px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105"
-                    style={{
-                      background: '#dc2626',
-                      color: 'white',
-                    }}
-                  >
-                    Sign Out
-                  </button>
-                </SignOutButton>
-              </div>
+          {/* Ensure all previous blocks are closed before starting the Account tab */}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <p className="text-sm font-semibold mb-2" style={{ color: colors.textMuted }}>
-                    Email Address
-                  </p>
-                  <p className="text-lg" style={{ color: colors.textPrimary }}>
-                    {user?.emailAddresses[0]?.emailAddress || 'N/A'}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm font-semibold mb-2" style={{ color: colors.textMuted }}>
-                    Name
-                  </p>
-                  <p className="text-lg" style={{ color: colors.textPrimary }}>
-                    {user?.firstName || 'User'} {user?.lastName || ''}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm font-semibold mb-2" style={{ color: colors.textMuted }}>
-                    Member Since
-                  </p>
-                  <p className="text-lg" style={{ color: colors.textPrimary }}>
-                    {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
-                  </p>
-                </div>
-
-                <div>
-                  <p className="text-sm font-semibold mb-2" style={{ color: colors.textMuted }}>
-                    Total Dreams
-                  </p>
-                  <p className="text-lg" style={{ color: colors.textPrimary }}>
-                    {dreams.length}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div
-              className="rounded-xl p-8"
-              style={{
-                background: colors.surface,
-                border: `2px solid ${colors.purple}`,
-              }}
-            >
-              <h2 className="text-2xl font-bold mb-6" style={{ color: colors.textPrimary }}>
-                Preferences
-              </h2>
-
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-semibold mb-2" style={{ color: colors.textPrimary }}>
-                    Theme
-                  </label>
-                  <div
-                    className="p-3 rounded-lg flex items-center justify-between"
-                    style={{
-                      background: colors.backgroundDark,
-                      color: colors.textMuted,
-                    }}
-                  >
-                    <span>Dark Purple & Cyan (Fixed)</span>
-                    <span className="text-xs px-2 py-1 rounded bg-purple-900 text-purple-200">Active</span>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-2" style={{ color: colors.textPrimary }}>
-                    Default AI Style
-                  </label>
-                  <select
-                    className="w-full p-3 rounded-lg"
-                    style={{
-                      background: colors.backgroundDark,
-                      color: colors.textPrimary,
-                      border: `1px solid ${colors.surface}`,
-                    }}
-                    defaultValue="Anime"
-                  >
-                    <option>Anime</option>
-                    <option>Watercolor</option>
-                    <option>Oil Painting</option>
-                    <option>Abstract</option>
-                    <option>Realistic</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-4" style={{ color: colors.textPrimary }}>
-                    Notifications
-                  </label>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: colors.backgroundDark }}>
-                      <span style={{ color: colors.textMuted }}>Weekly Dream Digest</span>
-                      <div className="w-10 h-6 rounded-full relative cursor-pointer transition-colors" style={{ background: colors.purple }}>
-                        <div className="absolute right-1 top-1 w-4 h-4 rounded-full bg-white shadow-sm"></div>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: colors.backgroundDark }}>
-                      <span style={{ color: colors.textMuted }}>New Feature Updates</span>
-                      <div className="w-10 h-6 rounded-full relative cursor-pointer transition-colors" style={{ background: colors.purple }}>
-                        <div className="absolute right-1 top-1 w-4 h-4 rounded-full bg-white shadow-sm"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-4" style={{ color: colors.textPrimary }}>
-                    Data & Privacy
-                  </label>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: colors.backgroundDark }}>
-                      <span style={{ color: colors.textMuted }}>Public Profile Visibility</span>
-                      <div className="w-10 h-6 rounded-full relative cursor-pointer transition-colors" style={{ background: '#374151' }}>
-                        <div className="absolute left-1 top-1 w-4 h-4 rounded-full bg-white shadow-sm"></div>
-                      </div>
-                    </div>
-                    <button
-                      className="w-full p-3 rounded-lg text-left transition-colors hover:bg-opacity-80"
-                      style={{
-                        background: colors.backgroundDark,
-                        color: colors.cyan,
-                      }}
-                    >
-                      📥 Download My Data (JSON)
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div
-              className="rounded-xl p-8"
-              style={{
-                background: colors.surface,
-                border: `2px solid #dc2626`,
-              }}
-            >
-              <h2 className="text-2xl font-bold mb-6" style={{ color: '#dc2626' }}>
-                Danger Zone
-              </h2>
-
-              <button
-                onClick={() => {
-                  localStorage.clear()
-                  setPanels([])
-                  setLastCreatedDreamId(null)
-                }}
-                className="px-4 py-2 rounded-lg font-semibold cursor-pointer hover:scale-105 transition-all"
+          {currentTab === 'Account' && isLoaded && (
+            <div className="max-w-4xl w-full space-y-6">
+              <div
+                className="rounded-xl p-8"
                 style={{
-                  background: '#dc2626',
-                  color: 'white',
-                  border: `1px solid #dc2626`,
+                  background: colors.surface,
+                  border: `2px solid ${colors.purple}`,
                 }}
               >
-                Clear All Data
-              </button>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold" style={{ color: colors.textPrimary }}>
+                    Account
+                  </h2>
+                  <SignOutButton>
+                    <button
+                      className="px-4 py-2 rounded-lg font-semibold transition-all hover:scale-105"
+                      style={{
+                        background: '#dc2626',
+                        color: 'white',
+                      }}
+                    >
+                      Sign Out
+                    </button>
+                  </SignOutButton>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <p className="text-sm font-semibold mb-2" style={{ color: colors.textMuted }}>
+                      Email Address
+                    </p>
+                    <p className="text-lg" style={{ color: colors.textPrimary }}>
+                      {user?.emailAddresses[0]?.emailAddress || 'N/A'}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-semibold mb-2" style={{ color: colors.textMuted }}>
+                      Name
+                    </p>
+                    <p className="text-lg" style={{ color: colors.textPrimary }}>
+                      {user?.firstName || 'User'} {user?.lastName || ''}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-semibold mb-2" style={{ color: colors.textMuted }}>
+                      Member Since
+                    </p>
+                    <p className="text-lg" style={{ color: colors.textPrimary }}>
+                      {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm font-semibold mb-2" style={{ color: colors.textMuted }}>
+                      Total Dreams
+                    </p>
+                    <p className="text-lg" style={{ color: colors.textPrimary }}>
+                      {dreams.length}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className="rounded-xl p-8"
+                style={{
+                  background: colors.surface,
+                  border: `2px solid ${colors.purple}`,
+                }}
+              >
+                <h2 className="text-2xl font-bold mb-6" style={{ color: colors.textPrimary }}>
+                  Preferences
+                </h2>
+
+                <div className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-semibold mb-2" style={{ color: colors.textPrimary }}>
+                      Theme
+                    </label>
+                    <div
+                      className="p-3 rounded-lg flex items-center justify-between"
+                      style={{
+                        background: colors.backgroundDark,
+                        color: colors.textMuted,
+                      }}
+                    >
+                      <span>Dark Purple & Cyan (Fixed)</span>
+                      <span className="text-xs px-2 py-1 rounded bg-purple-900 text-purple-200">Active</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold mb-2" style={{ color: colors.textPrimary }}>
+                      Default AI Style
+                    </label>
+                    <select
+                      className="w-full p-3 rounded-lg"
+                      style={{
+                        background: colors.backgroundDark,
+                        color: colors.textPrimary,
+                        border: `1px solid ${colors.surface}`,
+                      }}
+                      defaultValue="Anime"
+                    >
+                      <option>Anime</option>
+                      <option>Watercolor</option>
+                      <option>Oil Painting</option>
+                      <option>Abstract</option>
+                      <option>Realistic</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold mb-4" style={{ color: colors.textPrimary }}>
+                      Notifications
+                    </label>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: colors.backgroundDark }}>
+                        <span style={{ color: colors.textMuted }}>Weekly Dream Digest</span>
+                        <div className="w-10 h-6 rounded-full relative cursor-pointer transition-colors" style={{ background: colors.purple }}>
+                          <div className="absolute right-1 top-1 w-4 h-4 rounded-full bg-white shadow-sm"></div>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: colors.backgroundDark }}>
+                        <span style={{ color: colors.textMuted }}>New Feature Updates</span>
+                        <div className="w-10 h-6 rounded-full relative cursor-pointer transition-colors" style={{ background: colors.purple }}>
+                          <div className="absolute right-1 top-1 w-4 h-4 rounded-full bg-white shadow-sm"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold mb-4" style={{ color: colors.textPrimary }}>
+                      Data & Privacy
+                    </label>
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between p-3 rounded-lg" style={{ background: colors.backgroundDark }}>
+                        <span style={{ color: colors.textMuted }}>Public Profile Visibility</span>
+                        <div className="w-10 h-6 rounded-full relative cursor-pointer transition-colors" style={{ background: '#374151' }}>
+                          <div className="absolute left-1 top-1 w-4 h-4 rounded-full bg-white shadow-sm"></div>
+                        </div>
+                      </div>
+                      <button
+                        className="w-full p-3 rounded-lg text-left transition-colors hover:bg-opacity-80"
+                        style={{
+                          background: colors.backgroundDark,
+                          color: colors.cyan,
+                        }}
+                      >
+                        📥 Download My Data (JSON)
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                className="rounded-xl p-8"
+                style={{
+                  background: colors.surface,
+                  border: `2px solid #dc2626`,
+                }}
+              >
+                <h2 className="text-2xl font-bold mb-6" style={{ color: '#dc2626' }}>
+                  Danger Zone
+                </h2>
+
+                <button
+                  onClick={() => {
+                    localStorage.clear()
+                    setPanels([])
+                    setLastCreatedDreamId(null)
+                  }}
+                  className="px-4 py-2 rounded-lg font-semibold cursor-pointer hover:scale-105 transition-all"
+                  style={{
+                    background: '#dc2626',
+                    color: 'white',
+                    border: `1px solid #dc2626`,
+                  }}
+                >
+                  Clear All Data
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {currentTab === 'Dictionary' && (
-          <DreamDictionary 
-            dreamText={dreams.length > 0 ? dreams[0].text : ''}
-          />
-        )}
+          {currentTab === 'Tools' && <ToolsPage />}
 
-        {currentTab === 'Patterns' && (
-          <GlobalPatterns 
-            userDreams={dreams.map(d => d.text)}
-          />
-        )}
-
-        {currentTab === 'Gallery' && (
-          <PublicGallery />
-        )}
-
-        {currentTab === 'Groups' && (
-          <DreamGroups />
-        )}
-
-        {currentTab === 'Events' && (
-          <EventsContest />
-        )}
+          {currentTab === 'Account' && <AccountPage />}
 
 
         </div>
@@ -855,12 +782,6 @@ function DashboardPageContent() {
     </>
   )
 }
-
-
-
-
-
-
 
 export default function DashboardPage() {
   return (

@@ -1,8 +1,8 @@
 // Run with: node scripts/generate-icons.js
 // Requires: npm install sharp
 
+/* eslint-disable @typescript-eslint/no-require-imports */
 const sharp = require('sharp');
-const fs = require('fs');
 const path = require('path');
 
 const publicDir = path.join(__dirname, '..', 'public');

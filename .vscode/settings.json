@@ -9,8 +9,7 @@
     // Suggest formatting on save for consistency
     "editor.formatOnSave": true,
     // Helpful: automatically trim trailing whitespace on save
-    "files.trimTrailingWhitespace": true
-}
-{
+    "files.trimTrailingWhitespace": true,
+    // Disable Codium code completion if the extension is installed (optional)
     "codium.codeCompletion.enable": false
 }

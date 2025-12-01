@@ -7,10 +7,6 @@ import Card from '@/components/ui/Card'
 import Skeleton from '@/components/ui/Skeleton'
 import FrameStyleSelector from '@/components/FrameStyleSelector'
 
-const Panel = dynamic(() => import('@/components/Panel'), {
-  ssr: false,
-  loading: () => <Skeleton className="h-64 w-full" />,
-})
 
 const DraggablePanelGrid = dynamic(() => import('@/components/DraggablePanelGrid'), {
   ssr: false,

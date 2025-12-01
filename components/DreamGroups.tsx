@@ -2,19 +2,23 @@
 
 import { useState, useEffect } from 'react'
 import { useUser } from '@clerk/nextjs'
+import { useDreams } from '@/hooks/useDreams'
 import { colors, gradients } from '@/lib/design'
-import { Card, Chip, Button, EmptyState } from '@/components/ui/primitives'
+import { Card, Button, EmptyState } from '@/components/ui/primitives'
+import UpgradePrompt from '@/components/UpgradePrompt'
 import { DEFAULT_GROUPS, type DreamGroup } from '@/lib/mock-data'
 import { joinGroup, leaveGroup, getJoinedGroups, createGroup } from '@/lib/social'
 
 export default function DreamGroups({ groups: initialGroups = DEFAULT_GROUPS }: { groups?: DreamGroup[] }) {
   const { user } = useUser()
-  const userId = user?.id || 'anonymous'
-  
+  const userId = user?.id || ''
+  const { userTier } = useDreams()
+
   const [groups, setGroups] = useState<DreamGroup[]>(initialGroups)
   const [filter, setFilter] = useState<'all' | 'joined' | 'suggested'>('all')
   const [search, setSearch] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
   const [newGroup, setNewGroup] = useState({ name: '', description: '', emoji: '✨', isPrivate: false, category: 'general' })
 
   // Load joined status from Supabase
@@ -41,13 +45,24 @@ export default function DreamGroups({ groups: initialGroups = DEFAULT_GROUPS }: 
 
   const handleCreate = async () => {
     if (!newGroup.name.trim()) return
+    // Ensure signed-in and premium tier
+    if (!userId) {
+      alert('You must be signed in to create a group')
+      return
+    }
+    if (userTier !== 'premium') {
+      setShowCreateModal(false)
+      setShowUpgradePrompt(true)
+      return
+    }
+
     const result = await createGroup({
       name: newGroup.name,
       description: newGroup.description,
       category: newGroup.category,
       isPrivate: newGroup.isPrivate,
     }, userId)
-    
+
     if (result.success && result.group) {
       setGroups(prev => [result.group!, ...prev])
       setShowCreateModal(false)
@@ -68,91 +83,58 @@ export default function DreamGroups({ groups: initialGroups = DEFAULT_GROUPS }: 
   })
 
   const joinedCount = groups.filter(g => g.isJoined).length
-
   return (
-    <div className="space-y-6">
-      {/* Create Group Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="rounded-2xl p-6 max-w-md w-full" style={{ background: colors.surface, border: `2px solid ${colors.purple}` }}>
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold" style={{ color: colors.textPrimary }}>Create a Group</h3>
-              <button onClick={() => setShowCreateModal(false)} className="text-2xl" style={{ color: colors.textMuted }}>×</button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: colors.textSecondary }}>Group Name</label>
-                <input type="text" value={newGroup.name} onChange={e => setNewGroup(prev => ({ ...prev, name: e.target.value }))} placeholder="Lucid Dreamers Unite" className="w-full px-4 py-3 rounded-xl border outline-none" style={{ background: colors.background, borderColor: colors.border, color: colors.textPrimary }} />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: colors.textSecondary }}>Description</label>
-                <textarea value={newGroup.description} onChange={e => setNewGroup(prev => ({ ...prev, description: e.target.value }))} placeholder="A community for..." rows={3} className="w-full px-4 py-3 rounded-xl border outline-none resize-none" style={{ background: colors.background, borderColor: colors.border, color: colors.textPrimary }} />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: colors.textSecondary }}>Emoji</label>
-                <input type="text" value={newGroup.emoji} onChange={e => setNewGroup(prev => ({ ...prev, emoji: e.target.value }))} maxLength={2} className="w-20 px-4 py-3 rounded-xl border outline-none text-center text-2xl" style={{ background: colors.background, borderColor: colors.border }} />
-              </div>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={newGroup.isPrivate} onChange={e => setNewGroup(prev => ({ ...prev, isPrivate: e.target.checked }))} className="w-5 h-5 rounded" />
-                <span style={{ color: colors.textSecondary }}>Make this group private</span>
-              </label>
-              <Button onClick={handleCreate} className="w-full">Create Group</Button>
-            </div>
-          </div>
-        </div>
-      )}
-
+    <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2" style={{ color: colors.textPrimary }}>👥 Dream Groups</h2>
-          <p className="text-sm mt-1" style={{ color: colors.textMuted }}>Join communities of dreamers with shared interests</p>
+      <div className="flex items-center justify-between gap-4">
+        <h2 className="text-2xl font-extrabold" style={{ color: colors.textPrimary }}>Groups</h2>
+        <div className="flex items-center gap-3">
+          <div className="px-4 py-2 rounded-full shadow-sm text-sm font-semibold" style={{ background: colors.surface, color: colors.textPrimary }}>✓ Joined {joinedCount}</div>
+          <Button onClick={() => {
+            if (!user) {
+              alert('Please sign in to create a group')
+              return
+            }
+            if (userTier !== 'premium') {
+              setShowUpgradePrompt(true)
+              return
+            }
+            setShowCreateModal(true)
+          }} className="text-sm font-semibold px-4 py-2 rounded-full">Create</Button>
         </div>
-        <Button onClick={() => setShowCreateModal(true)}>+ Create Group</Button>
       </div>
-
-      {/* Stats */}
-      <div className="flex gap-4">
-        {[{ value: joinedCount, label: 'Groups Joined', color: colors.purple }, { value: groups.length, label: 'Available', color: colors.cyan }].map(s => (
-          <div key={s.label} className="px-4 py-2 rounded-xl" style={{ background: colors.surface }}>
-            <p className="text-2xl font-bold" style={{ color: s.color }}>{s.value}</p>
-            <p className="text-xs" style={{ color: colors.textMuted }}>{s.label}</p>
-          </div>
-        ))}
-      </div>
-
       {/* Search & Filter */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
-          <input type="text" placeholder="Search groups..." value={search} onChange={e => setSearch(e.target.value)} className="w-full px-4 py-3 pl-10 rounded-xl border outline-none" style={{ background: colors.surface, borderColor: colors.border, color: colors.textPrimary }} />
-          <span className="absolute left-3 top-1/2 -translate-y-1/2">🔍</span>
+          <input type="text" placeholder="Search groups..." value={search} onChange={e => setSearch(e.target.value)} className="w-full px-5 py-3 pl-12 rounded-2xl border outline-none text-base font-medium" style={{ background: colors.surface, borderColor: colors.border, color: colors.textPrimary }} />
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-xl">🔍</span>
         </div>
-        <div className="flex gap-2 p-1 rounded-xl" style={{ background: colors.surface }}>
+        <div className="flex gap-2 p-1 rounded-2xl shadow-sm" style={{ background: colors.surface }}>
           {(['all', 'joined', 'suggested'] as const).map(t => (
-            <button key={t} onClick={() => setFilter(t)} className="px-4 py-2 rounded-lg text-sm font-medium transition-all capitalize" style={{ background: filter === t ? colors.purple : 'transparent', color: filter === t ? colors.white : colors.textSecondary }}>{t}</button>
+            <button key={t} onClick={() => setFilter(t)} className={`px-5 py-2 rounded-xl text-base font-semibold transition-all capitalize focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7c3aed] focus-visible:ring-offset-2 ${filter === t ? 'shadow bg-gradient-to-r from-[#5B2CFC] to-[#8A2BE2] text-white scale-[1.04]' : 'text-[#B0B0B0] hover:text-white hover:bg-[rgba(255,255,255,0.07)] hover:scale-[1.02]'}`} style={{ background: filter === t ? colors.purple : 'transparent', color: filter === t ? colors.white : colors.textSecondary }}>{t}</button>
           ))}
         </div>
       </div>
 
       {/* Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {filtered.map(g => (
-          <Card key={g.id} className="overflow-hidden cursor-pointer" interactive padding="p-0" onClick={() => handleViewGroup(g.id)}>
-            <div className="h-20 relative" style={{ background: g.coverGradient || gradients.card }}>
-              <span className="absolute bottom-2 left-4 text-3xl">{g.emoji}</span>
-              {g.isPrivate && <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-xs" style={{ background: 'rgba(0,0,0,0.5)', color: colors.white }}>🔒 Private</span>}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {filtered.map((g) => (
+          <Card key={g.id} className="overflow-hidden cursor-pointer hover:shadow-xl hover:scale-[1.01] transition-all" interactive padding="p-0" onClick={() => handleViewGroup(g.id)}>
+            <div className="h-24 relative" style={{ background: g.coverGradient || gradients.card }}>
+              <span className="absolute bottom-3 left-6 text-4xl">{g.emoji}</span>
+              {g.isPrivate ? <span className="absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-bold shadow" style={{ background: 'rgba(0,0,0,0.5)', color: colors.white }}>🔒 Private</span> : null}
             </div>
-            <div className="p-4 space-y-3">
+            <div className="p-6 space-y-4">
               <div>
-                <h3 className="font-bold" style={{ color: colors.textPrimary }}>{g.name}</h3>
-                <p className="text-sm line-clamp-2 mt-1" style={{ color: colors.textSecondary }}>{g.description}</p>
+                <h3 className="font-extrabold text-lg tracking-tight" style={{ color: colors.textPrimary }}>{g.name}</h3>
+                <p className="text-base line-clamp-2 mt-1 font-medium" style={{ color: colors.textSecondary }}>{g.description}</p>
               </div>
-              <div className="flex items-center gap-4 text-xs" style={{ color: colors.textMuted }}>
+              <div className="flex items-center gap-6 text-sm font-medium" style={{ color: colors.textMuted }}>
                 <span>👥 {g.memberCount.toLocaleString()} members</span>
-                <span>📝 {g.postCount.toLocaleString()} posts</span>
+                <span>💭 {g.postCount.toLocaleString()} posts</span>
               </div>
-              {g.recentActivity && <p className="text-xs" style={{ color: colors.textMuted }}>Active {g.recentActivity}</p>}
-              <button onClick={e => { e.stopPropagation(); g.isJoined ? handleLeave(g.id) : handleJoin(g.id) }} className="w-full py-2 rounded-xl font-medium transition-all" style={{ background: g.isJoined ? colors.surface : colors.purple, color: g.isJoined ? colors.textSecondary : colors.white, border: `1px solid ${g.isJoined ? colors.border : colors.purple}` }}>
+              {g.recentActivity ? <p className="text-xs" style={{ color: colors.textMuted }}>Active {g.recentActivity}</p> : null}
+              <button onClick={(e) => { e.stopPropagation(); if (g.isJoined) handleLeave(g.id); else handleJoin(g.id); }} className={`w-full py-3 rounded-2xl font-bold text-base transition-all shadow-sm ${g.isJoined ? 'bg-[rgba(255,255,255,0.04)] text-[#B0B0B0] border border-[#8A2BE2]' : 'bg-gradient-to-r from-[#5B2CFC] to-[#8A2BE2] text-white border-none hover:scale-[1.02]'}`}>
                 {g.isJoined ? '✓ Joined' : 'Join Group'}
               </button>
             </div>
@@ -165,12 +147,43 @@ export default function DreamGroups({ groups: initialGroups = DEFAULT_GROUPS }: 
       )}
 
       {/* CTA */}
-      <Card className="text-center py-8" style={{ background: `linear-gradient(135deg, ${colors.purple}20, ${colors.cyan}20)` }}>
-        <span className="text-3xl mb-3 block">✨</span>
-        <p className="font-medium" style={{ color: colors.textPrimary }}>Can&apos;t find your community?</p>
-        <p className="text-sm mt-1 mb-4" style={{ color: colors.textMuted }}>Create your own dream group and invite others!</p>
-        <Button onClick={() => setShowCreateModal(true)}>Create a Group</Button>
+      <Card className="text-center py-12 rounded-3xl shadow-xl" style={{ background: `linear-gradient(135deg, ${colors.purple}20, ${colors.cyan}20)` }}>
+        <span className="text-4xl mb-4 block">✨</span>
+        <p className="font-extrabold text-lg" style={{ color: colors.textPrimary }}>Can&apos;t find your community?</p>
+        <p className="text-base mt-1 mb-5 font-medium" style={{ color: colors.textMuted }}>Create your own dream group and invite others!</p>
+        <Button onClick={() => {
+          if (!user) { alert('Please sign in to create a group'); return }
+          if (userTier !== 'premium') { setShowUpgradePrompt(true); return }
+          setShowCreateModal(true)
+        }} className="text-lg font-bold px-6 py-3 rounded-2xl shadow">Create a Group</Button>
       </Card>
+
+      {/* Create Modal */}
+      {showCreateModal ? (
+        <div className="fixed inset-0 z-40 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowCreateModal(false)} />
+          <div role="dialog" aria-modal="true" aria-labelledby="create-group-title" className="relative z-50 w-full max-w-md">
+            <Card className="p-6">
+              <h3 id="create-group-title" className="font-extrabold text-lg mb-2">Create a Group</h3>
+              <div className="space-y-3">
+                <input value={newGroup.name} onChange={e => setNewGroup(prev => ({ ...prev, name: e.target.value }))} placeholder="Group name" className="w-full p-3 rounded-xl border" style={{ background: colors.surface, borderColor: colors.border }} />
+                <input value={newGroup.description} onChange={e => setNewGroup(prev => ({ ...prev, description: e.target.value }))} placeholder="Short description" className="w-full p-3 rounded-xl border" style={{ background: colors.surface, borderColor: colors.border }} />
+                <div className="flex gap-3 items-center">
+                  <input value={newGroup.emoji} onChange={e => setNewGroup(prev => ({ ...prev, emoji: e.target.value }))} className="w-16 p-3 rounded-xl text-center" />
+                  <label className="flex items-center gap-2 text-sm text-muted"><input type="checkbox" checked={newGroup.isPrivate} onChange={e => setNewGroup(prev => ({ ...prev, isPrivate: e.target.checked }))} /> Private</label>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button onClick={() => setShowCreateModal(false)} className="px-4 py-2">Cancel</Button>
+                  <Button onClick={() => handleCreate()} className="px-4 py-2 font-bold">Create</Button>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      ) : null}
+      {showUpgradePrompt && (
+        <UpgradePrompt currentTier={userTier} onClose={() => setShowUpgradePrompt(false)} />
+      )}
     </div>
   )
 }

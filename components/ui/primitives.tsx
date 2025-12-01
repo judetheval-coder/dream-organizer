@@ -65,7 +65,7 @@ export function Button({ variant = 'primary', size = 'md', icon, className = '',
   return (
     <button
       {...props}
-      className={`rounded-xl font-semibold transition-all disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[rgba(6,182,212,0.25)] hover:opacity-95 ${BTN_SIZES[size]} ${className}`}
+      className={`rounded-xl font-semibold transition-all duration-200 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-[rgba(6,182,212,0.25)] hover:scale-105 hover:shadow-lg active:scale-95 ${BTN_SIZES[size]} ${className}`}
       style={BTN_STYLES[variant]}
     >
       {icon && <span className="mr-2">{icon}</span>}{children}
@@ -119,12 +119,26 @@ export function ErrorBanner({ title = 'Something went wrong', children, onRetry,
 export function EmptyState({ icon = '✨', title, description, action }: { icon?: string; title: string; description: string; action?: { label: string; onClick: () => void } }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
-      <div className="w-24 h-24 rounded-full flex items-center justify-center mb-6" style={{ background: colors.surface, border: `2px dashed ${colors.border}` }}>
-        <span className="text-5xl opacity-50">{icon}</span>
+      {/* Friendly animated illustration */}
+      <div className="relative w-28 h-28 mb-6 flex items-center justify-center">
+        <div className="absolute inset-0 animate-pulse-slow rounded-full bg-gradient-to-br from-[#7c3aed] via-[#06b6d4] to-[#ec4899] opacity-20" />
+        <div className="absolute -top-3 -left-3 animate-float">
+          <span className="text-2xl">🌙</span>
+        </div>
+        <div className="absolute -bottom-2 -right-2 animate-bounce">
+          <span className="text-xl">✨</span>
+        </div>
+        <div className="w-24 h-24 rounded-full flex items-center justify-center border-4 border-dashed border-cyan-300 bg-white/10 shadow-lg">
+          <span className="text-5xl opacity-60 select-none">{icon}</span>
+        </div>
       </div>
       <h3 className="text-2xl font-bold mb-3" style={{ color: colors.textPrimary }}>{title}</h3>
-      <p className="text-base max-w-md mb-6" style={{ color: colors.textMuted }}>{description}</p>
-      {action && <Button onClick={action.onClick}>{action.label}</Button>}
+      <p className="text-base max-w-md mb-6" style={{ color: colors.textMuted }}>
+        {description}
+        <br />
+        <span className="block mt-2 text-sm text-cyan-400 animate-fadeIn">Tip: You can always start by clicking the button below or exploring the menu!</span>
+      </p>
+      {action && <Button onClick={action.onClick} className="animate-wiggle" icon={<span>🌟</span>}>{action.label}</Button>}
     </div>
   )
 }

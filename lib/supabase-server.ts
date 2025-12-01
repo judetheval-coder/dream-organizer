@@ -20,7 +20,7 @@ function getSupabaseAdmin() {
 // Lazy load the client
 let supabaseAdmin: SupabaseClient | null = null
 
-function getClient(): SupabaseClient {
+export function getClient(): SupabaseClient {
   if (!supabaseAdmin) {
     supabaseAdmin = getSupabaseAdmin()
   }
@@ -30,7 +30,7 @@ function getClient(): SupabaseClient {
 // Sync Clerk user to Supabase
 export async function syncUserToSupabase(userId: string, email: string): Promise<{ demoCreated?: boolean } | void> {
   const admin = getClient()
-  
+
   // Check if user exists already
   const { data: existingUser } = await admin
     .from('users')
@@ -81,7 +81,7 @@ export async function syncUserToSupabase(userId: string, email: string): Promise
   }
   return demoCreated ? { demoCreated: true } : undefined
 }
- 
+
 // Fetch a published dream (for public page rendering)
 export async function getPublicDreamById(dreamId: string) {
   const admin = getClient()

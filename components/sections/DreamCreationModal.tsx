@@ -37,13 +37,13 @@ export function DreamCreationModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-6"
+      className="fixed inset-0 z-50 flex items-center justify-center p-6 animate-fadeIn"
       style={{ background: 'rgba(0,0,0,0.8)' }}
       onClick={onClose}
       role="presentation"
     >
       <div
-        className="rounded-2xl p-10 max-w-md w-full"
+        className="rounded-2xl p-10 max-w-md w-full animate-modalIn"
         style={{
           background: colors.surface,
           border: `2px solid ${colors.purple}`,
@@ -93,7 +93,7 @@ export function DreamCreationModal({
 
         {/* Voice input for hands-free dream recording */}
         <div className="mb-6">
-          <VoiceInput 
+          <VoiceInput
             onTranscript={onDreamTextChange}
             existingText=""
           />

@@ -18,7 +18,7 @@ export function DashboardLayout({ currentTab, onTabChange, children }: Dashboard
         Skip to content
       </a>
       <DashboardSidebar currentTab={currentTab} onTabChange={onTabChange} />
-      <main id="dashboard-content" className="lg:ml-64 px-4 py-8 lg:px-12">
+      <main id="dashboard-content" className="ml-64 px-4 py-8 lg:px-12">
         <DashboardHeader tab={currentTab} />
         <div className="space-y-8">{children}</div>
       </main>

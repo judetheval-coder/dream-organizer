@@ -1,6 +1,5 @@
 /// <reference lib="webworker" />
 
-const CACHE_NAME = 'dream-machine-v1'
 const STATIC_CACHE = 'dream-machine-static-v1'
 const DYNAMIC_CACHE = 'dream-machine-dynamic-v1'
 
@@ -28,7 +27,7 @@ self.addEventListener('install', (event) => {
       return cache.addAll(STATIC_ASSETS.filter(url => !url.includes('/api/')))
     })
   )
-  // @ts-ignore
+  // @ts-expect-error - skipWaiting exists in ServiceWorkerGlobalScope
   self.skipWaiting()
 })
 
@@ -43,7 +42,7 @@ self.addEventListener('activate', (event) => {
       )
     })
   )
-  // @ts-ignore
+  // @ts-expect-error - clients.claim exists in ServiceWorkerGlobalScope
   self.clients.claim()
 })
 
@@ -133,7 +132,7 @@ self.addEventListener('sync', (event) => {
 // Listen for skip waiting messages from clients
 self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
-    // @ts-ignore
+    // @ts-expect-error - skipWaiting exists in ServiceWorkerGlobalScope
     self.skipWaiting()
   }
 })
@@ -161,7 +160,7 @@ self.addEventListener('push', (event) => {
   }
 
   event.waitUntil(
-    // @ts-ignore
+    // @ts-expect-error - showNotification exists on ServiceWorkerRegistration
     self.registration.showNotification('The Dream Machine', options)
   )
 })
@@ -172,7 +171,7 @@ self.addEventListener('notificationclick', (event) => {
   
   if (event.action === 'explore') {
     event.waitUntil(
-      // @ts-ignore
+      // @ts-expect-error - clients.openWindow exists on ServiceWorkerGlobalScope
       clients.openWindow('/dashboard')
     )
   }

@@ -12,6 +12,7 @@ import {
   type Panel,
 } from '@/lib/supabase'
 import { uploadImageFromDataURL, deleteDreamImages } from '@/lib/supabase-storage'
+import { analyzeDreams as gptAnalyzeDreams } from '@/lib/gpt-helpers'
 import type { SubscriptionTier } from '@/lib/subscription-tiers'
 
 // Simple in-memory cache
@@ -44,6 +45,10 @@ interface UseDreamsResult {
   removeDream: (dreamId: string) => Promise<void>
   loadMoreDreams: () => Promise<void>
   demoCreated: boolean
+  insights: string | null
+  analyzing: boolean
+  analyzeDreams: (force?: boolean) => Promise<void>
+  analysisError: string | null
 }
 
 export function useDreams(): UseDreamsResult {
@@ -56,6 +61,9 @@ export function useDreams(): UseDreamsResult {
   const [hasMore, setHasMore] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
   const [demoCreated, setDemoCreated] = useState(false)
+  const [insights, setInsights] = useState<string | null>(null)
+  const [analyzing, setAnalyzing] = useState(false)
+  const [analysisError, setAnalysisError] = useState<string | null>(null)
   const fetchIdRef = useRef(0) // Prevent race conditions
 
   const PAGE_SIZE = 10
@@ -90,7 +98,7 @@ export function useDreams(): UseDreamsResult {
             if (json?.demoCreated) {
               setDemoCreated(true)
             }
-          } catch (e) {
+          } catch {
             // Not JSON or no demo flag; ignore
           }
         } catch (err) {
@@ -108,7 +116,7 @@ export function useDreams(): UseDreamsResult {
     }
 
     const fetchId = ++fetchIdRef.current
-        
+
     try {
       // Check cache on initial load
       if (reset && !skipCache) {
@@ -153,7 +161,7 @@ export function useDreams(): UseDreamsResult {
           .select('subscription_tier')
           .eq('id', user.id)
           .single()
-        
+
         if (userData) {
           setUserTier(userData.subscription_tier as SubscriptionTier)
         }
@@ -175,7 +183,7 @@ export function useDreams(): UseDreamsResult {
   // Load dreams and user tier from Supabase
   useEffect(() => {
     fetchDreams(true)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id])
 
   const loadMoreDreams = async () => {
@@ -214,13 +222,39 @@ export function useDreams(): UseDreamsResult {
     }
   }
 
+  const analyzeDreams = async (force: boolean = false) => {
+    if (!dreams.length) return
+    if (analyzing && !force) return
+
+    setAnalyzing(true)
+    setAnalysisError(null)
+    try {
+      const analysisPayload = dreams.map(dream => {
+        const panelDescriptions = dream.panels?.map(panel => panel.description).filter(Boolean) ?? []
+        const description = panelDescriptions.length ? panelDescriptions.join(' ') : dream.text || 'Untitled dream'
+        return {
+          description,
+          text: dream.text ?? '',
+          date: dream.created_at ?? undefined,
+        }
+      })
+
+      const result = await gptAnalyzeDreams(analysisPayload, false)
+      setInsights(result)
+    } catch (err) {
+      console.error('Analysis failed:', err)
+      setAnalysisError('Please try again in a moment.')
+    }
+    setAnalyzing(false)
+  }
+
   const updatePanel = async (panelId: string, imageDataURL: string, dreamId: string, sceneNumber: number) => {
     if (!user) throw new Error('Not authenticated')
-    
+
     try {
       // Upload image to Supabase Storage
       const publicUrl = await uploadImageFromDataURL(imageDataURL, user.id, dreamId, sceneNumber)
-      
+
       // Update panel with public URL
       await updatePanelImage(panelId, publicUrl)
 
@@ -231,7 +265,7 @@ export function useDreams(): UseDreamsResult {
           panel.id === panelId ? { ...panel, image_url: publicUrl } : panel
         ),
       })))
-      
+
       return publicUrl
     } catch (err) {
       console.error('Error updating panel:', err)
@@ -245,7 +279,7 @@ export function useDreams(): UseDreamsResult {
     try {
       // Delete images from storage first
       await deleteDreamImages(user.id, dreamId)
-      
+
       // Then delete dream from database
       await deleteDream(dreamId, user.id)
       setDreams(prev => prev.filter(d => d.id !== dreamId))
@@ -269,6 +303,10 @@ export function useDreams(): UseDreamsResult {
     removeDream,
     loadMoreDreams,
     demoCreated,
+    insights,
+    analyzing,
+    analyzeDreams,
+    analysisError,
   }
 }
 

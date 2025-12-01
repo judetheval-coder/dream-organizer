@@ -16,24 +16,24 @@ export default function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="w-64 h-screen sticky top-0 bg-[rgba(18,18,18,0.95)] backdrop-blur-xl border-r border-[rgba(138,43,226,0.2)] flex flex-col">
+    <aside className="hidden sm:flex w-64 h-screen sticky top-0 bg-[rgba(18,18,18,0.97)] backdrop-blur-xl border-r border-[rgba(138,43,226,0.18)] flex-col shadow-xl">
       {/* Logo */}
-      <div className="p-6 border-b border-[rgba(138,43,226,0.2)]">
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#5B2CFC] to-[#03DAC6] rounded-xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+      <div className="p-7 border-b border-[rgba(138,43,226,0.18)]">
+        <Link href="/" className="flex items-center gap-4 group">
+          <div className="w-11 h-11 bg-gradient-to-br from-[#5B2CFC] to-[#03DAC6] rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform shadow-md">
             ✨
           </div>
           <div>
-            <h1 className="text-xl font-black bg-gradient-to-r from-[#5B2CFC] to-[#03DAC6] bg-clip-text text-transparent">
+            <h1 className="text-2xl font-extrabold bg-gradient-to-r from-[#5B2CFC] to-[#03DAC6] bg-clip-text text-transparent tracking-tight">
               Dream Machine
             </h1>
-            <p className="text-[10px] text-[#666] uppercase tracking-wider">Beta v1.0</p>
+            <p className="text-[11px] text-[#888] uppercase tracking-widest font-semibold mt-1">Beta v1.0</p>
           </div>
         </Link>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-5 space-y-2">
         {navItems.map((item) => {
           const isActive = pathname === item.href
           return (
@@ -41,31 +41,32 @@ export default function Sidebar() {
               key={item.href}
               href={item.href}
               className={`
-                flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300
-                ${isActive 
-                  ? 'bg-gradient-to-r from-[#5B2CFC] to-[#8A2BE2] text-white shadow-lg shadow-[rgba(91,44,252,0.3)]' 
-                  : 'text-[#B0B0B0] hover:text-white hover:bg-[rgba(255,255,255,0.05)]'
+                flex items-center gap-3 px-5 py-3 rounded-xl transition-all duration-300 font-semibold text-base
+                focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7c3aed] focus-visible:ring-offset-2
+                ${isActive
+                  ? 'bg-gradient-to-r from-[#5B2CFC] to-[#8A2BE2] text-white shadow-lg shadow-[rgba(91,44,252,0.3)] scale-[1.03]'
+                  : 'text-[#B0B0B0] hover:text-white hover:bg-[rgba(255,255,255,0.07)] hover:scale-[1.02]'
                 }
               `}
             >
               <span className="text-xl">{item.icon}</span>
-              <span className="font-medium">{item.name}</span>
+              <span className="font-semibold tracking-tight">{item.name}</span>
             </Link>
           )
         })}
       </nav>
 
       {/* User Profile */}
-      <div className="p-4 border-t border-[rgba(138,43,226,0.2)]">
-        <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-[rgba(255,255,255,0.03)] hover:bg-[rgba(255,255,255,0.05)] transition-all cursor-pointer group">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#8A2BE2] to-[#03DAC6] rounded-full flex items-center justify-center text-white font-bold">
+      <div className="p-5 border-t border-[rgba(138,43,226,0.18)]">
+        <div className="flex items-center gap-4 px-5 py-3 rounded-2xl bg-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.07)] transition-all cursor-pointer group shadow-sm">
+          <div className="w-11 h-11 bg-gradient-to-br from-[#8A2BE2] to-[#03DAC6] rounded-full flex items-center justify-center text-white font-extrabold text-lg shadow">
             L
           </div>
           <div className="flex-1">
-            <p className="text-white text-sm font-medium">Levi</p>
-            <p className="text-[#666] text-xs">@dreamer</p>
+            <p className="text-white text-base font-semibold leading-tight">Levi</p>
+            <p className="text-[#888] text-xs mt-0.5">@dreamer</p>
           </div>
-          <span className="text-[#666] group-hover:text-white transition-colors">⋮</span>
+          <span className="text-[#888] group-hover:text-white transition-colors text-xl">⋮</span>
         </div>
       </div>
     </aside>

@@ -57,7 +57,7 @@ export function DreamList({ dreams, loading = false, loadingMore = false, hasMor
           map[id] = published
         }))
         if (mounted) setPublishedMap(map)
-      } catch (e) {
+      } catch {
         // noop
       }
     }

@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { colors } from '@/lib/design'
-import { GLOBAL_DREAM_PATTERNS, findPatternMatches, type GlobalPattern } from '@/lib/global-dream-patterns'
+import { GLOBAL_DREAM_PATTERNS, findPatternMatches } from '@/lib/global-dream-patterns'
 import Card from '@/components/ui/Card'
 
 interface GlobalPatternsProps {

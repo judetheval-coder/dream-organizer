@@ -13,8 +13,10 @@ export async function POST(request: Request) {
     // lightweight in-memory limiter via globalThis cache
     const key = `voice:${ip}`
     const now = Date.now()
-    const store: Map<string, { count: number; resetAt: number }> = (globalThis as any).__voiceLimiter__ || new Map()
-    if (!(globalThis as any).__voiceLimiter__) (globalThis as any).__voiceLimiter__ = store
+    type VoiceLimiterEntry = { count: number; resetAt: number }
+    const g = globalThis as unknown as { __voiceLimiter__?: Map<string, VoiceLimiterEntry> }
+    const store: Map<string, VoiceLimiterEntry> = g.__voiceLimiter__ || new Map()
+    if (!g.__voiceLimiter__) g.__voiceLimiter__ = store
     const entry = store.get(key)
     if (!entry || now > entry.resetAt) {
       store.set(key, { count: 1, resetAt: now + 60_000 })

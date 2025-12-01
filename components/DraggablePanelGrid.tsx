@@ -162,6 +162,7 @@ export default function DraggablePanelGrid({
               onDragStart={(e) => handleDragStart(e, index)}
               onDragOver={(e) => handleDragOver(e, index)}
               onDrop={(e) => handleDrop(e, index)}
+                onDragEnd={() => handleDragEnd()}
               dragIndex={index}
               onImageReady={(url) => onImageReady?.(panel.id, url)}
             />

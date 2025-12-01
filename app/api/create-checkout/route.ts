@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     }
     try {
       new URL(appUrl)
-    } catch (err) {
+    } catch {
       console.error('Checkout error: invalid NEXT_PUBLIC_APP_URL', appUrl)
       return NextResponse.json({ error: 'Server misconfigured: invalid app url' }, { status: 500 })
     }

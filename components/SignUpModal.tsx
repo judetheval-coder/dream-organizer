@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+// useState not needed here
 import { SignUp } from '@clerk/nextjs'
 import { colors, gradients } from '@/lib/design'
 
@@ -8,8 +8,8 @@ export default function SignUpModal({ open, onClose }: { open: boolean; onClose:
   if (!open) return null
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative max-w-xl w-full">
+      <div className="absolute inset-0 bg-black/60 transition-opacity animate-fadeIn" onClick={onClose} />
+      <div className="relative max-w-xl w-full animate-modalIn">
         <div className="bg-gradient-to-br from-purple-900/95 to-blue-900/95 rounded-2xl p-6">
           <div style={{ background: gradients.page }} className="p-4 rounded-lg">
             <SignUp
@@ -21,7 +21,7 @@ export default function SignUpModal({ open, onClose }: { open: boolean; onClose:
               }}
             />
           </div>
-          <button onClick={onClose} className="mt-2 text-sm text-gray-300">Close</button>
+          <button onClick={onClose} className="mt-2 text-sm text-gray-300 transition-colors hover:text-white">Close</button>
         </div>
       </div>
     </div>
