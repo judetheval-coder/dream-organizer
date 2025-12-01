@@ -8,29 +8,45 @@ const HEADLINES: Record<DashboardTab, { title: string; subtitle: string }> = {
     title: '✨ Welcome to Your Dreams',
     subtitle: 'Explore, enhance, and visualize your dream world',
   },
-  'Dreams': {
+  'My Dreams': {
     title: '💭 My Dreams',
     subtitle: 'Browse and manage all your saved dreams',
   },
-  'Create': {
-    title: '✨ Create Dream',
-    subtitle: 'Write and visualize new dreams',
+  'Comics': {
+    title: '🎨 Comics',
+    subtitle: 'View your generated dream comic panels',
   },
-  'Community': {
-    title: '👥 Community',
-    subtitle: 'Join communities of like-minded dreamers',
+  'Dictionary': {
+    title: '📖 Dream Dictionary',
+    subtitle: 'Explore symbols and meanings in your dreams',
+  },
+  'Patterns': {
+    title: '🌌 Global Patterns',
+    subtitle: 'Discover recurring themes across your dreams',
   },
   'Gallery': {
     title: '🌟 Public Gallery',
     subtitle: 'Explore dreams shared by the community',
   },
-  'Tools': {
-    title: '🛠️ Tools & Insights',
-    subtitle: 'AI-powered tools to analyze and meaningfully enhance your dreams',
+  'Groups': {
+    title: '👥 Dream Groups',
+    subtitle: 'Join communities of like-minded dreamers',
   },
-  'Account': {
-    title: '⚙️ Account',
-    subtitle: 'Manage your account and subscription',
+  'Events': {
+    title: '🏆 Events & Contests',
+    subtitle: 'Participate in dream challenges and competitions',
+  },
+  'Insights': {
+    title: '✨ Insights',
+    subtitle: 'AI-powered analysis of your dream patterns',
+  },
+  'Subscription': {
+    title: '💎 Subscription',
+    subtitle: 'Manage your plan and billing',
+  },
+  'Settings': {
+    title: '⚙️ Settings',
+    subtitle: 'Customize your account and preferences',
   },
 }
 
