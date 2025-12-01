@@ -1,7 +1,9 @@
 /// <reference lib="webworker" />
 
-const STATIC_CACHE = 'dream-machine-static-v1'
-const DYNAMIC_CACHE = 'dream-machine-dynamic-v1'
+// Version bump forces cache invalidation on deploy
+const CACHE_VERSION = 'v2'
+const STATIC_CACHE = `dream-machine-static-${CACHE_VERSION}`
+const DYNAMIC_CACHE = `dream-machine-dynamic-${CACHE_VERSION}`
 
 // Assets to cache immediately on install
 const STATIC_ASSETS = [
@@ -92,6 +94,22 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
+  // Use network-first for HTML navigation requests (pages)
+  // This ensures users always get the latest version
+  if (request.mode === 'navigate' || request.destination === 'document') {
+    event.respondWith(
+      fetch(request).then((networkResponse) => {
+        if (networkResponse.ok) {
+          const clone = networkResponse.clone()
+          caches.open(DYNAMIC_CACHE).then(cache => cache.put(request, clone))
+        }
+        return networkResponse
+      }).catch(() => caches.match(request).then(r => r || offlineResponse(request)))
+    )
+    return
+  }
+
+  // Cache-first for static assets (images, fonts, etc.)
   event.respondWith(
     caches.match(request).then((cachedResponse) => {
       // Return cached response if available
