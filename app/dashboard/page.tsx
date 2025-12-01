@@ -28,6 +28,8 @@ import PublicGallery from '@/components/PublicGallery'
 import DreamGroups from '@/components/DreamGroups'
 import GiftSubscriptions from '@/components/GiftSubscriptions'
 import EventsContest from '@/components/EventsContest'
+import ReferralSystem from '@/components/ReferralSystem'
+import { BadgeShowcase } from '@/components/BadgeShowcase'
 import { KeyboardShortcutsHelp, useKeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp'
 import { OnboardingTour, useOnboardingTour } from '@/components/OnboardingTour'
 import { useDreams } from '@/hooks/useDreams'
@@ -883,6 +885,32 @@ function DashboardPageContent() {
 
           {currentTab === 'Events' && (
             <EventsContest />
+          )}
+
+          {currentTab === 'Challenges' && (
+            <div className="text-center py-12">
+              <p style={{ color: colors.textMuted }}>
+                Redirecting to Daily Challenges...
+              </p>
+              <script dangerouslySetInnerHTML={{ __html: "window.location.href='/challenges'" }} />
+            </div>
+          )}
+
+          {currentTab === 'Leaderboard' && (
+            <div className="text-center py-12">
+              <p style={{ color: colors.textMuted }}>
+                Redirecting to Leaderboard...
+              </p>
+              <script dangerouslySetInnerHTML={{ __html: "window.location.href='/leaderboard'" }} />
+            </div>
+          )}
+
+          {currentTab === 'Referrals' && (
+            <ReferralSystem />
+          )}
+
+          {currentTab === 'Badges' && (
+            <BadgeShowcase />
           )}
 
 

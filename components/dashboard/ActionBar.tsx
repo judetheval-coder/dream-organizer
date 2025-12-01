@@ -15,10 +15,10 @@ interface ActionBarProps {
   onStartTour?: () => void
 }
 
-export function ActionBar({ 
-  onCreate, 
-  onAnalyze, 
-  disableAnalysis, 
+export function ActionBar({
+  onCreate,
+  onAnalyze,
+  disableAnalysis,
   analyzing,
   isSaving = false,
   lastSaved = null,
@@ -57,7 +57,7 @@ export function ActionBar({
       >
         {analyzing ? '🔄 Analyzing...' : '🔍 Analyze Dreams'}
       </button>
-      
+
       {/* Help buttons */}
       <div className="flex gap-2">
         {onShowShortcuts && (
@@ -91,7 +91,7 @@ export function ActionBar({
           </button>
         )}
       </div>
-      
+
       {/* Auto-save status indicator */}
       <div className="ml-auto">
         <AutoSaveIndicator isSaving={isSaving} lastSaved={lastSaved} error={saveError} />

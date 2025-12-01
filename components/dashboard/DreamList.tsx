@@ -7,6 +7,7 @@ import Card from '@/components/ui/Card'
 import Chip from '@/components/ui/Chip'
 import Skeleton from '@/components/ui/Skeleton'
 import EmptyState from '@/components/EmptyState'
+import ShareButton from '@/components/ShareButton'
 import { colors } from '@/lib/design'
 
 export type DreamRecord = {
@@ -211,7 +212,13 @@ export function DreamList({ dreams, loading = false, loadingMore = false, hasMor
             </span>
             {dream.mood && <span>• Mood: {dream.mood}</span>}
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap items-center gap-3">
+            <ShareButton
+              dreamId={Number(dream.id)}
+              title={dream.text.substring(0, 100)}
+              description={dream.mood}
+              imageUrl={dream.panels?.[0]?.image_url}
+            />
             {user?.id && (
               <button
                 type="button"
