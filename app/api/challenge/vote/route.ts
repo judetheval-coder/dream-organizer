@@ -15,10 +15,18 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Submission ID required' }, { status: 400 })
         }
 
-        // Increment vote count
+        // Get current votes and increment
+        const { data: submission, error: fetchError } = await supabase
+            .from('challenge_submissions')
+            .select('votes')
+            .eq('id', submissionId)
+            .single()
+
+        if (fetchError) throw fetchError
+
         const { error } = await supabase
             .from('challenge_submissions')
-            .update({ votes: supabase.raw('votes + 1') })
+            .update({ votes: (submission?.votes || 0) + 1 })
             .eq('id', submissionId)
 
         if (error) throw error
