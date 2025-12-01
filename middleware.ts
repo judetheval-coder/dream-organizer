@@ -43,15 +43,7 @@ export default clerkMiddleware(async (auth, req) => {
 
   // Protect dashboard and API routes - redirect to sign-in if not authenticated
   if (isProtectedRoute(req)) {
-    // If this is an admin route, only allow in development, from localhost, or if explicitly enabled via env
-    const isAdmin = req.nextUrl.pathname.startsWith('/admin')
-    const host = req.headers.get('host') || ''
-    const isLocalhost = host.includes('localhost') || host.includes('127.0.0.1')
-    const allowAdmin = isLocalhost || process.env.NODE_ENV === 'development' || process.env.NEXT_PUBLIC_ENABLE_ADMIN === 'true'
-    if (isAdmin && !allowAdmin) {
-      // Redirect to site root to avoid exposing admin in production
-      return NextResponse.redirect(new URL('/', req.url))
-    }
+    // Admin routes require authentication - role check happens in the component/API
     const { userId } = await auth()
     if (!userId) {
       const signInUrl = new URL('/sign-in', req.url)

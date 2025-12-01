@@ -19,7 +19,7 @@ export async function GET(req: Request) {
         const order = (url.searchParams.get('order') || 'desc').toLowerCase() === 'asc'
 
         const admin = getClient()
-        
+
         // Count total (with optional search filter)
         let countQuery = admin.from('dreams').select('id', { count: 'exact', head: true })
         if (q) {
