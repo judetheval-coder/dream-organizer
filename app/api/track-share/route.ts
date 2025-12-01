@@ -14,10 +14,21 @@ export async function POST(req: Request) {
             )
         }
 
-        // Increment share count
+        // Get current share count and increment
+        const { data: dream, error: fetchError } = await supabase
+            .from('dreams')
+            .select('share_count')
+            .eq('id', dreamId)
+            .single()
+
+        if (fetchError) {
+            console.error('Error fetching dream:', fetchError)
+            return NextResponse.json({ error: 'Failed to track share' }, { status: 500 })
+        }
+
         const { error } = await supabase
             .from('dreams')
-            .update({ share_count: supabase.raw('share_count + 1') })
+            .update({ share_count: (dream?.share_count || 0) + 1 })
             .eq('id', dreamId)
 
         if (error) {
