@@ -13,7 +13,7 @@ const DraggablePanelGrid = dynamic(() => import('@/components/DraggablePanelGrid
   loading: () => <Skeleton className="h-64 w-full" />,
 })
 
-type FrameStyle = 'classic' | 'torn' | 'fade' | 'comic' | 'glow'
+type FrameStyle = 'minimal' | 'classic' | 'comic' | 'glow' | 'neon'
 
 type PanelPreview = {
   id: number
@@ -31,7 +31,7 @@ interface PanelShowcaseProps {
 }
 
 export function PanelShowcase({ panels, currentGeneratingIndex, onImageReady, onReorder }: PanelShowcaseProps) {
-  const [frameStyle, setFrameStyle] = useState<FrameStyle>('glow')
+  const [frameStyle, setFrameStyle] = useState<FrameStyle>('minimal')
   const [enableEffects, setEnableEffects] = useState(true)
   const [currentPanelIndex, setCurrentPanelIndex] = useState(0)
 

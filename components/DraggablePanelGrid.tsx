@@ -13,7 +13,7 @@ type PanelData = {
   image?: string
 }
 
-type FrameStyle = 'classic' | 'torn' | 'fade' | 'comic' | 'glow'
+type FrameStyle = 'minimal' | 'classic' | 'comic' | 'glow' | 'neon'
 
 interface DraggablePanelGridProps {
   panels: PanelData[]
