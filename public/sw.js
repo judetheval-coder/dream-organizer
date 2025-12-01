@@ -121,7 +121,7 @@ self.addEventListener('fetch', (event) => {
               cache.put(request, networkResponse.clone())
             })
           }
-        }).catch(() => {})
+        }).catch(() => { })
         return cachedResponse
       }
 
@@ -186,7 +186,7 @@ self.addEventListener('push', (event) => {
 // Notification click
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
-  
+
   if (event.action === 'explore') {
     event.waitUntil(
       // @ts-expect-error - clients.openWindow exists on ServiceWorkerGlobalScope
