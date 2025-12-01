@@ -75,8 +75,8 @@ export default function UpgradePrompt({ currentTier, onClose }: UpgradePromptPro
             <button
               onClick={() => setBillingPeriod('monthly')}
               className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${billingPeriod === 'monthly'
-                  ? 'bg-purple-500 text-white'
-                  : 'text-gray-400 hover:text-white'
+                ? 'bg-purple-500 text-white'
+                : 'text-gray-400 hover:text-white'
                 }`}
             >
               Monthly
@@ -84,8 +84,8 @@ export default function UpgradePrompt({ currentTier, onClose }: UpgradePromptPro
             <button
               onClick={() => setBillingPeriod('yearly')}
               className={`px-6 py-2 rounded-full text-sm font-semibold transition-all ${billingPeriod === 'yearly'
-                  ? 'bg-purple-500 text-white'
-                  : 'text-gray-400 hover:text-white'
+                ? 'bg-purple-500 text-white'
+                : 'text-gray-400 hover:text-white'
                 }`}
             >
               Yearly <span className="text-cyan-400 text-xs">Save 17%</span>

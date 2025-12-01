@@ -43,6 +43,7 @@ interface DreamListProps {
 export function DreamList({ dreams, loading = false, loadingMore = false, hasMore = false, onLoadMore, onRemove }: DreamListProps) {
   const [sort, setSort] = useState<SortOption>('newest')
   const [filter, setFilter] = useState<FilterOption>('all')
+  const [searchQuery, setSearchQuery] = useState('')
   const { user } = useUser()
   const [publishedMap, setPublishedMap] = useState<Record<string, boolean>>({})
 
@@ -68,6 +69,16 @@ export function DreamList({ dreams, loading = false, loadingMore = false, hasMor
   const processedDreams = useMemo(() => {
     let records = [...dreams]
 
+    // Search filter
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      records = records.filter((dream) =>
+        dream.text.toLowerCase().includes(query) ||
+        dream.style?.toLowerCase().includes(query) ||
+        dream.mood?.toLowerCase().includes(query)
+      )
+    }
+
     if (filter === 'hasPanels') {
       records = records.filter((dream) => dream.panels && dream.panels.length > 0)
     }
@@ -90,7 +101,7 @@ export function DreamList({ dreams, loading = false, loadingMore = false, hasMor
     })
 
     return records
-  }, [dreams, filter, sort])
+  }, [dreams, filter, sort, searchQuery])
 
   const renderDate = (dream: DreamRecord) => {
     const timestamp = dream.created_at || dream.date
@@ -126,6 +137,31 @@ export function DreamList({ dreams, loading = false, loadingMore = false, hasMor
 
   return (
     <div className="space-y-4">
+      {/* Search Bar */}
+      <div className="relative">
+        <input
+          type="text"
+          placeholder="Search dreams by text, style, or mood..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full px-4 py-3 pl-11 rounded-xl text-sm transition-all focus:outline-none focus:ring-2"
+          style={{
+            background: colors.surface,
+            border: `1px solid ${colors.border}`,
+            color: colors.textPrimary,
+          }}
+        />
+        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg">🔍</span>
+        {searchQuery && (
+          <button
+            onClick={() => setSearchQuery('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+          >
+            ✕
+          </button>
+        )}
+      </div>
+
       <div className="flex flex-wrap gap-3 items-center">
         <div className="flex gap-2">
           {(['all', 'hasPanels', 'noPanels'] as FilterOption[]).map((option) => (
@@ -146,6 +182,13 @@ export function DreamList({ dreams, loading = false, loadingMore = false, hasMor
           ))}
         </div>
       </div>
+
+      {/* Results count */}
+      {searchQuery && (
+        <p className="text-sm" style={{ color: colors.textMuted }}>
+          Found {processedDreams.length} dream{processedDreams.length !== 1 ? 's' : ''} matching &quot;{searchQuery}&quot;
+        </p>
+      )}
 
       {processedDreams.map((dream) => (
         <Card key={dream.id} className="space-y-4">
@@ -168,38 +211,38 @@ export function DreamList({ dreams, loading = false, loadingMore = false, hasMor
             </span>
             {dream.mood && <span>• Mood: {dream.mood}</span>}
           </div>
-            <div className="flex gap-2">
-              {user?.id && (
-                <button
-                  type="button"
-                  onClick={async () => {
-                    const id = dream.id
-                    const wasPublished = publishedMap[id]
-                    if (wasPublished) {
-                      const resp = await unpublishDreamFromGallery(id, user.id)
-                      if (resp.success) setPublishedMap(prev => ({ ...prev, [id]: false }))
-                    } else {
-                      const resp = await publishDreamToGallery(id, user.id)
-                      if (resp.success) setPublishedMap(prev => ({ ...prev, [id]: true }))
-                    }
-                  }}
-                  className="text-sm font-semibold underline underline-offset-4"
-                  style={{ color: publishedMap[dream.id] ? '#f87171' : colors.cyan }}
-                >
-                  {publishedMap[dream.id] ? 'Unpublish' : 'Publish'}
-                </button>
-              )}
-              {onRemove && (
-            <button
-              type="button"
-              onClick={() => dream.id && onRemove(dream.id)}
-              className="text-sm font-semibold underline underline-offset-4"
-              style={{ color: '#f87171' }}
-            >
-              Delete dream
-            </button>
-              )}
-            </div>
+          <div className="flex gap-2">
+            {user?.id && (
+              <button
+                type="button"
+                onClick={async () => {
+                  const id = dream.id
+                  const wasPublished = publishedMap[id]
+                  if (wasPublished) {
+                    const resp = await unpublishDreamFromGallery(id, user.id)
+                    if (resp.success) setPublishedMap(prev => ({ ...prev, [id]: false }))
+                  } else {
+                    const resp = await publishDreamToGallery(id, user.id)
+                    if (resp.success) setPublishedMap(prev => ({ ...prev, [id]: true }))
+                  }
+                }}
+                className="text-sm font-semibold underline underline-offset-4"
+                style={{ color: publishedMap[dream.id] ? '#f87171' : colors.cyan }}
+              >
+                {publishedMap[dream.id] ? 'Unpublish' : 'Publish'}
+              </button>
+            )}
+            {onRemove && (
+              <button
+                type="button"
+                onClick={() => dream.id && onRemove(dream.id)}
+                className="text-sm font-semibold underline underline-offset-4"
+                style={{ color: '#f87171' }}
+              >
+                Delete dream
+              </button>
+            )}
+          </div>
         </Card>
       ))}
 

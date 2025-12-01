@@ -28,6 +28,8 @@ import PublicGallery from '@/components/PublicGallery'
 import DreamGroups from '@/components/DreamGroups'
 import GiftSubscriptions from '@/components/GiftSubscriptions'
 import EventsContest from '@/components/EventsContest'
+import { KeyboardShortcutsHelp, useKeyboardShortcutsHelp } from '@/components/KeyboardShortcutsHelp'
+import { OnboardingTour, useOnboardingTour } from '@/components/OnboardingTour'
 import { useDreams } from '@/hooks/useDreams'
 import { useToast } from '@/contexts/ToastContext'
 import { canCreateDream, getTierName, getTierFeatures, SUBSCRIPTION_TIERS } from '@/lib/subscription-tiers'
@@ -97,6 +99,11 @@ function DashboardPageContent() {
     }
   }, [demoCreated])
 
+  // Keyboard shortcuts help
+  const keyboardHelp = useKeyboardShortcutsHelp()
+
+  // Onboarding tour
+  const onboarding = useOnboardingTour()
 
   const [dreamText, setDreamText] = useState('')
   const [style, setStyle] = useState('Anime')
@@ -397,6 +404,8 @@ function DashboardPageContent() {
                   onAnalyze={handleAnalyze}
                   disableAnalysis={!hasDreams || analyzing}
                   analyzing={analyzing}
+                  onShowShortcuts={keyboardHelp.open}
+                  onStartTour={onboarding.startTour}
                 />
               </section>
 
@@ -901,6 +910,17 @@ function DashboardPageContent() {
           currentTier={userTier}
           onClose={() => setShowUpgrade(false)}
         />
+      )}
+
+      {/* Keyboard Shortcuts Help Modal */}
+      <KeyboardShortcutsHelp
+        isOpen={keyboardHelp.isOpen}
+        onClose={keyboardHelp.close}
+      />
+
+      {/* Onboarding Tour */}
+      {onboarding.showTour && (
+        <OnboardingTour onComplete={onboarding.completeTour} />
       )}
     </>
   )
