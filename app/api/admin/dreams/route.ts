@@ -19,18 +19,16 @@ export async function GET(req: Request) {
         const order = (url.searchParams.get('order') || 'desc').toLowerCase() === 'asc'
 
         const admin = getClient()
-        // Build base query and count
-        let base = admin.from('dreams')
+        
+        // Count total (with optional search filter)
+        let countQuery = admin.from('dreams').select('id', { count: 'exact', head: true })
         if (q) {
-            // search by text containing q (case-insensitive)
-            base = base.ilike('text', `%${q}%`)
+            countQuery = countQuery.ilike('text', `%${q}%`)
         }
-
-        const countRes = await base.select('id', { count: 'exact', head: true })
+        const countRes = await countQuery
         const total = (countRes.count as number) || 0
 
         // Fetch page with panels.image_url for thumbnails
-        // server supports sorting by created_at only. Derived fields are sorted client-side.
         const serverSort = sort === 'created_at' ? 'created_at' : 'created_at'
         let query = admin.from('dreams').select(`id, user_id, text, created_at, panels ( id, image_url )`)
         if (q) {
