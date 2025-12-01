@@ -22,8 +22,8 @@ export async function GET(req: Request) {
         // Build base query and count
         let base = admin.from('dreams')
         if (q) {
-            // search by text or user_id (use or for multiple conditions)
-            base = base.or(`text.ilike.%${q}%,user_id.ilike.%${q}%`)
+            // search by text containing q (case-insensitive)
+            base = base.ilike('text', `%${q}%`)
         }
 
         const countRes = await base.select('id', { count: 'exact', head: true })
@@ -34,7 +34,7 @@ export async function GET(req: Request) {
         const serverSort = sort === 'created_at' ? 'created_at' : 'created_at'
         let query = admin.from('dreams').select(`id, user_id, text, created_at, panels ( id, image_url )`)
         if (q) {
-            query = query.or(`text.ilike.%${q}%,user_id.ilike.%${q}%`)
+            query = query.ilike('text', `%${q}%`)
         }
         query = query.order(serverSort, { ascending: order }).range(offset, offset + limit - 1)
         const { data, error } = await query
