@@ -65,9 +65,29 @@ function DailyChallengesSection() {
   const [submissions, setSubmissions] = useState<Submission[]>([])
   const [loading, setLoading] = useState(true)
   const [voting, setVoting] = useState<number | null>(null)
+  const [timeUntilNext, setTimeUntilNext] = useState({ hours: 0, minutes: 0, seconds: 0 })
 
   useEffect(() => {
     fetchChallenge()
+
+    // Countdown timer to next challenge (midnight UTC)
+    const updateCountdown = () => {
+      const now = new Date()
+      const tomorrow = new Date(now)
+      tomorrow.setUTCDate(tomorrow.getUTCDate() + 1)
+      tomorrow.setUTCHours(0, 0, 0, 0)
+
+      const diff = tomorrow.getTime() - now.getTime()
+      const hours = Math.floor(diff / (1000 * 60 * 60))
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000)
+
+      setTimeUntilNext({ hours, minutes, seconds })
+    }
+
+    updateCountdown()
+    const interval = setInterval(updateCountdown, 1000)
+    return () => clearInterval(interval)
   }, [])
 
   const fetchChallenge = async () => {
@@ -99,10 +119,21 @@ function DailyChallengesSection() {
     }
   }
 
+  // Sample upcoming challenge themes for preview
+  const upcomingThemes = [
+    { theme: 'Flying Dreams', icon: '🦋', day: 'Tomorrow' },
+    { theme: 'Underwater Adventure', icon: '🌊', day: 'Wednesday' },
+    { theme: 'Space Exploration', icon: '🚀', day: 'Thursday' },
+  ]
+
   if (loading) {
     return (
       <div className="text-center py-16">
-        <div className="animate-bounce text-6xl mb-4">🏆</div>
+        <div className="loading-dream-dust mb-4">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
         <p style={{ color: colors.textMuted }}>Loading today's challenge...</p>
       </div>
     )
@@ -110,13 +141,161 @@ function DailyChallengesSection() {
 
   if (!challenge) {
     return (
-      <Card className="text-center py-12">
-        <div className="text-6xl mb-4">📅</div>
-        <h2 className="text-2xl font-bold mb-2" style={{ color: colors.textPrimary }}>
-          No Challenge Today
-        </h2>
-        <p style={{ color: colors.textMuted }}>Check back tomorrow for a new dream challenge!</p>
-      </Card>
+      <div className="space-y-6">
+        {/* Main "No Challenge" card - but make it exciting */}
+        <div
+          className="relative overflow-hidden rounded-2xl p-8"
+          style={{
+            background: `linear-gradient(135deg, ${colors.backgroundDark} 0%, rgba(124,58,237,0.1) 50%, rgba(6,182,212,0.1) 100%)`,
+            border: `1px solid ${colors.border}`,
+          }}
+        >
+          {/* Animated background elements */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div
+              className="absolute top-10 left-10 w-32 h-32 rounded-full blur-3xl opacity-20 animate-pulse"
+              style={{ background: colors.purple }}
+            />
+            <div
+              className="absolute bottom-10 right-10 w-40 h-40 rounded-full blur-3xl opacity-20 animate-pulse"
+              style={{ background: colors.cyan, animationDelay: '1s' }}
+            />
+          </div>
+
+          <div className="relative z-10 text-center">
+            {/* Trophy with sparkles */}
+            <div className="relative inline-block mb-6">
+              <div className="text-7xl animate-bounce" style={{ animationDuration: '2s' }}>🏆</div>
+              <div className="absolute -top-2 -right-2 text-2xl animate-pulse">✨</div>
+              <div className="absolute -bottom-1 -left-3 text-xl animate-pulse" style={{ animationDelay: '0.5s' }}>⭐</div>
+            </div>
+
+            <h2 className="text-3xl font-bold mb-3" style={{ color: colors.textPrimary }}>
+              Challenge Brewing...
+            </h2>
+            <p className="text-lg mb-6" style={{ color: colors.textMuted }}>
+              The next creative challenge is being prepared! Get ready to show off your dream skills.
+            </p>
+
+            {/* Countdown Timer */}
+            <div className="mb-8">
+              <p className="text-sm mb-3 uppercase tracking-wider" style={{ color: colors.purple }}>
+                Next Challenge In
+              </p>
+              <div className="flex items-center justify-center gap-3">
+                {[
+                  { value: timeUntilNext.hours, label: 'Hours' },
+                  { value: timeUntilNext.minutes, label: 'Mins' },
+                  { value: timeUntilNext.seconds, label: 'Secs' },
+                ].map((item, idx) => (
+                  <div key={idx} className="text-center">
+                    <div
+                      className="w-20 h-20 rounded-xl flex items-center justify-center text-3xl font-bold mb-1"
+                      style={{
+                        background: `linear-gradient(135deg, ${colors.purple}30, ${colors.cyan}30)`,
+                        border: `2px solid ${colors.purple}50`,
+                        color: colors.textPrimary,
+                        boxShadow: `0 0 20px ${colors.purple}20`,
+                      }}
+                    >
+                      {String(item.value).padStart(2, '0')}
+                    </div>
+                    <span className="text-xs uppercase tracking-wide" style={{ color: colors.textMuted }}>
+                      {item.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Notify button */}
+            <button
+              className="px-6 py-3 rounded-xl font-bold transition-all hover:scale-105"
+              style={{
+                background: `linear-gradient(135deg, ${colors.purple}, ${colors.pink})`,
+                color: 'white',
+                boxShadow: `0 4px 20px ${colors.purple}40`,
+              }}
+            >
+              🔔 Notify Me When It's Live
+            </button>
+          </div>
+        </div>
+
+        {/* Upcoming Challenges Preview */}
+        <div>
+          <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ color: colors.textPrimary }}>
+            <span>📅</span> Upcoming Themes
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {upcomingThemes.map((item, idx) => (
+              <div
+                key={idx}
+                className="p-4 rounded-xl transition-all hover:scale-[1.02] hover:-translate-y-1 cursor-pointer"
+                style={{
+                  background: colors.surface,
+                  border: `1px solid ${colors.border}`,
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-12 h-12 rounded-lg flex items-center justify-center text-2xl"
+                    style={{
+                      background: `linear-gradient(135deg, ${colors.purple}20, ${colors.cyan}20)`,
+                    }}
+                  >
+                    {item.icon}
+                  </div>
+                  <div>
+                    <p className="font-medium" style={{ color: colors.textPrimary }}>{item.theme}</p>
+                    <p className="text-sm" style={{ color: colors.textMuted }}>{item.day}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Past Winners Teaser */}
+        <div
+          className="p-6 rounded-xl text-center"
+          style={{
+            background: `linear-gradient(135deg, rgba(234,179,8,0.1), rgba(236,72,153,0.1))`,
+            border: `1px solid rgba(234,179,8,0.3)`,
+          }}
+        >
+          <div className="text-4xl mb-3">🥇🥈🥉</div>
+          <h3 className="text-lg font-bold mb-2" style={{ color: colors.textPrimary }}>
+            Hall of Fame
+          </h3>
+          <p className="text-sm mb-4" style={{ color: colors.textMuted }}>
+            Win challenges to earn the exclusive <span style={{ color: '#f59e0b' }}>Challenge Champion</span> badge!
+          </p>
+          <div className="flex items-center justify-center gap-2">
+            <span className="text-2xl">🏅</span>
+            <span className="text-sm font-medium" style={{ color: colors.cyan }}>
+              Epic Rarity Badge
+            </span>
+          </div>
+        </div>
+
+        {/* Tips Section */}
+        <div
+          className="p-4 rounded-xl flex items-start gap-3"
+          style={{
+            background: `${colors.purple}10`,
+            border: `1px solid ${colors.purple}30`,
+          }}
+        >
+          <span className="text-2xl">💡</span>
+          <div>
+            <p className="font-medium mb-1" style={{ color: colors.textPrimary }}>Pro Tip</p>
+            <p className="text-sm" style={{ color: colors.textMuted }}>
+              While waiting, practice creating dreams! The more you create, the better your challenge entries will be.
+            </p>
+          </div>
+        </div>
+      </div>
     )
   }
 
