@@ -35,7 +35,6 @@ export const SIDEBAR_CATEGORIES = [
     name: 'Challenges & Rewards',
     icon: '🏆',
     tabs: [
-      { key: 'Challenges', label: 'Daily Challenges', icon: '🏆' },
       { key: 'Events', label: 'Events & Contests', icon: '🎉' },
       { key: 'Badges', label: 'My Badges', icon: '🏅' },
       { key: 'Referrals', label: 'Invite Friends', icon: '🎁' },
@@ -67,7 +66,6 @@ export const DASHBOARD_TABS = [
   { key: 'Gallery', label: 'Public Gallery', icon: '🌟' },
   { key: 'Groups', label: 'Dream Groups', icon: '👥' },
   { key: 'Leaderboard', label: 'Leaderboard', icon: '🥇' },
-  { key: 'Challenges', label: 'Daily Challenges', icon: '🏆' },
   { key: 'Events', label: 'Events & Contests', icon: '🎉' },
   { key: 'Badges', label: 'My Badges', icon: '🏅' },
   { key: 'Referrals', label: 'Invite Friends', icon: '🎁' },

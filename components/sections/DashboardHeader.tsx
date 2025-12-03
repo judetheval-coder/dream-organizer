@@ -44,10 +44,6 @@ const HEADLINES: Record<DashboardTab, { title: string; subtitle: string }> = {
     title: '💎 Subscription',
     subtitle: 'Manage your plan and billing',
   },
-  'Challenges': {
-    title: '🎯 Daily Challenges',
-    subtitle: 'Compete in daily dream prompts and win badges',
-  },
   'Leaderboard': {
     title: '🏆 Leaderboard',
     subtitle: 'See top dreamers and their achievements',
