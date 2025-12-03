@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useMemo, useState, useEffect } from 'react'
+import { Suspense, useMemo, useState, useEffect, useCallback } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { analytics } from '@/lib/analytics'
 import { useUser, SignOutButton } from '@clerk/nextjs'
@@ -833,9 +833,10 @@ function DashboardPageContent() {
     }
   }
 
-  const handlePanelImageReady = async (panelId: number, imageUrl: string) => {
-    const updatedPanels = panels.map(panel => (panel.id === panelId ? { ...panel, image: imageUrl } : panel))
-    setPanels(updatedPanels)
+  const handlePanelImageReady = useCallback(async (panelId: number, imageUrl: string) => {
+    setPanels(prevPanels => prevPanels.map(panel =>
+      panel.id === panelId ? { ...panel, image: imageUrl } : panel
+    ))
 
     const targetDreamId = lastCreatedDreamId || dreams[0]?.id
     const currentDream = dreams.find(dream => dream.id === targetDreamId) || dreams[0]
@@ -855,18 +856,18 @@ function DashboardPageContent() {
     }
 
     // Check if this is the last panel
-    const isLastPanel = currentGeneratingIndex >= panels.length - 1
-
-    if (isLastPanel) {
-      // All panels generated - switch to My Dreams tab and show success
-      setCurrentGeneratingIndex(-1)
-      updateTabInUrl('My Dreams')
-      showToast('✨ Dream complete! All panels generated.', 'success')
-      refreshDreams() // Refresh to show the new dream with images
-    } else {
-      setCurrentGeneratingIndex(currentGeneratingIndex + 1)
-    }
-  }
+    setCurrentGeneratingIndex(prevIndex => {
+      const isLastPanel = prevIndex >= panels.length - 1
+      if (isLastPanel) {
+        // All panels generated - switch to My Dreams tab and show success
+        updateTabInUrl('My Dreams')
+        showToast('✨ Dream complete! All panels generated.', 'success')
+        refreshDreams()
+        return -1
+      }
+      return prevIndex + 1
+    })
+  }, [dreams, lastCreatedDreamId, panels, refreshDreams, showToast, updatePanel, user])
 
   const handleEnhance = async () => {
     if (!dreamText.trim()) return

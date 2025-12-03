@@ -144,20 +144,29 @@ export default function Panel({
     }
   }, [description, loading, mood, onImageReady, persist, style])
 
+  // Track if we've already called onImageReady to prevent loops
+  const hasCalledImageReady = useRef(false)
+
   useEffect(() => {
     if (initialImage) {
       setImage(initialImage)
-      onImageReady?.(initialImage)
+      if (!hasCalledImageReady.current) {
+        hasCalledImageReady.current = true
+        onImageReady?.(initialImage)
+      }
       return
     }
     try {
       const s = JSON.parse(localStorage.getItem(IMG_STORE) || "{}")
       if (s[key]) {
         setImage(s[key])
-        onImageReady?.(s[key])
+        if (!hasCalledImageReady.current) {
+          hasCalledImageReady.current = true
+          onImageReady?.(s[key])
+        }
       }
     } catch { /* ignore */ }
-  }, [initialImage, key, onImageReady])
+  }, [initialImage, key]) // Remove onImageReady from deps to prevent loop
 
   useEffect(() => {
     if (!image && !loading && description && shouldGenerate) {
