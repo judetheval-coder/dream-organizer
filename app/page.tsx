@@ -300,30 +300,9 @@ export default function LandingPage() {
               See How It Works
             </a>
           </div>
-
-          {/* Video/Interactive Demo */}
-          <div
-            className="relative max-w-4xl mx-auto rounded-2xl overflow-hidden shadow-2xl border border-cyan-400 bg-black/60"
-            style={{
-              background: colors.surface,
-              border: `1px solid ${colors.border}`,
-              boxShadow: '0 40px 80px rgba(0,0,0,0.5)',
-            }}
-          >
-            <div className="aspect-video flex items-center justify-center p-8">
-              {/* Replace this with a real video or interactive demo if available */}
-              <video className="rounded-xl w-full h-full object-cover shadow-lg" autoPlay loop muted playsInline poster="/demo-poster.jpg">
-                <source src="/demo.mp4" type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
-              <SignUpModal open={signupOpen} onClose={() => setSignupOpen(false)} />
-            </div>
-            <div className="absolute bottom-4 left-4 right-4 text-center">
-              <p className="text-sm" style={{ color: colors.textMuted }}>
-                Example: &quot;I was flying over a castle with dragons&quot; → 4 AI-generated panels
-              </p>
-            </div>
-          </div>
+          
+          {/* Signup Modal */}
+          <SignUpModal open={signupOpen} onClose={() => setSignupOpen(false)} />
         </div>
       </section>
 
