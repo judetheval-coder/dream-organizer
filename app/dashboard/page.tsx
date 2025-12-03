@@ -811,7 +811,7 @@ function DashboardPageContent() {
     setDreamText('')
     clearDraft() // Clear saved draft after successful creation
     setShowCreateModal(false)
-    updateTabInUrl('My Dreams')
+    updateTabInUrl('Comics') // Stay on Comics tab to show generation progress
 
     try {
       const createdDream = await saveDream({
@@ -854,7 +854,16 @@ function DashboardPageContent() {
       }
     }
 
-    if (currentGeneratingIndex < panels.length - 1) {
+    // Check if this is the last panel
+    const isLastPanel = currentGeneratingIndex >= panels.length - 1
+
+    if (isLastPanel) {
+      // All panels generated - switch to My Dreams tab and show success
+      setCurrentGeneratingIndex(-1)
+      updateTabInUrl('My Dreams')
+      showToast('✨ Dream complete! All panels generated.', 'success')
+      refreshDreams() // Refresh to show the new dream with images
+    } else {
       setCurrentGeneratingIndex(currentGeneratingIndex + 1)
     }
   }

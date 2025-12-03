@@ -118,13 +118,13 @@ export default function Panel({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt })
       })
-      
+
       const data = await res.json()
-      
+
       if (!res.ok) {
         throw new Error(data?.error || `Generation failed (${res.status})`)
       }
-      
+
       if (!data?.image) throw new Error("No image returned")
 
       clearInterval(iv)
