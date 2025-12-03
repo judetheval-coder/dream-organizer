@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useDevMode } from '@/hooks/useDevMode'
 import { useToast } from '@/contexts/ToastContext'
 import { Button } from './ui/primitives'
@@ -9,7 +9,36 @@ interface DevPanelProps {
   onClose?: () => void
 }
 
-type DevTab = 'data' | 'debug' | 'system' | 'logs' | 'social' | 'groups' | 'contests' | 'media' | 'simulation' | 'analytics'
+type DevTab = 'data' | 'debug' | 'system' | 'logs' | 'social' | 'groups' | 'contests' | 'media' | 'simulation' | 'analytics' | 'challenges' | 'users' | 'badges' | 'database'
+
+interface Challenge {
+  id: string
+  prompt: string
+  style: string
+  mood: string
+  challenge_date: string
+  bonus_xp?: number
+  winner_id?: string
+  submission_count?: number
+}
+
+interface User {
+  id: string
+  email: string
+  subscription_tier: string
+  dreams_count: number
+  actual_dreams_count?: number
+  panels_count?: number
+  created_at: string
+}
+
+interface Badge {
+  id: string
+  name: string
+  description: string
+  rarity: string
+  emoji: string
+}
 
 export function DevPanel({ onClose }: DevPanelProps) {
   const { unlocked, unlock } = useDevMode()
@@ -31,6 +60,27 @@ export function DevPanel({ onClose }: DevPanelProps) {
   const [fakeUsers, setFakeUsers] = useState<any[]>([])
   const [fakeUserForm, setFakeUserForm] = useState({ username: '', display_name: '', bio: '', profile_pic_url: '', follower_count: 0, post_count: 0 })
   const [stats, setStats] = useState<Record<string, any>>({})
+
+  // NEW: Challenge management state
+  const [challenges, setChallenges] = useState<Challenge[]>([])
+  const [challengeForm, setChallengeForm] = useState({ prompt: '', style: 'Arcane', mood: 'Mysterious', challenge_date: '', bonus_xp: 100 })
+  const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null)
+  const [submissions, setSubmissions] = useState<any[]>([])
+
+  // NEW: User management state
+  const [users, setUsers] = useState<User[]>([])
+  const [userSearch, setUserSearch] = useState('')
+  const [selectedUser, setSelectedUser] = useState<any>(null)
+  const [userDetails, setUserDetails] = useState<any>(null)
+
+  // NEW: Badge management state
+  const [allBadges, setAllBadges] = useState<Badge[]>([])
+  const [badgeStats, setBadgeStats] = useState<any>({})
+  const [selectedBadgeUser, setSelectedBadgeUser] = useState('')
+  const [selectedBadge, setSelectedBadge] = useState('')
+
+  // NEW: Database health state
+  const [dbHealth, setDbHealth] = useState<any>(null)
 
   const loadGroups = async () => {
     try {
@@ -111,6 +161,111 @@ export function DevPanel({ onClose }: DevPanelProps) {
       addLog(`Error loading stats: ${err}`)
     }
   }
+
+  // NEW: Load challenges
+  const loadChallenges = async () => {
+    try {
+      const res = await fetch('/api/dev_7c29/challenges')
+      const data = await res.json()
+      if (res.ok) {
+        setChallenges(data.challenges || [])
+        addLog(`Loaded ${data.challenges?.length || 0} challenges`)
+      } else {
+        showToast(data.error || 'Failed to load challenges', 'error')
+      }
+    } catch (err) {
+      showToast('Error loading challenges', 'error')
+      addLog(`Error loading challenges: ${err}`)
+    }
+  }
+
+  // NEW: Load challenge submissions
+  const loadSubmissions = async (challengeId: string) => {
+    try {
+      const res = await fetch(`/api/dev_7c29/challenges/submissions?challenge_id=${challengeId}`)
+      const data = await res.json()
+      if (res.ok) {
+        setSubmissions(data.submissions || [])
+        addLog(`Loaded ${data.submissions?.length || 0} submissions`)
+      } else {
+        showToast(data.error || 'Failed to load submissions', 'error')
+      }
+    } catch (err) {
+      showToast('Error loading submissions', 'error')
+    }
+  }
+
+  // NEW: Load users
+  const loadUsers = async (search = '') => {
+    try {
+      const res = await fetch(`/api/dev_7c29/users?search=${encodeURIComponent(search)}`)
+      const data = await res.json()
+      if (res.ok) {
+        setUsers(data.users || [])
+        addLog(`Loaded ${data.users?.length || 0} users`)
+      } else {
+        showToast(data.error || 'Failed to load users', 'error')
+      }
+    } catch (err) {
+      showToast('Error loading users', 'error')
+    }
+  }
+
+  // NEW: Load user details
+  const loadUserDetails = async (userId: string) => {
+    try {
+      const res = await fetch(`/api/dev_7c29/users/details?id=${userId}`)
+      const data = await res.json()
+      if (res.ok) {
+        setUserDetails(data)
+        addLog(`Loaded details for user ${data.user?.email || userId}`)
+      } else {
+        showToast(data.error || 'Failed to load user details', 'error')
+      }
+    } catch (err) {
+      showToast('Error loading user details', 'error')
+    }
+  }
+
+  // NEW: Load badges and stats
+  const loadBadges = async () => {
+    try {
+      const [badgesRes, statsRes] = await Promise.all([
+        fetch('/api/dev_7c29/badges'),
+        fetch('/api/dev_7c29/badges?action=stats')
+      ])
+      const badgesData = await badgesRes.json()
+      const statsData = await statsRes.json()
+
+      if (badgesRes.ok) setAllBadges(badgesData.badges || [])
+      if (statsRes.ok) setBadgeStats(statsData)
+      addLog('Loaded badges and stats')
+    } catch (err) {
+      showToast('Error loading badges', 'error')
+    }
+  }
+
+  // NEW: Load database health
+  const loadDbHealth = async () => {
+    try {
+      const res = await fetch('/api/dev_7c29/database')
+      const data = await res.json()
+      setDbHealth(data)
+      addLog(`Database health: ${data.status}`)
+    } catch (err) {
+      showToast('Error checking database health', 'error')
+    }
+  }
+
+  // Auto-load data when tabs change
+  useEffect(() => {
+    if (unlocked) {
+      if (activeTab === 'challenges') loadChallenges()
+      if (activeTab === 'users') loadUsers()
+      if (activeTab === 'badges') loadBadges()
+      if (activeTab === 'database') loadDbHealth()
+    }
+  }, [activeTab, unlocked])
 
   const addLog = (message: string) => {
     setLogs(prev => [...prev, `[${new Date().toLocaleTimeString()}] ${message}`])
@@ -201,24 +356,28 @@ export function DevPanel({ onClose }: DevPanelProps) {
         </div>
 
         {/* Tabs */}
-        <div className="bg-gray-800 px-4 py-2 border-b border-gray-700">
-          <div className="flex gap-1">
+        <div className="bg-gray-800 px-4 py-2 border-b border-gray-700 overflow-x-auto">
+          <div className="flex gap-1 flex-wrap">
             {[
-              { key: 'data' as DevTab, label: '📊 Data', icon: '📊' },
-              { key: 'debug' as DevTab, label: '🔧 Debug', icon: '🔧' },
-              { key: 'system' as DevTab, label: '⚙️ System', icon: '⚙️' },
-              { key: 'logs' as DevTab, label: '📝 Logs', icon: '📝' },
-              { key: 'social' as DevTab, label: '👥 Social', icon: '👥' },
-              { key: 'groups' as DevTab, label: '👥 Groups', icon: '👥' },
-              { key: 'contests' as DevTab, label: '🏆 Contests', icon: '🏆' },
-              { key: 'media' as DevTab, label: '🖼️ Media', icon: '🖼️' },
-              { key: 'simulation' as DevTab, label: '🤖 Simulation', icon: '🤖' },
-              { key: 'analytics' as DevTab, label: '📈 Analytics', icon: '📈' }
+              { key: 'data' as DevTab, label: '📊 Data' },
+              { key: 'challenges' as DevTab, label: '🎯 Challenges' },
+              { key: 'users' as DevTab, label: '👤 Users' },
+              { key: 'badges' as DevTab, label: '🏅 Badges' },
+              { key: 'database' as DevTab, label: '🗄️ Database' },
+              { key: 'debug' as DevTab, label: '🔧 Debug' },
+              { key: 'system' as DevTab, label: '⚙️ System' },
+              { key: 'logs' as DevTab, label: '📝 Logs' },
+              { key: 'social' as DevTab, label: '👥 Social' },
+              { key: 'groups' as DevTab, label: '🏘️ Groups' },
+              { key: 'contests' as DevTab, label: '🏆 Contests' },
+              { key: 'media' as DevTab, label: '🖼️ Media' },
+              { key: 'simulation' as DevTab, label: '🤖 Sim' },
+              { key: 'analytics' as DevTab, label: '📈 Stats' }
             ].map(({ key, label }) => (
               <button
                 key={key}
                 onClick={() => setActiveTab(key)}
-                className={`px-3 py-1 rounded text-sm font-medium transition-colors ${activeTab === key
+                className={`px-3 py-1 rounded text-sm font-medium transition-colors whitespace-nowrap ${activeTab === key
                   ? 'bg-purple-600 text-white'
                   : 'text-gray-300 hover:text-white hover:bg-gray-700'
                   }`}
@@ -1470,6 +1629,610 @@ export function DevPanel({ onClose }: DevPanelProps) {
               </div>
               <div className="text-xs text-gray-500">
                 Last updated: {stats.timestamp ? new Date(stats.timestamp).toLocaleString() : 'Never'}
+              </div>
+            </div>
+          )}
+
+          {/* NEW: Challenges Tab */}
+          {activeTab === 'challenges' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-white font-semibold">🎯 Daily Challenge Management</h4>
+                <Button onClick={loadChallenges} size="sm">Refresh</Button>
+              </div>
+
+              {/* Create new challenge form */}
+              <div className="bg-gray-800 rounded p-4 space-y-3">
+                <h5 className="text-gray-300 font-medium">Create New Challenge</h5>
+                <textarea
+                  placeholder="Challenge prompt (e.g., 'A dream where you discover a hidden door in your house')"
+                  value={challengeForm.prompt}
+                  onChange={(e) => setChallengeForm(prev => ({ ...prev, prompt: e.target.value }))}
+                  className="w-full p-2 bg-gray-700 text-white rounded border border-gray-600"
+                  rows={2}
+                />
+                <div className="grid grid-cols-3 gap-2">
+                  <select
+                    value={challengeForm.style}
+                    onChange={(e) => setChallengeForm(prev => ({ ...prev, style: e.target.value }))}
+                    className="p-2 bg-gray-700 text-white rounded border border-gray-600"
+                  >
+                    <option value="Arcane">Arcane</option>
+                    <option value="Gothic">Gothic</option>
+                    <option value="Retro Comic">Retro Comic</option>
+                    <option value="Dark Fantasy">Dark Fantasy</option>
+                    <option value="Cyberpunk">Cyberpunk</option>
+                    <option value="Watercolor">Watercolor</option>
+                  </select>
+                  <select
+                    value={challengeForm.mood}
+                    onChange={(e) => setChallengeForm(prev => ({ ...prev, mood: e.target.value }))}
+                    className="p-2 bg-gray-700 text-white rounded border border-gray-600"
+                  >
+                    <option value="Mysterious">Mysterious</option>
+                    <option value="Adventurous">Adventurous</option>
+                    <option value="Peaceful">Peaceful</option>
+                    <option value="Tense">Tense</option>
+                    <option value="Exciting">Exciting</option>
+                    <option value="Nostalgic">Nostalgic</option>
+                  </select>
+                  <input
+                    type="date"
+                    value={challengeForm.challenge_date}
+                    onChange={(e) => setChallengeForm(prev => ({ ...prev, challenge_date: e.target.value }))}
+                    className="p-2 bg-gray-700 text-white rounded border border-gray-600"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="number"
+                    placeholder="Bonus XP"
+                    value={challengeForm.bonus_xp}
+                    onChange={(e) => setChallengeForm(prev => ({ ...prev, bonus_xp: parseInt(e.target.value) || 100 }))}
+                    className="p-2 bg-gray-700 text-white rounded border border-gray-600 w-32"
+                  />
+                  <Button
+                    onClick={async () => {
+                      try {
+                        const res = await fetch('/api/dev_7c29/challenges', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify(challengeForm)
+                        })
+                        const data = await res.json()
+                        if (res.ok) {
+                          showToast('Challenge created!', 'success')
+                          addLog(`Created challenge for ${challengeForm.challenge_date}`)
+                          setChallengeForm({ prompt: '', style: 'Arcane', mood: 'Mysterious', challenge_date: '', bonus_xp: 100 })
+                          loadChallenges()
+                        } else {
+                          showToast(data.error || 'Failed to create challenge', 'error')
+                        }
+                      } catch (err) {
+                        showToast('Error creating challenge', 'error')
+                      }
+                    }}
+                    disabled={!challengeForm.prompt || !challengeForm.challenge_date}
+                    className="flex-1"
+                  >
+                    Create Challenge
+                  </Button>
+                </div>
+              </div>
+
+              {/* Challenges list */}
+              <div className="bg-gray-800 rounded p-4 max-h-96 overflow-y-auto">
+                <h5 className="text-gray-300 font-medium mb-3">All Challenges ({challenges.length})</h5>
+                {challenges.length === 0 ? (
+                  <p className="text-gray-500 text-sm">No challenges found. Create one above!</p>
+                ) : (
+                  <div className="space-y-2">
+                    {challenges.map((challenge) => (
+                      <div
+                        key={challenge.id}
+                        className={`p-3 rounded border cursor-pointer transition-colors ${selectedChallenge?.id === challenge.id
+                            ? 'bg-purple-900/50 border-purple-500'
+                            : 'bg-gray-700 border-gray-600 hover:border-gray-500'
+                          }`}
+                        onClick={() => {
+                          setSelectedChallenge(challenge)
+                          loadSubmissions(challenge.id)
+                        }}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <div className="text-white font-medium">{challenge.prompt.slice(0, 60)}...</div>
+                            <div className="text-gray-400 text-sm mt-1">
+                              📅 {challenge.challenge_date} • 🎨 {challenge.style} • 💭 {challenge.mood}
+                            </div>
+                            <div className="text-gray-400 text-sm">
+                              📝 {challenge.submission_count || 0} submissions • ⭐ {challenge.bonus_xp || 100} XP
+                            </div>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button
+                              onClick={async (e) => {
+                                e.stopPropagation()
+                                if (confirm('Delete this challenge?')) {
+                                  const res = await fetch('/api/dev_7c29/challenges', {
+                                    method: 'DELETE',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ id: challenge.id })
+                                  })
+                                  if (res.ok) {
+                                    showToast('Challenge deleted', 'success')
+                                    loadChallenges()
+                                  }
+                                }
+                              }}
+                              size="sm"
+                              variant="secondary"
+                            >
+                              🗑️
+                            </Button>
+                          </div>
+                        </div>
+                        {challenge.winner_id && (
+                          <div className="mt-2 text-green-400 text-sm">🏆 Winner selected</div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Submissions for selected challenge */}
+              {selectedChallenge && (
+                <div className="bg-gray-800 rounded p-4">
+                  <h5 className="text-gray-300 font-medium mb-3">
+                    Submissions for: {selectedChallenge.prompt.slice(0, 40)}...
+                  </h5>
+                  {submissions.length === 0 ? (
+                    <p className="text-gray-500 text-sm">No submissions yet</p>
+                  ) : (
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {submissions.map((sub) => (
+                        <div key={sub.id} className="p-2 bg-gray-700 rounded flex justify-between items-center">
+                          <div>
+                            <div className="text-white text-sm">{sub.user?.email || 'Unknown'}</div>
+                            <div className="text-gray-400 text-xs">
+                              👍 {sub.votes || 0} votes • {sub.dream?.text?.slice(0, 50) || 'No dream text'}...
+                            </div>
+                          </div>
+                          <div className="flex gap-1">
+                            <Button
+                              onClick={async () => {
+                                const res = await fetch('/api/dev_7c29/challenges', {
+                                  method: 'PATCH',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({
+                                    id: selectedChallenge.id,
+                                    action: 'pick_winner',
+                                    winner_id: sub.user_id
+                                  })
+                                })
+                                if (res.ok) {
+                                  showToast('Winner selected!', 'success')
+                                  addLog(`Selected winner: ${sub.user?.email}`)
+                                  loadChallenges()
+                                }
+                              }}
+                              size="sm"
+                            >
+                              🏆 Pick Winner
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* NEW: Users Tab */}
+          {activeTab === 'users' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-white font-semibold">👤 User Management</h4>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Search by email..."
+                    value={userSearch}
+                    onChange={(e) => setUserSearch(e.target.value)}
+                    className="p-2 bg-gray-700 text-white rounded border border-gray-600 text-sm"
+                    onKeyDown={(e) => e.key === 'Enter' && loadUsers(userSearch)}
+                  />
+                  <Button onClick={() => loadUsers(userSearch)} size="sm">Search</Button>
+                </div>
+              </div>
+
+              {/* Users list */}
+              <div className="bg-gray-800 rounded p-4 max-h-80 overflow-y-auto">
+                <h5 className="text-gray-300 font-medium mb-3">Users ({users.length})</h5>
+                {users.length === 0 ? (
+                  <p className="text-gray-500 text-sm">No users found. Click Search to load.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {users.map((user) => (
+                      <div
+                        key={user.id}
+                        className={`p-3 rounded border cursor-pointer transition-colors ${selectedUser?.id === user.id
+                            ? 'bg-purple-900/50 border-purple-500'
+                            : 'bg-gray-700 border-gray-600 hover:border-gray-500'
+                          }`}
+                        onClick={() => {
+                          setSelectedUser(user)
+                          loadUserDetails(user.id)
+                        }}
+                      >
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <div className="text-white font-medium">{user.email}</div>
+                            <div className="text-gray-400 text-sm">
+                              💭 {user.actual_dreams_count || user.dreams_count || 0} dreams •
+                              🖼️ {user.panels_count || 0} panels •
+                              💎 {user.subscription_tier || 'free'}
+                            </div>
+                            <div className="text-gray-500 text-xs">
+                              Joined: {new Date(user.created_at).toLocaleDateString()}
+                            </div>
+                          </div>
+                          <div className="flex gap-1">
+                            {user.subscription_tier !== 'pro' && (
+                              <Button
+                                onClick={async (e) => {
+                                  e.stopPropagation()
+                                  const res = await fetch('/api/dev_7c29/users', {
+                                    method: 'PATCH',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ id: user.id, action: 'upgrade_to_pro' })
+                                  })
+                                  if (res.ok) {
+                                    showToast('Upgraded to Pro!', 'success')
+                                    loadUsers(userSearch)
+                                  }
+                                }}
+                                size="sm"
+                              >
+                                ⬆️ Pro
+                              </Button>
+                            )}
+                            {user.subscription_tier !== 'premium' && (
+                              <Button
+                                onClick={async (e) => {
+                                  e.stopPropagation()
+                                  const res = await fetch('/api/dev_7c29/users', {
+                                    method: 'PATCH',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ id: user.id, action: 'upgrade_to_premium' })
+                                  })
+                                  if (res.ok) {
+                                    showToast('Upgraded to Premium!', 'success')
+                                    loadUsers(userSearch)
+                                  }
+                                }}
+                                size="sm"
+                              >
+                                👑 Premium
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* User details */}
+              {userDetails && (
+                <div className="bg-gray-800 rounded p-4">
+                  <h5 className="text-gray-300 font-medium mb-3">
+                    Details: {userDetails.user?.email}
+                  </h5>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="bg-gray-700 p-2 rounded">
+                      <div className="text-2xl font-bold text-cyan-400">{userDetails.stats?.total_dreams || 0}</div>
+                      <div className="text-gray-400">Total Dreams</div>
+                    </div>
+                    <div className="bg-gray-700 p-2 rounded">
+                      <div className="text-2xl font-bold text-pink-400">{userDetails.stats?.total_panels || 0}</div>
+                      <div className="text-gray-400">Total Panels</div>
+                    </div>
+                    <div className="bg-gray-700 p-2 rounded">
+                      <div className="text-2xl font-bold text-yellow-400">{userDetails.stats?.total_badges || 0}</div>
+                      <div className="text-gray-400">Badges Earned</div>
+                    </div>
+                    <div className="bg-gray-700 p-2 rounded">
+                      <div className="text-2xl font-bold text-green-400">{userDetails.stats?.total_referrals || 0}</div>
+                      <div className="text-gray-400">Referrals</div>
+                    </div>
+                  </div>
+                  {userDetails.badges?.length > 0 && (
+                    <div className="mt-3">
+                      <div className="text-gray-400 text-sm mb-1">Badges:</div>
+                      <div className="flex flex-wrap gap-1">
+                        {userDetails.badges.map((b: any) => (
+                          <span key={b.badge_id} className="px-2 py-1 bg-gray-700 rounded text-xs">
+                            {b.badge_id}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* NEW: Badges Tab */}
+          {activeTab === 'badges' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-white font-semibold">🏅 Badge Management</h4>
+                <Button onClick={loadBadges} size="sm">Refresh</Button>
+              </div>
+
+              {/* Badge stats */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-gray-800 rounded p-3 text-center">
+                  <div className="text-2xl font-bold text-yellow-400">{badgeStats.totalAwarded || 0}</div>
+                  <div className="text-gray-400 text-sm">Badges Awarded</div>
+                </div>
+                <div className="bg-gray-800 rounded p-3 text-center">
+                  <div className="text-2xl font-bold text-cyan-400">{badgeStats.uniqueUsers || 0}</div>
+                  <div className="text-gray-400 text-sm">Users with Badges</div>
+                </div>
+                <div className="bg-gray-800 rounded p-3 text-center">
+                  <div className="text-2xl font-bold text-purple-400">{allBadges.length}</div>
+                  <div className="text-gray-400 text-sm">Total Badge Types</div>
+                </div>
+              </div>
+
+              {/* Award badge form */}
+              <div className="bg-gray-800 rounded p-4 space-y-3">
+                <h5 className="text-gray-300 font-medium">Award Badge Manually</h5>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="User ID (from Users tab)"
+                    value={selectedBadgeUser}
+                    onChange={(e) => setSelectedBadgeUser(e.target.value)}
+                    className="flex-1 p-2 bg-gray-700 text-white rounded border border-gray-600 text-sm"
+                  />
+                  <select
+                    value={selectedBadge}
+                    onChange={(e) => setSelectedBadge(e.target.value)}
+                    className="flex-1 p-2 bg-gray-700 text-white rounded border border-gray-600 text-sm"
+                  >
+                    <option value="">Select badge...</option>
+                    {allBadges.map((badge) => (
+                      <option key={badge.id} value={badge.id}>
+                        {badge.emoji} {badge.name} ({badge.rarity})
+                      </option>
+                    ))}
+                  </select>
+                  <Button
+                    onClick={async () => {
+                      if (!selectedBadgeUser || !selectedBadge) return
+                      const res = await fetch('/api/dev_7c29/badges', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_id: selectedBadgeUser, badge_id: selectedBadge })
+                      })
+                      const data = await res.json()
+                      if (res.ok) {
+                        showToast(data.message || 'Badge awarded!', 'success')
+                        loadBadges()
+                        setSelectedBadgeUser('')
+                        setSelectedBadge('')
+                      } else {
+                        showToast(data.error || 'Failed to award badge', 'error')
+                      }
+                    }}
+                    disabled={!selectedBadgeUser || !selectedBadge}
+                  >
+                    Award Badge
+                  </Button>
+                </div>
+              </div>
+
+              {/* Badge distribution */}
+              <div className="bg-gray-800 rounded p-4">
+                <h5 className="text-gray-300 font-medium mb-3">Badge Distribution</h5>
+                <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+                  {allBadges.map((badge) => (
+                    <div key={badge.id} className="flex items-center justify-between p-2 bg-gray-700 rounded">
+                      <div className="flex items-center gap-2">
+                        <span>{badge.emoji}</span>
+                        <span className="text-white text-sm">{badge.name}</span>
+                      </div>
+                      <span className={`text-sm font-bold ${badge.rarity === 'legendary' ? 'text-yellow-400' :
+                          badge.rarity === 'epic' ? 'text-purple-400' :
+                            badge.rarity === 'rare' ? 'text-blue-400' :
+                              badge.rarity === 'uncommon' ? 'text-green-400' :
+                                'text-gray-400'
+                        }`}>
+                        {badgeStats.badgeCounts?.[badge.id] || 0}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Recent unlocks */}
+              {badgeStats.recentUnlocks?.length > 0 && (
+                <div className="bg-gray-800 rounded p-4">
+                  <h5 className="text-gray-300 font-medium mb-3">Recent Unlocks</h5>
+                  <div className="space-y-1 max-h-32 overflow-y-auto">
+                    {badgeStats.recentUnlocks.slice(0, 10).map((unlock: any, i: number) => (
+                      <div key={i} className="flex justify-between text-sm">
+                        <span className="text-gray-400">{unlock.email}</span>
+                        <span className="text-white">{unlock.badge?.emoji} {unlock.badge?.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* NEW: Database Tab */}
+          {activeTab === 'database' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-white font-semibold">🗄️ Database Health</h4>
+                <Button onClick={loadDbHealth} size="sm">Refresh</Button>
+              </div>
+
+              {/* Connection status */}
+              <div className={`p-4 rounded flex items-center gap-3 ${dbHealth?.status === 'healthy' ? 'bg-green-900/50 border border-green-500' :
+                  dbHealth?.status === 'degraded' ? 'bg-yellow-900/50 border border-yellow-500' :
+                    'bg-red-900/50 border border-red-500'
+                }`}>
+                <div className={`w-3 h-3 rounded-full animate-pulse ${dbHealth?.status === 'healthy' ? 'bg-green-400' :
+                    dbHealth?.status === 'degraded' ? 'bg-yellow-400' :
+                      'bg-red-400'
+                  }`} />
+                <div>
+                  <div className="text-white font-medium">
+                    Status: {dbHealth?.status?.toUpperCase() || 'UNKNOWN'}
+                  </div>
+                  <div className="text-gray-400 text-sm">
+                    Connection: {dbHealth?.connection || 'Checking...'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Table counts */}
+              {dbHealth?.tableCounts && (
+                <div className="bg-gray-800 rounded p-4">
+                  <h5 className="text-gray-300 font-medium mb-3">Table Counts</h5>
+                  <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto">
+                    {Object.entries(dbHealth.tableCounts).map(([table, count]) => (
+                      <div key={table} className="flex justify-between p-2 bg-gray-700 rounded text-sm">
+                        <span className="text-gray-400">{table}</span>
+                        <span className={typeof count === 'number' ? 'text-cyan-400' : 'text-red-400'}>
+                          {String(count)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Recent activity */}
+              {dbHealth?.recent24h && (
+                <div className="bg-gray-800 rounded p-4">
+                  <h5 className="text-gray-300 font-medium mb-3">Last 24 Hours</h5>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-cyan-400">{dbHealth.recent24h.users}</div>
+                      <div className="text-gray-400 text-sm">New Users</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-pink-400">{dbHealth.recent24h.dreams}</div>
+                      <div className="text-gray-400 text-sm">New Dreams</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-purple-400">{dbHealth.recent24h.panels}</div>
+                      <div className="text-gray-400 text-sm">New Panels</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Subscription distribution */}
+              {dbHealth?.subscriptionDistribution && (
+                <div className="bg-gray-800 rounded p-4">
+                  <h5 className="text-gray-300 font-medium mb-3">Subscription Tiers</h5>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-gray-400">{dbHealth.subscriptionDistribution.free}</div>
+                      <div className="text-gray-400 text-sm">Free</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-purple-400">{dbHealth.subscriptionDistribution.pro}</div>
+                      <div className="text-gray-400 text-sm">Pro</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-yellow-400">{dbHealth.subscriptionDistribution.premium}</div>
+                      <div className="text-gray-400 text-sm">Premium</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Maintenance actions */}
+              <div className="bg-gray-800 rounded p-4">
+                <h5 className="text-gray-300 font-medium mb-3">Maintenance Actions</h5>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    onClick={async () => {
+                      const res = await fetch('/api/dev_7c29/database', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'cleanup_orphans' })
+                      })
+                      const data = await res.json()
+                      showToast(data.message || 'Cleanup complete', res.ok ? 'success' : 'error')
+                      loadDbHealth()
+                    }}
+                    size="sm"
+                  >
+                    🧹 Cleanup Orphans
+                  </Button>
+                  <Button
+                    onClick={async () => {
+                      const res = await fetch('/api/dev_7c29/database', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'verify_counts' })
+                      })
+                      const data = await res.json()
+                      showToast(data.message || 'Counts verified', res.ok ? 'success' : 'error')
+                      loadDbHealth()
+                    }}
+                    size="sm"
+                  >
+                    ✅ Verify Counts
+                  </Button>
+                  <Button
+                    onClick={async () => {
+                      if (!confirm('Reset monthly panel counters for all users?')) return
+                      const res = await fetch('/api/dev_7c29/database', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'reset_monthly_counters' })
+                      })
+                      const data = await res.json()
+                      showToast(data.message || 'Counters reset', res.ok ? 'success' : 'error')
+                    }}
+                    size="sm"
+                    variant="secondary"
+                  >
+                    🔄 Reset Monthly Counters
+                  </Button>
+                </div>
+              </div>
+
+              {/* Errors */}
+              {dbHealth?.errors?.length > 0 && (
+                <div className="bg-red-900/50 border border-red-500 rounded p-4">
+                  <h5 className="text-red-400 font-medium mb-2">⚠️ Issues Detected</h5>
+                  <ul className="text-red-300 text-sm space-y-1">
+                    {dbHealth.errors.map((err: string, i: number) => (
+                      <li key={i}>• {err}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="text-xs text-gray-500">
+                Last checked: {dbHealth?.timestamp ? new Date(dbHealth.timestamp).toLocaleString() : 'Never'}
               </div>
             </div>
           )}

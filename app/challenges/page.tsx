@@ -111,7 +111,7 @@ export default function DailyChallengePage() {
             <div className="min-h-screen p-8" style={{ background: colors.backgroundDark }}>
                 <div className="max-w-4xl mx-auto space-y-8">
                     {/* Hero Section */}
-                    <div 
+                    <div
                         className="relative overflow-hidden rounded-3xl p-10"
                         style={{
                             background: `linear-gradient(135deg, ${colors.backgroundDark} 0%, rgba(124,58,237,0.15) 50%, rgba(6,182,212,0.15) 100%)`,
@@ -120,15 +120,15 @@ export default function DailyChallengePage() {
                     >
                         {/* Animated background blobs */}
                         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                            <div 
+                            <div
                                 className="absolute top-10 left-10 w-40 h-40 rounded-full blur-3xl opacity-30 animate-pulse"
                                 style={{ background: colors.purple }}
                             />
-                            <div 
+                            <div
                                 className="absolute bottom-10 right-10 w-48 h-48 rounded-full blur-3xl opacity-30 animate-pulse"
                                 style={{ background: colors.cyan, animationDelay: '1s' }}
                             />
-                            <div 
+                            <div
                                 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-60 h-60 rounded-full blur-3xl opacity-20 animate-pulse"
                                 style={{ background: colors.pink, animationDelay: '2s' }}
                             />
@@ -162,7 +162,7 @@ export default function DailyChallengePage() {
                                         { value: timeUntilNext.seconds, label: 'Seconds' },
                                     ].map((item, idx) => (
                                         <div key={idx} className="text-center">
-                                            <div 
+                                            <div
                                                 className="w-24 h-24 rounded-2xl flex items-center justify-center text-4xl font-bold mb-2 transition-all hover:scale-105"
                                                 style={{
                                                     background: `linear-gradient(135deg, ${colors.purple}40, ${colors.cyan}40)`,
@@ -224,9 +224,9 @@ export default function DailyChallengePage() {
                                     }}
                                 >
                                     <div className="flex items-center gap-4">
-                                        <div 
+                                        <div
                                             className="w-14 h-14 rounded-xl flex items-center justify-center text-3xl transition-transform group-hover:scale-110"
-                                            style={{ 
+                                            style={{
                                                 background: `linear-gradient(135deg, ${colors.purple}25, ${colors.cyan}25)`,
                                             }}
                                         >
@@ -236,11 +236,11 @@ export default function DailyChallengePage() {
                                             <p className="font-bold text-lg" style={{ color: colors.textPrimary }}>{item.theme}</p>
                                             <p className="text-sm" style={{ color: colors.textMuted }}>{item.description}</p>
                                         </div>
-                                        <div 
+                                        <div
                                             className="px-3 py-1 rounded-full text-xs font-medium"
-                                            style={{ 
+                                            style={{
                                                 background: `${colors.purple}20`,
-                                                color: colors.purple 
+                                                color: colors.purple
                                             }}
                                         >
                                             {item.day}
@@ -252,7 +252,7 @@ export default function DailyChallengePage() {
                     </div>
 
                     {/* Hall of Fame */}
-                    <div 
+                    <div
                         className="p-8 rounded-2xl text-center"
                         style={{
                             background: `linear-gradient(135deg, rgba(234,179,8,0.15), rgba(236,72,153,0.15))`,
@@ -266,9 +266,9 @@ export default function DailyChallengePage() {
                         <p className="text-lg mb-4 max-w-lg mx-auto" style={{ color: colors.textMuted }}>
                             Win challenges to earn the exclusive <span className="font-bold" style={{ color: '#f59e0b' }}>Challenge Champion</span> badge and eternal glory!
                         </p>
-                        <div 
+                        <div
                             className="inline-flex items-center gap-3 px-5 py-3 rounded-full"
-                            style={{ 
+                            style={{
                                 background: 'rgba(245,158,11,0.2)',
                                 border: '1px solid rgba(245,158,11,0.4)'
                             }}
@@ -280,7 +280,7 @@ export default function DailyChallengePage() {
 
                     {/* Pro Tips */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div 
+                        <div
                             className="p-5 rounded-xl flex items-start gap-4"
                             style={{
                                 background: `${colors.purple}15`,
@@ -295,7 +295,7 @@ export default function DailyChallengePage() {
                                 </p>
                             </div>
                         </div>
-                        <div 
+                        <div
                             className="p-5 rounded-xl flex items-start gap-4"
                             style={{
                                 background: `${colors.cyan}15`,
