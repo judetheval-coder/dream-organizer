@@ -417,10 +417,13 @@ export default function LandingPage() {
       <section id="features" className="py-20 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4" style={{ color: colors.textPrimary }}>
+            <span className="inline-block px-4 py-1.5 rounded-full text-sm font-medium mb-4" style={{ background: 'rgba(124, 58, 237, 0.2)', color: colors.purple }}>
+              ✨ Features
+            </span>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: colors.textPrimary }}>
               Everything You Need to Capture Dreams
             </h2>
-            <p className="text-lg" style={{ color: colors.textSecondary }}>
+            <p className="text-lg max-w-2xl mx-auto" style={{ color: colors.textSecondary }}>
               Powerful features that make dream journaling magical
             </p>
           </div>
@@ -429,17 +432,28 @@ export default function LandingPage() {
             {FEATURES.map((feature, i) => (
               <div
                 key={i}
-                className="p-6 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-xl"
+                className="group p-6 rounded-2xl transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl relative overflow-hidden"
                 style={{
-                  background: colors.surface,
+                  background: `linear-gradient(145deg, ${colors.surface}, rgba(26, 16, 37, 0.8))`,
                   border: `1px solid ${colors.border}`,
                 }}
               >
-                <div className="text-4xl mb-4">{feature.icon}</div>
-                <h3 className="text-xl font-semibold mb-2" style={{ color: colors.textPrimary }}>
+                {/* Hover glow effect */}
+                <div 
+                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                  style={{ background: 'radial-gradient(circle at center, rgba(124, 58, 237, 0.15) 0%, transparent 70%)' }}
+                />
+                
+                <div 
+                  className="w-14 h-14 rounded-xl flex items-center justify-center text-3xl mb-4 transition-transform duration-300 group-hover:scale-110"
+                  style={{ background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.3), rgba(6, 182, 212, 0.2))' }}
+                >
+                  {feature.icon}
+                </div>
+                <h3 className="text-xl font-semibold mb-2 relative z-10" style={{ color: colors.textPrimary }}>
                   {feature.title}
                 </h3>
-                <p style={{ color: colors.textMuted }}>{feature.description}</p>
+                <p className="relative z-10" style={{ color: colors.textMuted }}>{feature.description}</p>
               </div>
             ))}
           </div>
@@ -447,10 +461,18 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing Section */}
-      <section id="pricing" className="py-20 px-6" style={{ background: 'rgba(0,0,0,0.3)' }}>
-        <div className="max-w-6xl mx-auto">
+      <section id="pricing" className="py-20 px-6 relative overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-purple-500/5 rounded-full blur-3xl" />
+        </div>
+        
+        <div className="max-w-6xl mx-auto relative z-10">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4" style={{ color: colors.textPrimary }}>
+            <span className="inline-block px-4 py-1.5 rounded-full text-sm font-medium mb-4" style={{ background: 'rgba(6, 182, 212, 0.2)', color: colors.cyan }}>
+              💎 Pricing
+            </span>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: colors.textPrimary }}>
               Simple, Transparent Pricing
             </h2>
             <p className="text-lg" style={{ color: colors.textSecondary }}>
@@ -520,10 +542,19 @@ export default function LandingPage() {
       </section>
 
       {/* Testimonials Section */}
-      <section id="testimonials" className="py-20 px-6">
-        <div className="max-w-6xl mx-auto">
+      <section id="testimonials" className="py-20 px-6 relative overflow-hidden">
+        {/* Decorative elements */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/3 left-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 right-0 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
+        </div>
+        
+        <div className="max-w-6xl mx-auto relative z-10">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4" style={{ color: colors.textPrimary }}>
+            <span className="inline-block px-4 py-1.5 rounded-full text-sm font-medium mb-4" style={{ background: 'rgba(236, 72, 153, 0.2)', color: colors.pink }}>
+              💬 Testimonials
+            </span>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: colors.textPrimary }}>
               Loved by Dreamers
             </h2>
             <p className="text-lg" style={{ color: colors.textSecondary }}>
@@ -535,13 +566,21 @@ export default function LandingPage() {
             {TESTIMONIALS.map((testimonial, i) => (
               <div
                 key={i}
-                className="p-6 rounded-2xl"
-                style={{ background: colors.surface, border: `1px solid ${colors.border}` }}
+                className="group p-6 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-xl relative"
+                style={{ 
+                  background: `linear-gradient(145deg, ${colors.surface}, rgba(26, 16, 37, 0.9))`,
+                  border: `1px solid ${colors.border}` 
+                }}
               >
+                {/* Quote decoration */}
+                <div className="absolute top-4 right-4 text-4xl opacity-10" style={{ color: colors.purple }}>
+                  &ldquo;
+                </div>
+                
                 <div className="flex items-center gap-3 mb-4">
                   <div
-                    className="w-12 h-12 rounded-full flex items-center justify-center text-2xl"
-                    style={{ background: colors.backgroundDark }}
+                    className="w-14 h-14 rounded-full flex items-center justify-center text-2xl transition-transform duration-300 group-hover:scale-110"
+                    style={{ background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.4), rgba(6, 182, 212, 0.3))' }}
                   >
                     {testimonial.avatar}
                   </div>
@@ -549,12 +588,19 @@ export default function LandingPage() {
                     <p className="font-semibold" style={{ color: colors.textPrimary }}>
                       {testimonial.name}
                     </p>
-                    <p className="text-sm" style={{ color: colors.textMuted }}>
+                    <p className="text-sm" style={{ color: colors.cyan }}>
                       {testimonial.role}
                     </p>
                   </div>
                 </div>
-                <p style={{ color: colors.textSecondary }}>&ldquo;{testimonial.text}&rdquo;</p>
+                <p className="italic" style={{ color: colors.textSecondary }}>&ldquo;{testimonial.text}&rdquo;</p>
+                
+                {/* Star rating */}
+                <div className="mt-4 flex gap-1">
+                  {[...Array(5)].map((_, j) => (
+                    <span key={j} className="text-yellow-400 text-sm">★</span>
+                  ))}
+                </div>
               </div>
             ))}
           </div>
@@ -594,21 +640,40 @@ export default function LandingPage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-6">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-4xl font-bold mb-6" style={{ color: colors.textPrimary }}>
+      <section className="py-24 px-6 relative overflow-hidden">
+        {/* Dramatic background */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-pink-500/10 rounded-full blur-3xl" />
+        </div>
+        
+        <div className="max-w-4xl mx-auto text-center relative z-10">
+          <div className="mb-8">
+            <span className="text-6xl mb-6 inline-block animate-bounce">🌙</span>
+          </div>
+          <h2 className="text-4xl md:text-5xl font-bold mb-6" style={{ 
+            background: gradients.purpleCyan, 
+            WebkitBackgroundClip: 'text', 
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}>
             Ready to Visualize Your Dreams?
           </h2>
-          <p className="text-xl mb-8" style={{ color: colors.textSecondary }}>
-            Join thousands of dreamers who are turning their nightly adventures into art.
+          <p className="text-xl mb-10 max-w-2xl mx-auto" style={{ color: colors.textSecondary }}>
+            Join thousands of dreamers who are turning their nightly adventures into stunning visual stories.
           </p>
           <Link
             href={isSignedIn ? '/dashboard' : '/sign-up'}
-            className="inline-block px-10 py-4 rounded-xl font-bold text-lg transition-all hover:scale-105 hover:shadow-2xl"
-            style={{ background: gradients.button, color: colors.white, boxShadow: shadows.glow }}
+            className="inline-flex items-center gap-3 px-12 py-5 rounded-2xl font-bold text-xl transition-all hover:scale-105 hover:shadow-2xl group"
+            style={{ background: gradients.button, color: colors.white, boxShadow: `0 0 60px rgba(124, 58, 237, 0.4)` }}
           >
-            Start Free Today 🚀
+            Start Free Today 
+            <span className="group-hover:translate-x-1 transition-transform">🚀</span>
           </Link>
+          <p className="mt-6 text-sm" style={{ color: colors.textMuted }}>
+            No credit card required • Free forever tier available
+          </p>
         </div>
       </section>
 
