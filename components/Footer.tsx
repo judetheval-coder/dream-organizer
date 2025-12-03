@@ -6,7 +6,6 @@ import { colors } from '@/lib/design'
 const COLS = [
   { title: 'Features', items: ['🎨 Image Generation', '📖 Comic Panel Creation', '💾 Dream Archive', '✨ Dream Insights'] },
   { title: 'Company', links: [{ href: '/pricing', label: 'Pricing' }, { href: '/privacy', label: 'Privacy Policy' }, { href: '/terms', label: 'Terms of Service' }] },
-  { title: 'Built With', items: ['⚡ Next.js 16', '🎨 Stable Diffusion', '🔐 Clerk Auth', '💳 Stripe'] },
 ]
 
 const SOCIAL_LINKS = [

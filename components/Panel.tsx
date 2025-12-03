@@ -118,17 +118,26 @@ export default function Panel({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt })
       })
-      if (!res.ok) throw new Error(`Generation failed`)
-      const { image: img } = await res.json()
-      if (!img) throw new Error("No image returned")
+      
+      const data = await res.json()
+      
+      if (!res.ok) {
+        throw new Error(data?.error || `Generation failed (${res.status})`)
+      }
+      
+      if (!data?.image) throw new Error("No image returned")
 
       clearInterval(iv)
       setProgress(100)
-      setImage(img)
-      persist(img)
-      onImageReady?.(img)
+      setImage(data.image)
+      persist(data.image)
+      onImageReady?.(data.image)
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Generation failed")
+      clearInterval(iv)
+      setProgress(0)
+      const errorMessage = e instanceof Error ? e.message : "Generation failed"
+      setError(errorMessage)
+      console.error('[Panel] Generation error:', errorMessage)
     } finally {
       clearInterval(iv)
       setLoading(false)
