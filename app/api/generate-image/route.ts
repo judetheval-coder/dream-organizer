@@ -21,11 +21,23 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { allowed, remaining, resetTime, headers } = checkRateLimit(
+    const { allowed, remaining, resetTime, abuse, headers } = checkRateLimit(
       userId,
       RATE_LIMIT,
       RATE_WINDOW,
     )
+
+    // Check for abuse block first
+    if (abuse.blocked) {
+      return NextResponse.json(
+        {
+          error: 'Temporarily blocked due to suspicious activity. Please wait before trying again.',
+          blocked: true,
+          resetTime,
+        },
+        { status: 429, headers },
+      )
+    }
 
     if (!allowed) {
       return NextResponse.json(
@@ -33,6 +45,7 @@ export async function POST(req: NextRequest) {
           error: `Rate limited. Try again in ${resetTime} seconds.`,
           remaining,
           resetTime,
+          ...(abuse.warning && { warning: 'Unusual activity detected. Slow down to avoid temporary block.' }),
         },
         { status: 429, headers },
       )

@@ -21,13 +21,13 @@ export default function Sidebar() {
       <div className="p-7 border-b border-[rgba(138,43,226,0.18)]">
         <Link href="/" className="flex items-center gap-4 group">
           <div className="w-11 h-11 bg-gradient-to-br from-[#5B2CFC] to-[#03DAC6] rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform shadow-md">
-            ✨
+            🌙
           </div>
           <div>
             <h1 className="text-2xl font-extrabold bg-gradient-to-r from-[#5B2CFC] to-[#03DAC6] bg-clip-text text-transparent tracking-tight">
-              Dream Machine
+              Visnoctis
             </h1>
-            <p className="text-[11px] text-[#888] uppercase tracking-widest font-semibold mt-1">Beta v1.0</p>
+            <p className="text-[10px] text-[#888] italic tracking-wide mt-1">"Vision of the Night"</p>
           </div>
         </Link>
       </div>

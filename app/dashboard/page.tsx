@@ -596,15 +596,26 @@ function DashboardPageContent() {
   // Onboarding tour
   const onboarding = useOnboardingTour()
 
-  const [dreamText, setDreamText] = useState('')
-  const [style, setStyle] = useState('Anime')
-  const [mood, setMood] = useState('Dreamy')
+  // Draft auto-save: Restore from localStorage on init
+  const [dreamText, setDreamText] = useState(() => {
+    if (typeof window === 'undefined') return ''
+    return window.localStorage.getItem('visnoctis-draft-text') || ''
+  })
+  const [style, setStyle] = useState(() => {
+    if (typeof window === 'undefined') return 'Anime'
+    return window.localStorage.getItem('visnoctis-draft-style') || 'Anime'
+  })
+  const [mood, setMood] = useState(() => {
+    if (typeof window === 'undefined') return 'Dreamy'
+    return window.localStorage.getItem('visnoctis-draft-mood') || 'Dreamy'
+  })
   const [panels, setPanels] = useState<LocalPanel[]>([])
   const [enhancing, setEnhancing] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
   const [insights, setInsights] = useState<string | null>(null)
   const [analysisError, setAnalysisError] = useState<string | null>(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [hasDraftRestored, setHasDraftRestored] = useState(false)
   const [currentGeneratingIndex, setCurrentGeneratingIndex] = useState(-1)
   const [showWelcome, setShowWelcome] = useState(() => {
     if (typeof window === 'undefined') {
@@ -614,6 +625,30 @@ function DashboardPageContent() {
   })
   const [lastCreatedDreamId, setLastCreatedDreamId] = useState<string | null>(null)
   const [showUpgrade, setShowUpgrade] = useState(false)
+
+  // Auto-save draft to localStorage whenever dream content changes
+  useEffect(() => {
+    if (dreamText.trim()) {
+      window.localStorage.setItem('visnoctis-draft-text', dreamText)
+      window.localStorage.setItem('visnoctis-draft-style', style)
+      window.localStorage.setItem('visnoctis-draft-mood', mood)
+    }
+  }, [dreamText, style, mood])
+
+  // Show notification when draft is restored
+  useEffect(() => {
+    if (!hasDraftRestored && dreamText.trim()) {
+      setHasDraftRestored(true)
+      showToast('📝 Draft restored from your last session', 'info')
+    }
+  }, [hasDraftRestored, dreamText, showToast])
+
+  // Clear draft after successful creation
+  const clearDraft = () => {
+    window.localStorage.removeItem('visnoctis-draft-text')
+    window.localStorage.removeItem('visnoctis-draft-style')
+    window.localStorage.removeItem('visnoctis-draft-mood')
+  }
 
   const hasDreams = dreams.length > 0
 
@@ -774,6 +809,7 @@ function DashboardPageContent() {
     setPanels(newPanels)
     setCurrentGeneratingIndex(0)
     setDreamText('')
+    clearDraft() // Clear saved draft after successful creation
     setShowCreateModal(false)
     updateTabInUrl('Comics')
 
@@ -1427,7 +1463,11 @@ function DashboardPageContent() {
 
       {/* Onboarding Tour */}
       {onboarding.showTour && (
-        <OnboardingTour onComplete={onboarding.completeTour} />
+        <OnboardingTour
+          onComplete={onboarding.completeTour}
+          currentStep={onboarding.currentStep}
+          onStepChange={onboarding.goToStep}
+        />
       )}
     </>
   )

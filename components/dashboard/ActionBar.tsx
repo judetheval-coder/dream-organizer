@@ -33,6 +33,7 @@ export function ActionBar({
         onClick={onCreate}
         data-tour="new-dream"
         data-action="new-dream"
+        data-onboarding="new-dream-btn"
         className="px-6 py-3 rounded-2xl font-semibold flex items-center gap-2"
         style={{
           background: gradients.button,

@@ -22,9 +22,21 @@ export async function POST(req: NextRequest) {
     }
 
     const rate = checkRateLimit(userId, RATE_LIMIT, RATE_WINDOW)
+
+    // Check for abuse block first
+    if (rate.abuse?.blocked) {
+      return NextResponse.json(
+        { error: 'Temporarily blocked due to suspicious activity. Please wait before trying again.' },
+        { status: 429, headers: rate.headers },
+      )
+    }
+
     if (!rate.allowed) {
       return NextResponse.json(
-        { error: `Too many analyses. Try again in ${rate.resetTime}s.` },
+        {
+          error: `Too many analyses. Try again in ${rate.resetTime}s.`,
+          ...(rate.abuse?.warning && { warning: 'Unusual activity detected.' }),
+        },
         { status: 429, headers: rate.headers },
       )
     }
@@ -57,7 +69,7 @@ export async function POST(req: NextRequest) {
       })
       .join('\n\n')
 
-    const systemPrompt = analyzeCharacters 
+    const systemPrompt = analyzeCharacters
       ? `You are a dream analyst specializing in character and symbol recognition. Analyze the dreams to identify:
 1. Recurring characters (people, animals, entities) with their traits
 2. Character relationships and roles
@@ -81,7 +93,7 @@ Be insightful but accessible. Focus on patterns across multiple dreams.`;
         },
         {
           role: "user",
-          content: analyzeCharacters 
+          content: analyzeCharacters
             ? `Identify recurring characters and symbols for artistic consistency:\n\n${dreamTexts}`
             : `Analyze these dreams for patterns and insights:\n\n${dreamTexts}`
         }

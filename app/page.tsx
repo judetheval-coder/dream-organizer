@@ -49,19 +49,19 @@ const TESTIMONIALS = [
   {
     name: 'Sarah M.',
     role: 'Artist',
-    text: 'Finally a way to visualize my dreams! The AI captures the surreal quality perfectly.',
+    text: 'Finally a way to visualize my dreams! Visnoctis captures the surreal quality perfectly.',
     avatar: '👩‍🎨',
   },
   {
     name: 'James K.',
     role: 'Writer',
-    text: 'I use The Dream Machine for story inspiration. The comics help me remember dream details.',
+    text: 'I use Visnoctis for story inspiration. Love the Latin name — "Vision of the Night" is so fitting!',
     avatar: '✍️',
   },
   {
     name: 'Luna R.',
     role: 'Dream Enthusiast',
-    text: 'Beautiful interface and the AI art quality is incredible. Worth every penny!',
+    text: 'Beautiful interface and the AI art is incredible. The name Visnoctis is perfectly mystical! 🌙',
     avatar: '🌙',
   },
 ]
@@ -88,13 +88,19 @@ export default function LandingPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 px-6 py-4" style={{ background: 'rgba(10, 1, 24, 0.8)', backdropFilter: 'blur(12px)' }}>
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <span className="text-3xl">💭</span>
+            <span className="text-3xl">🌙</span>
             <span className="text-xl font-bold" style={{ color: colors.textPrimary }}>
-              The Dream Machine
+              Visnoctis
+            </span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-500/30 to-cyan-500/30 text-purple-300 font-medium hidden sm:inline">
+              Vision of the Night
             </span>
           </Link>
 
           <div className="hidden md:flex items-center gap-8">
+            <a href="#about-name" className="text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: colors.textSecondary }}>
+              About
+            </a>
             <a href="#features" className="text-sm font-medium hover:opacity-80 transition-opacity" style={{ color: colors.textSecondary }}>
               Features
             </a>
@@ -163,6 +169,14 @@ export default function LandingPage() {
           >
             <div className="flex flex-col gap-2 px-4">
               <a
+                href="#about-name"
+                className="py-2 px-4 rounded-lg hover:bg-white/5"
+                style={{ color: colors.textSecondary }}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                About Visnoctis 🌙
+              </a>
+              <a
                 href="#features"
                 className="py-2 px-4 rounded-lg hover:bg-white/5"
                 style={{ color: colors.textSecondary }}
@@ -226,12 +240,19 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto text-center">
           {/* Prominent Logo/Illustration */}
           <div className="flex justify-center mb-8">
-            <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] flex items-center justify-center shadow-2xl animate-float bg-gradient-to-br from-[#7c3aed] via-[#06b6d4] to-[#ec4899]">
-              <span className="text-7xl md:text-8xl drop-shadow-lg">💭</span>
+            <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-[2.5rem] flex items-center justify-center shadow-2xl animate-float bg-gradient-to-br from-[#7c3aed] via-[#06b6d4] to-[#0a0118]">
+              <span className="text-7xl md:text-8xl drop-shadow-lg">🌙</span>
               {/* Decorative sparkles */}
               <span className="absolute top-2 left-2 text-pink-400 text-2xl animate-pulse">✨</span>
-              <span className="absolute bottom-3 right-3 text-cyan-300 text-xl animate-bounce">🌙</span>
+              <span className="absolute bottom-3 right-3 text-cyan-300 text-xl animate-bounce">💭</span>
             </div>
+          </div>
+
+          {/* Visnoctis branding */}
+          <div className="mb-4">
+            <span className="text-lg md:text-xl tracking-widest uppercase font-medium" style={{ color: colors.purple }}>
+              ✦ Visnoctis ✦
+            </span>
           </div>
 
           <h1
@@ -301,6 +322,113 @@ export default function LandingPage() {
               <p className="text-sm" style={{ color: colors.textMuted }}>
                 Example: &quot;I was flying over a castle with dragons&quot; → 4 AI-generated panels
               </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* About the Name Section */}
+      <section id="about-name" className="py-20 px-6 relative overflow-hidden">
+        {/* Decorative background */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl" />
+        </div>
+
+        <div className="max-w-4xl mx-auto relative z-10">
+          <div className="text-center mb-12">
+            <div className="inline-block mb-6">
+              <span className="text-7xl">🌙</span>
+            </div>
+            <h2
+              className="text-4xl md:text-5xl font-bold mb-4"
+              style={{
+                background: gradients.purpleCyan,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
+              Why &quot;Visnoctis&quot;?
+            </h2>
+            <p className="text-xl italic mb-2" style={{ color: colors.purple }}>
+              /viz-NOK-tis/
+            </p>
+          </div>
+
+          <div
+            className="p-8 md:p-12 rounded-3xl relative overflow-hidden"
+            style={{
+              background: 'linear-gradient(145deg, rgba(124, 58, 237, 0.1), rgba(6, 182, 212, 0.05))',
+              border: `1px solid ${colors.border}`,
+              boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+            }}
+          >
+            {/* Latin scroll decoration */}
+            <div className="absolute top-4 right-4 text-4xl opacity-20">📜</div>
+
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="text-3xl flex-shrink-0">✨</div>
+                <div>
+                  <h3 className="text-2xl font-bold mb-2" style={{ color: colors.textPrimary }}>
+                    The Etymology
+                  </h3>
+                  <p className="text-lg" style={{ color: colors.textSecondary }}>
+                    <span className="font-bold" style={{ color: colors.purple }}>Visnoctis</span> is a fusion of two Latin words:
+                  </p>
+                  <ul className="mt-3 space-y-2 text-lg" style={{ color: colors.textSecondary }}>
+                    <li className="flex items-center gap-2">
+                      <span style={{ color: colors.cyan }}>•</span>
+                      <strong style={{ color: colors.purple }}>Vis</strong> — from <em>vīsiō</em> (vision, sight, dream)
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <span style={{ color: colors.cyan }}>•</span>
+                      <strong style={{ color: colors.purple }}>Noctis</strong> — from <em>nox, noctis</em> (night, of the night)
+                    </li>
+                  </ul>
+                  <p className="mt-4 text-xl font-semibold" style={{ color: colors.textPrimary }}>
+                    Together: <span className="italic" style={{ color: colors.cyan }}>&quot;Vision of the Night&quot;</span> 🌌
+                  </p>
+                </div>
+              </div>
+
+              <div className="border-t pt-6" style={{ borderColor: colors.border }}>
+                <div className="flex items-start gap-4">
+                  <div className="text-3xl flex-shrink-0">🎭</div>
+                  <div>
+                    <h3 className="text-xl font-bold mb-2" style={{ color: colors.textPrimary }}>
+                      The Philosophy
+                    </h3>
+                    <p className="text-lg" style={{ color: colors.textSecondary }}>
+                      Just as the ancient Romans believed dreams were messages from the gods,
+                      we believe your nightly visions deserve to be captured, celebrated, and transformed into art.
+                      <span className="font-medium" style={{ color: colors.purple }}> Visnoctis</span> is your portal
+                      to preserve these fleeting nocturnal stories.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-6" style={{ borderColor: colors.border }}>
+                <div className="flex items-start gap-4">
+                  <div className="text-3xl flex-shrink-0">🗣️</div>
+                  <div>
+                    <h3 className="text-xl font-bold mb-2" style={{ color: colors.textPrimary }}>
+                      How to Pronounce It
+                    </h3>
+                    <div
+                      className="inline-block px-6 py-3 rounded-xl text-xl font-mono"
+                      style={{ background: colors.backgroundDark, color: colors.cyan }}
+                    >
+                      viz · NOK · tis
+                    </div>
+                    <p className="mt-3 text-sm" style={{ color: colors.textMuted }}>
+                      Rhymes with &quot;this&quot; at the end. Think of it as &quot;Viz-Knock-Tis&quot; 🎤
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -461,7 +589,7 @@ export default function LandingPage() {
             We Value Your Feedback
           </h2>
           <p className="text-lg mb-6" style={{ color: colors.textSecondary }}>
-            Help us make Dream Organizer even better! Share your thoughts, suggestions, or report any issues.
+            Help us make Visnoctis even better! Share your thoughts, suggestions, or report any issues.
           </p>
           <button
             className="px-8 py-3 rounded-xl font-semibold text-lg transition-all hover:scale-105 border bg-cyan-600 text-white shadow-lg"

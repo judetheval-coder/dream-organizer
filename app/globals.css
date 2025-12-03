@@ -1436,6 +1436,337 @@ button:active:not(:disabled) {
 }
 
 /* ============================================
+   NIGHT MODE IMMERSIVE ANIMATIONS
+   Enhanced atmospheric effects for dreamlike experience
+   ============================================ */
+
+/* Floating dream orbs - soft glowing particles that drift across the screen */
+.night-mode-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.dream-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(1px);
+  animation: orb-drift 25s ease-in-out infinite;
+  opacity: 0;
+}
+
+.dream-orb-1 {
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.8), transparent 70%);
+  left: 10%;
+  top: 20%;
+  animation-delay: 0s;
+  animation-duration: 28s;
+}
+
+.dream-orb-2 {
+  width: 4px;
+  height: 4px;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.7), transparent 70%);
+  left: 85%;
+  top: 15%;
+  animation-delay: 3s;
+  animation-duration: 32s;
+}
+
+.dream-orb-3 {
+  width: 8px;
+  height: 8px;
+  background: radial-gradient(circle, rgba(236, 72, 153, 0.6), transparent 70%);
+  left: 50%;
+  top: 80%;
+  animation-delay: 7s;
+  animation-duration: 26s;
+}
+
+.dream-orb-4 {
+  width: 5px;
+  height: 5px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.5), transparent 70%);
+  left: 30%;
+  top: 60%;
+  animation-delay: 12s;
+  animation-duration: 30s;
+}
+
+.dream-orb-5 {
+  width: 7px;
+  height: 7px;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.6), transparent 70%);
+  left: 70%;
+  top: 40%;
+  animation-delay: 5s;
+  animation-duration: 24s;
+}
+
+@keyframes orb-drift {
+  0% {
+    transform: translate(0, 0) scale(0);
+    opacity: 0;
+  }
+
+  10% {
+    opacity: 0.8;
+    transform: translate(10px, -10px) scale(1);
+  }
+
+  50% {
+    transform: translate(-30px, -60px) scale(1.2);
+    opacity: 0.6;
+  }
+
+  90% {
+    opacity: 0.8;
+    transform: translate(20px, -120px) scale(0.8);
+  }
+
+  100% {
+    transform: translate(0, -150px) scale(0);
+    opacity: 0;
+  }
+}
+
+/* Ambient glow pulse behind main content */
+.ambient-glow {
+  position: fixed;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.ambient-glow-purple {
+  background: rgba(124, 58, 237, 0.4);
+  top: -200px;
+  left: -100px;
+  animation: glow-pulse-1 8s ease-in-out infinite;
+}
+
+.ambient-glow-cyan {
+  background: rgba(6, 182, 212, 0.3);
+  bottom: -200px;
+  right: -100px;
+  animation: glow-pulse-2 10s ease-in-out infinite;
+}
+
+.ambient-glow-pink {
+  background: rgba(236, 72, 153, 0.25);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: glow-pulse-3 12s ease-in-out infinite;
+}
+
+@keyframes glow-pulse-1 {
+
+  0%,
+  100% {
+    opacity: 0.12;
+    transform: scale(1) translate(0, 0);
+  }
+
+  50% {
+    opacity: 0.2;
+    transform: scale(1.1) translate(20px, 10px);
+  }
+}
+
+@keyframes glow-pulse-2 {
+
+  0%,
+  100% {
+    opacity: 0.1;
+    transform: scale(1) translate(0, 0);
+  }
+
+  50% {
+    opacity: 0.18;
+    transform: scale(1.15) translate(-15px, -10px);
+  }
+}
+
+@keyframes glow-pulse-3 {
+
+  0%,
+  100% {
+    opacity: 0.08;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+
+  50% {
+    opacity: 0.15;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+}
+
+/* Shooting star effect - occasional streaks across the screen */
+.shooting-star {
+  position: fixed;
+  width: 100px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.shooting-star-1 {
+  top: 15%;
+  left: -100px;
+  animation: shoot 8s ease-in 2s infinite;
+  transform: rotate(-15deg);
+}
+
+.shooting-star-2 {
+  top: 45%;
+  left: -100px;
+  animation: shoot 12s ease-in 7s infinite;
+  transform: rotate(-8deg);
+}
+
+.shooting-star-3 {
+  top: 75%;
+  left: -100px;
+  animation: shoot 15s ease-in 12s infinite;
+  transform: rotate(-20deg);
+}
+
+@keyframes shoot {
+  0% {
+    left: -100px;
+    opacity: 0;
+  }
+
+  2% {
+    opacity: 1;
+  }
+
+  15% {
+    left: 120%;
+    opacity: 0;
+  }
+
+  100% {
+    left: 120%;
+    opacity: 0;
+  }
+}
+
+/* Soft breathing effect on main container */
+.breathing-glow {
+  animation: breathe 6s ease-in-out infinite;
+}
+
+@keyframes breathe {
+
+  0%,
+  100% {
+    box-shadow: 0 0 30px rgba(124, 58, 237, 0.1);
+  }
+
+  50% {
+    box-shadow: 0 0 50px rgba(124, 58, 237, 0.2), 0 0 80px rgba(6, 182, 212, 0.1);
+  }
+}
+
+/* Twinkling stars scattered across background */
+.twinkle-star {
+  position: fixed;
+  width: 2px;
+  height: 2px;
+  background: white;
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.twinkle-star:nth-child(1) {
+  left: 5%;
+  top: 10%;
+  animation: twinkle 4s ease-in-out 0s infinite;
+}
+
+.twinkle-star:nth-child(2) {
+  left: 15%;
+  top: 25%;
+  animation: twinkle 3s ease-in-out 1s infinite;
+}
+
+.twinkle-star:nth-child(3) {
+  left: 25%;
+  top: 8%;
+  animation: twinkle 5s ease-in-out 2s infinite;
+}
+
+.twinkle-star:nth-child(4) {
+  left: 40%;
+  top: 18%;
+  animation: twinkle 4.5s ease-in-out 0.5s infinite;
+}
+
+.twinkle-star:nth-child(5) {
+  left: 55%;
+  top: 12%;
+  animation: twinkle 3.5s ease-in-out 1.5s infinite;
+}
+
+.twinkle-star:nth-child(6) {
+  left: 70%;
+  top: 22%;
+  animation: twinkle 4s ease-in-out 3s infinite;
+}
+
+.twinkle-star:nth-child(7) {
+  left: 80%;
+  top: 5%;
+  animation: twinkle 5.5s ease-in-out 2.5s infinite;
+}
+
+.twinkle-star:nth-child(8) {
+  left: 90%;
+  top: 15%;
+  animation: twinkle 3s ease-in-out 4s infinite;
+}
+
+.twinkle-star:nth-child(9) {
+  left: 35%;
+  top: 85%;
+  animation: twinkle 4s ease-in-out 1s infinite;
+}
+
+.twinkle-star:nth-child(10) {
+  left: 65%;
+  top: 90%;
+  animation: twinkle 5s ease-in-out 3.5s infinite;
+}
+
+@keyframes twinkle {
+
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: scale(1.2);
+  }
+}
+
+/* ============================================
    MOBILE OPTIMIZATIONS
    ============================================ */
 @media (max-width: 768px) {

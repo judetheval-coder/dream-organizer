@@ -84,6 +84,7 @@ export function DreamCreationModal({
           aria-label="Dream description"
           aria-required="true"
           aria-invalid={!dreamText.trim()}
+          data-onboarding="dream-textarea"
           style={{
             background: colors.backgroundDark,
             color: colors.textPrimary,
@@ -99,7 +100,7 @@ export function DreamCreationModal({
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-6 mb-6 md:grid-cols-2">
+        <div className="grid grid-cols-1 gap-6 mb-6 md:grid-cols-2" data-onboarding="style-selector">
           <div>
             <label className="block text-sm mb-3 font-semibold" style={{ color: colors.textMuted }}>
               Style
@@ -163,6 +164,7 @@ export function DreamCreationModal({
             onClick={onCreate}
             disabled={!dreamText.trim()}
             className="flex-1 py-3 rounded-lg font-semibold cursor-pointer disabled:opacity-50 transition-all hover:scale-105"
+            data-onboarding="create-btn"
             style={{
               background: gradients.button,
               color: colors.white,

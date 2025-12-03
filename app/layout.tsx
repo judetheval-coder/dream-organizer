@@ -8,6 +8,7 @@ import ErrorBoundary from '@/components/ErrorBoundary'
 import { ServiceWorkerRegistration } from '@/components/ServiceWorker'
 import { ToastProvider } from '@/contexts/ToastContext'
 import { GlobalDevControls } from '@/components/GlobalDevControls'
+import NightModeEffects from '@/components/NightModeEffects'
 import { devRoutesEnabled } from '@/lib/dev-utils'
 import "./globals.css";
 
@@ -23,22 +24,22 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "The Dream Machine - Turn Your Dreams Into Beautiful Comics",
-    template: "%s | The Dream Machine",
+    default: "Visnoctis - Vision of the Night | Turn Dreams Into Comics",
+    template: "%s | Visnoctis",
   },
-  description: "Dream journaling reimagined. Transform your nightly adventures into stunning visual comic stories. Record, visualize, and share your dreams like never before.",
-  keywords: ["dream journal", "comic generator", "dream tracker", "dream visualization", "dream diary", "comic art", "dream machine"],
-  authors: [{ name: "The Dream Machine" }],
-  creator: "The Dream Machine",
-  publisher: "The Dream Machine",
+  description: "Visnoctis: Latin for 'Vision of the Night'. Dream journaling reimagined. Transform your nightly adventures into stunning visual comic stories. Record, visualize, and share your dreams like never before.",
+  keywords: ["dream journal", "comic generator", "dream tracker", "dream visualization", "dream diary", "comic art", "visnoctis", "dream vision"],
+  authors: [{ name: "Visnoctis" }],
+  creator: "Visnoctis",
+  publisher: "Visnoctis",
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://lucidlaboratories.net"),
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "/",
-    siteName: "The Dream Machine",
-    title: "The Dream Machine - Turn Your Dreams Into Beautiful Comics",
-    description: "Dream journaling reimagined. Transform your nightly adventures into stunning visual stories.",
+    siteName: "Visnoctis",
+    title: "Visnoctis - Vision of the Night | Turn Dreams Into Comics",
+    description: "Visnoctis: 'Vision of the Night'. Dream journaling reimagined. Transform your nightly adventures into stunning visual stories.",
     images: [
       {
         url: "/api/og",
@@ -50,10 +51,10 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "The Dream Machine - Turn Your Dreams Into Beautiful Comics",
-    description: "Dream journaling reimagined. Transform your nightly adventures into stunning visual stories.",
+    title: "Visnoctis - Vision of the Night | Turn Dreams Into Comics",
+    description: "Visnoctis: 'Vision of the Night'. Dream journaling reimagined. Transform your nightly adventures into stunning visual stories.",
     images: ["/api/og"],
-    creator: "@thedreammachine",
+    creator: "@visnoctis",
   },
   robots: {
     index: true,
@@ -78,7 +79,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "Dream Organizer",
+    title: "Visnoctis",
   },
 };
 
@@ -103,6 +104,9 @@ export default function RootLayout({
           {/* Animated nebula background */}
           <div className="nebula-bg" />
           <div className="dream-dust-layer" />
+
+          {/* Immersive night mode effects - floating orbs, glows, shooting stars */}
+          <NightModeEffects />
 
           <ErrorBoundary>
             <ToastProvider>
