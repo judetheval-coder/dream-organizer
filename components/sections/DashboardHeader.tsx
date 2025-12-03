@@ -38,7 +38,7 @@ const HEADLINES: Record<DashboardTab, { title: string; subtitle: string }> = {
   },
   'Insights': {
     title: '✨ Insights',
-    subtitle: 'AI-powered analysis of your dream patterns',
+    subtitle: 'Deep analysis of your dream patterns and themes',
   },
   'Subscription': {
     title: '💎 Subscription',

@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 export const metadata = {
   title: 'Terms of Service - The Dream Machine',
-  description: 'Terms of service for The Dream Machine - AI-powered dream journaling platform',
+  description: 'Terms of service for The Dream Machine - dream journaling and visualization platform',
 }
 
 export default function TermsPage() {
@@ -42,11 +42,11 @@ export default function TermsPage() {
               2. Description of Service
             </h2>
             <p>
-              The Dream Machine is an AI-powered dream journaling platform that allows users to:
+              The Dream Machine is a dream journaling platform that allows users to:
             </p>
             <ul className="list-disc pl-6 space-y-2">
               <li>Record and store dream descriptions</li>
-              <li>Generate AI-powered comic panel artwork from dreams</li>
+              <li>Generate stunning comic panel artwork from dreams</li>
               <li>Analyze dream patterns and themes</li>
               <li>Export and share dream content</li>
             </ul>

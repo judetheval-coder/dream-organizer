@@ -31,7 +31,7 @@ export default function ToolsPage() {
                     🛠️ Dream Analysis Tools
                 </h2>
                 <p className="text-lg mb-6" style={{ color: colors.textSecondary }}>
-                    Unlock the hidden meanings in your dreams with AI-powered analysis and pattern recognition.
+                    Unlock the hidden meanings in your dreams with deep analysis and pattern recognition.
                 </p>
                 <div className="flex flex-wrap justify-center gap-4">
                     <Button onClick={() => setActiveTab('dictionary')} className="flex items-center gap-2">
@@ -110,8 +110,8 @@ export default function ToolsPage() {
                         key={key}
                         onClick={() => setActiveTab(key)}
                         className={`flex items-center gap-2 px-4 py-2 rounded-md transition-all font-medium ${activeTab === key
-                                ? 'bg-purple-600 text-white shadow-lg'
-                                : 'text-gray-300 hover:text-white hover:bg-white/10'
+                            ? 'bg-purple-600 text-white shadow-lg'
+                            : 'text-gray-300 hover:text-white hover:bg-white/10'
                             }`}
                     >
                         <span>{icon}</span>

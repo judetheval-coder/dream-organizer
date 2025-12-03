@@ -168,7 +168,7 @@ export default function UpgradePrompt({ currentTier, onClose }: UpgradePromptPro
         </div>
 
         <p className="text-center text-gray-400 text-sm mt-6">
-          All plans include secure cloud storage and AI-powered dream analysis
+          All plans include secure cloud storage and advanced dream analysis
         </p>
       </div>
     </div>

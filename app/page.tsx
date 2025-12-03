@@ -36,7 +36,7 @@ const FEATURES = [
   {
     icon: '🧠',
     title: 'Dream Insights',
-    description: 'AI-powered analysis reveals patterns and themes in your dreams',
+    description: 'Discover hidden patterns and recurring themes in your dreams',
   },
   {
     icon: '💾',
@@ -249,7 +249,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto" style={{ color: colors.textSecondary }}>
-            AI-powered dream journaling that transforms your nightly adventures into stunning visual stories.
+            Dream journaling reimagined. Transform your nightly adventures into stunning visual stories.
             Record, visualize, and share your dreams like never before.
           </p>
 

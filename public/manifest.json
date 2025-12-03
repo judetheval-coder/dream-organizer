@@ -1,7 +1,7 @@
 {
   "name": "The Dream Machine",
   "short_name": "Dreams",
-  "description": "AI-powered dream journaling that transforms your nightly adventures into stunning visual stories.",
+  "description": "Dream journaling reimagined. Transform your nightly adventures into stunning visual comic stories.",
   "start_url": "/dashboard",
   "display": "standalone",
   "background_color": "#0a0118",

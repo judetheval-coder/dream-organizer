@@ -22,7 +22,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div>
             <h3 className="font-bold text-lg mb-2" style={{ color: colors.textPrimary }}>💭 The Dream Machine</h3>
-            <p className="text-sm" style={{ color: colors.textMuted }}>Transform your dreams into visual stories with AI-powered comic generation</p>
+            <p className="text-sm" style={{ color: colors.textMuted }}>Transform your dreams into stunning visual comic stories</p>
           </div>
           {COLS.map(col => (
             <div key={col.title}>

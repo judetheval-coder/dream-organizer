@@ -129,7 +129,7 @@ export async function GET() {
                 fontSize: '20px',
               }}
             >
-              AI-Powered
+              Dream Journaling
             </div>
             <div
               style={{

@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 export const metadata = {
   title: 'Privacy Policy - The Dream Machine',
-  description: 'Privacy policy for The Dream Machine - AI-powered dream journaling platform',
+  description: 'Privacy policy for The Dream Machine - dream journaling and visualization platform',
 }
 
 export default function PrivacyPage() {

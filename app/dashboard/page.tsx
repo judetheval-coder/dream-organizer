@@ -134,10 +134,10 @@ function DailyChallengesSection() {
               weekday: 'long', month: 'long', day: 'numeric'
             })}
           </p>
-          
-          <div 
+
+          <div
             className="p-6 rounded-xl mb-6"
-            style={{ 
+            style={{
               background: `linear-gradient(135deg, ${colors.purple}20 0%, ${colors.cyan}20 100%)`,
               border: `1px solid ${colors.purple}40`
             }}
@@ -175,7 +175,7 @@ function DailyChallengesSection() {
             {submissions.slice(0, 6).map((submission, idx) => (
               <Card key={submission.id} className="p-4">
                 <div className="flex items-start gap-4">
-                  <div 
+                  <div
                     className="w-20 h-20 rounded-lg flex items-center justify-center text-2xl"
                     style={{ background: colors.surface }}
                   >
@@ -293,9 +293,9 @@ function LeaderboardSection() {
                   className="p-5 flex items-center gap-4 hover:bg-white/5 transition-colors"
                 >
                   {/* Rank Badge */}
-                  <div 
+                  <div
                     className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg"
-                    style={{ 
+                    style={{
                       background: typeof rank.bg === 'string' && rank.bg.includes('gradient') ? rank.bg : rank.bg,
                       color: index < 3 ? '#000' : colors.textPrimary
                     }}
