@@ -1,4 +1,4 @@
-# Dream Machine - Sitemap
+# Visnoctis - Sitemap
 # https://lucidlaboratories.net
 
 User-agent: *

@@ -96,7 +96,7 @@ export async function GET() {
               marginBottom: '20px',
             }}
           >
-            The Dream Machine
+            Visnoctis
           </h1>
 
           {/* Subtitle */}

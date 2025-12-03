@@ -17,7 +17,7 @@ export default function PricingPage() {
           <Link href="/" className="flex items-center gap-2">
             <span className="text-3xl">💭</span>
             <span className="text-xl font-bold" style={{ color: colors.textPrimary }}>
-              The Dream Machine
+              Visnoctis
             </span>
           </Link>
 

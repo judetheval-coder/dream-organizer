@@ -163,9 +163,9 @@ export function DashboardSidebar({ currentTab, onTabChange }: SidebarProps) {
 
           return (
             <div key={category.name} className="mb-1">
-              {/* Section Divider before category groups (except first) */}
+              {/* Subtle spacing before category groups (except first) */}
               {category.name !== 'Home' && (
-                <div className="section-divider my-3 mx-2" />
+                <div className="my-2" />
               )}
 
               {/* Category Header */}
@@ -258,9 +258,9 @@ export function DashboardSidebar({ currentTab, onTabChange }: SidebarProps) {
         </button>
       </div>
 
-      <div className="mt-6 pt-6 section-divider" style={{ borderTop: `1px solid ${colors.surface}` }}>
+      <div className="mt-6 pt-6" style={{ borderTop: `1px solid ${colors.surface}` }}>
         <p className="text-xs mt-4" style={{ color: colors.textMuted }}>
-          v1.0 • The Dream Machine
+          v1.0 • Visnoctis
         </p>
       </div>
     </div>

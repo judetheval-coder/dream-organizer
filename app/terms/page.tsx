@@ -2,8 +2,8 @@ import { colors, gradients } from '@/lib/design'
 import Link from 'next/link'
 
 export const metadata = {
-  title: 'Terms of Service - The Dream Machine',
-  description: 'Terms of service for The Dream Machine - dream journaling and visualization platform',
+  title: 'Terms of Service - Visnoctis',
+  description: 'Terms of service for Visnoctis - dream journaling and visualization platform',
 }
 
 export default function TermsPage() {
@@ -32,7 +32,7 @@ export default function TermsPage() {
               1. Acceptance of Terms
             </h2>
             <p>
-              By accessing or using The Dream Machine (&quot;the Service&quot;), you agree to be bound by these
+              By accessing or using Visnoctis (&quot;the Service&quot;), you agree to be bound by these
               Terms of Service. If you do not agree to these terms, please do not use the Service.
             </p>
           </section>
@@ -42,7 +42,7 @@ export default function TermsPage() {
               2. Description of Service
             </h2>
             <p>
-              The Dream Machine is a dream journaling platform that allows users to:
+              Visnoctis is a dream journaling platform that allows users to:
             </p>
             <ul className="list-disc pl-6 space-y-2">
               <li>Record and store dream descriptions</li>
@@ -151,7 +151,7 @@ export default function TermsPage() {
               7. Intellectual Property
             </h2>
             <p>
-              The Service, including its design, code, and branding, is owned by The Dream Machine
+              The Service, including its design, code, and branding, is owned by Visnoctis
               and protected by intellectual property laws. You may not copy, modify, or distribute
               our proprietary materials without permission.
             </p>
@@ -177,7 +177,7 @@ export default function TermsPage() {
               9. Limitation of Liability
             </h2>
             <p>
-              TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE DREAM MACHINE SHALL NOT BE LIABLE FOR
+              TO THE MAXIMUM EXTENT PERMITTED BY LAW, VISNOCTIS SHALL NOT BE LIABLE FOR
               ANY INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOSS OF
               DATA, PROFITS, OR GOODWILL.
             </p>

@@ -179,7 +179,7 @@ self.addEventListener('push', (event) => {
 
   event.waitUntil(
     // @ts-expect-error - showNotification exists on ServiceWorkerRegistration
-    self.registration.showNotification('The Dream Machine', options)
+    self.registration.showNotification('Visnoctis', options)
   )
 })
 

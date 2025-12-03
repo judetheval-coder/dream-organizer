@@ -447,22 +447,11 @@ body::after {
    ============================================ */
 .section-divider {
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.3), rgba(6, 182, 212, 0.3), transparent);
+  background: linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.15), rgba(124, 58, 237, 0.15), transparent);
   position: relative;
 }
 
-.section-divider::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 60px;
-  height: 3px;
-  background: linear-gradient(90deg, #7c3aed, #06b6d4);
-  border-radius: 2px;
-  box-shadow: 0 0 20px rgba(124, 58, 237, 0.5);
-}
+/* Removed the glowing center bar - too distracting */
 
 .divider-wavy {
   height: 20px;

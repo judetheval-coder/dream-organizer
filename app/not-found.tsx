@@ -42,7 +42,7 @@ export default function NotFound() {
           className="text-lg mb-8"
           style={{ color: colors.textMuted }}
         >
-          The page you&apos;re looking for has drifted away like a forgotten dream. 
+          The page you&apos;re looking for has drifted away like a forgotten dream.
           Let&apos;s guide you back to reality.
         </p>
 
@@ -78,7 +78,7 @@ export default function NotFound() {
         className="absolute bottom-8 text-sm"
         style={{ color: colors.textMuted }}
       >
-        The Dream Machine • Transform dreams into comics
+        Visnoctis • Transform dreams into comics
       </p>
     </div>
   )

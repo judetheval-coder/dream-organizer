@@ -12,7 +12,7 @@ export default function Logo({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
 
   return (
     <div className="flex items-center gap-3">
-      <div 
+      <div
         className={`${sizes[size].container} rounded-xl flex items-center justify-center relative overflow-hidden group cursor-pointer`}
         style={{
           background: `linear-gradient(135deg, ${colors.purple} 0%, ${colors.cyan} 100%)`,
@@ -24,13 +24,13 @@ export default function Logo({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) {
       </div>
       {size !== 'sm' && (
         <div>
-          <h1 
+          <h1
             className="text-2xl font-bold bg-clip-text text-transparent"
             style={{
               backgroundImage: `linear-gradient(135deg, ${colors.purple} 0%, ${colors.cyan} 100%)`
             }}
           >
-            Dream Machine
+            Visnoctis
           </h1>
           <p className="text-xs" style={{ color: colors.textMuted }}>
             Your Dream Canvas
