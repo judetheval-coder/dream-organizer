@@ -159,8 +159,8 @@ export default function PricingPage() {
                   a: 'Yes, we offer a 7-day money-back guarantee for new paid subscriptions. Contact support within 7 days for a full refund.',
                 },
                 {
-                  q: 'What AI model do you use?',
-                  a: 'We use OpenAI\'s DALL-E 3 for image generation, ensuring high-quality, creative comic panels that capture your dreams.',
+                  q: 'How does image generation work?',
+                  a: 'We use advanced image generation to create high-quality, creative comic panels that bring your dreams to life.',
                 },
                 {
                   q: 'Is my dream data private?',

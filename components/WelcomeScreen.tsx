@@ -16,8 +16,8 @@ const FEATURES = [
   },
   {
     icon: '🎨',
-    title: 'AI Comics',
-    desc: 'DALL-E transforms words to art',
+    title: 'Dream Comics',
+    desc: 'Words transform into art',
     color: colors.cyan
   },
   {

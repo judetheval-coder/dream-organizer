@@ -20,8 +20,8 @@ const FEATURES = [
   },
   {
     icon: '🎨',
-    title: 'AI Comic Generation',
-    description: 'DALL-E powered art transforms your dreams into stunning comic panels',
+    title: 'Comic Generation',
+    description: 'Watch your dreams transform into stunning visual comic panels',
   },
   {
     icon: '📖',
@@ -300,7 +300,7 @@ export default function LandingPage() {
               See How It Works
             </a>
           </div>
-          
+
           {/* Signup Modal */}
           <SignUpModal open={signupOpen} onClose={() => setSignupOpen(false)} />
         </div>

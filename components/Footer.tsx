@@ -4,15 +4,15 @@ import Link from 'next/link'
 import { colors } from '@/lib/design'
 
 const COLS = [
-  { title: 'Features', items: ['🎨 AI Image Generation', '📖 Comic Panel Creation', '💾 Dream Archive', '✨ Dream Insights'] },
+  { title: 'Features', items: ['🎨 Image Generation', '📖 Comic Panel Creation', '💾 Dream Archive', '✨ Dream Insights'] },
   { title: 'Company', links: [{ href: '/pricing', label: 'Pricing' }, { href: '/privacy', label: 'Privacy Policy' }, { href: '/terms', label: 'Terms of Service' }] },
-  { title: 'Built With', items: ['⚡ Next.js 16', '🤖 DALL-E 3', '🔐 Clerk Auth', '💳 Stripe'] },
+  { title: 'Built With', items: ['⚡ Next.js 16', '🎨 Stable Diffusion', '🔐 Clerk Auth', '💳 Stripe'] },
 ]
 
 const SOCIAL_LINKS = [
   { href: 'https://twitter.com/intent/tweet?text=Check%20out%20Visnoctis%20-%20turn%20your%20dreams%20into%20comics!%20%F0%9F%8C%99', icon: '🐦', label: 'Twitter' },
   { href: 'https://www.facebook.com/sharer/sharer.php?u=https://visnoctis.com', icon: '📘', label: 'Facebook' },
-  { href: 'https://www.reddit.com/submit?title=Visnoctis%20-%20Vision%20of%20the%20Night%20-%20AI%20Dream%20Comics', icon: '🔴', label: 'Reddit' },
+  { href: 'https://www.reddit.com/submit?title=Visnoctis%20-%20Vision%20of%20the%20Night%20-%20Dream%20Comics', icon: '🔴', label: 'Reddit' },
 ]
 
 export default function Footer() {

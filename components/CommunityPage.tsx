@@ -62,7 +62,7 @@ export default function CommunityPage() {
                     <div className="text-3xl mb-2">🌟</div>
                     <h3 className="font-semibold mb-1" style={{ color: colors.textPrimary }}>Public Gallery</h3>
                     <p className="text-sm" style={{ color: colors.textSecondary }}>
-                        Explore stunning AI-generated dream comics
+                        Explore stunning dream comics from the community
                     </p>
                 </Card>
             </div>
@@ -78,8 +78,8 @@ export default function CommunityPage() {
                         key={key}
                         onClick={() => setActiveTab(key)}
                         className={`flex items-center gap-2 px-4 py-2 rounded-md transition-all font-medium ${activeTab === key
-                                ? 'bg-purple-600 text-white shadow-lg'
-                                : 'text-gray-300 hover:text-white hover:bg-white/10'
+                            ? 'bg-purple-600 text-white shadow-lg'
+                            : 'text-gray-300 hover:text-white hover:bg-white/10'
                             }`}
                     >
                         <span>{icon}</span>

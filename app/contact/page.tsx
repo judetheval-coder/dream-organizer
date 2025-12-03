@@ -6,8 +6,8 @@ import FeedbackForm from '@/components/FeedbackForm'
 
 const FAQ = [
   {
-    q: 'How does the AI generate comic panels?',
-    a: 'We use OpenAI\'s DALL-E to transform your dream descriptions into stunning visual artwork. Each scene in your dream becomes a unique comic panel.'
+    q: 'How does the comic generation work?',
+    a: 'We transform your dream descriptions into stunning visual artwork. Each scene in your dream becomes a unique comic panel with beautiful art styles.'
   },
   {
     q: 'Can I edit my dreams after creating them?',
@@ -63,8 +63,8 @@ export default function ContactPage() {
           <button
             onClick={() => setActiveTab('contact')}
             className={`px-6 py-3 rounded-xl font-semibold transition-all ${activeTab === 'contact'
-                ? 'bg-gradient-to-r from-purple-600 to-cyan-600 text-white shadow-lg'
-                : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+              ? 'bg-gradient-to-r from-purple-600 to-cyan-600 text-white shadow-lg'
+              : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
               }`}
           >
             ✉️ Contact Us
@@ -72,8 +72,8 @@ export default function ContactPage() {
           <button
             onClick={() => setActiveTab('faq')}
             className={`px-6 py-3 rounded-xl font-semibold transition-all ${activeTab === 'faq'
-                ? 'bg-gradient-to-r from-purple-600 to-cyan-600 text-white shadow-lg'
-                : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+              ? 'bg-gradient-to-r from-purple-600 to-cyan-600 text-white shadow-lg'
+              : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
               }`}
           >
             ❓ FAQ

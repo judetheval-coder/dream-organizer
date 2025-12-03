@@ -3,7 +3,7 @@ import Link from 'next/link'
 
 export const metadata = {
   title: 'Privacy Policy - Visnoctis',
-  description: 'Privacy policy for Visnoctis - AI-powered dream journaling platform',
+  description: 'Privacy policy for Visnoctis - dream journaling and visualization platform',
 }
 
 export default function PrivacyPage() {
@@ -34,7 +34,7 @@ export default function PrivacyPage() {
             <p>
               Visnoctis (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) respects your privacy and is committed to protecting
               your personal data. This privacy policy explains how we collect, use, and safeguard your
-              information when you use our dream journaling and AI comic generation service.
+              information when you use our dream journaling and comic generation service.
             </p>
           </section>
 
@@ -57,7 +57,7 @@ export default function PrivacyPage() {
             </h3>
             <ul className="list-disc pl-6 space-y-2">
               <li>Dream text and descriptions you submit</li>
-              <li>AI-generated comic panel images</li>
+              <li>Generated comic panel images</li>
               <li>Style and mood preferences</li>
               <li>Timestamps and metadata</li>
             </ul>
@@ -78,10 +78,10 @@ export default function PrivacyPage() {
             </h2>
             <ul className="list-disc pl-6 space-y-2">
               <li>To provide and maintain our service</li>
-              <li>To generate AI comic panels from your dream descriptions</li>
+              <li>To generate comic panels from your dream descriptions</li>
               <li>To process payments and manage subscriptions</li>
               <li>To send service-related communications</li>
-              <li>To improve our AI models and user experience</li>
+              <li>To improve our service and user experience</li>
               <li>To comply with legal obligations</li>
             </ul>
           </section>
@@ -108,7 +108,7 @@ export default function PrivacyPage() {
             <ul className="list-disc pl-6 space-y-2">
               <li><strong>Clerk</strong> - Authentication and user management</li>
               <li><strong>Supabase</strong> - Database and file storage</li>
-              <li><strong>OpenAI</strong> - AI image generation (DALL-E)</li>
+              <li><strong>OpenAI</strong> - Image generation services</li>
               <li><strong>Stripe</strong> - Payment processing</li>
               <li><strong>Vercel</strong> - Hosting and deployment</li>
             </ul>
