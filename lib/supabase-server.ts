@@ -3,9 +3,14 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 // Server-side Supabase client with service role key
 function getSupabaseAdmin() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY
+  // Support both naming conventions for the service role key
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY
 
   if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('Missing Supabase configuration:', {
+      hasUrl: !!supabaseUrl,
+      hasServiceKey: !!supabaseServiceKey
+    })
     throw new Error('Missing Supabase configuration')
   }
 

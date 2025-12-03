@@ -786,7 +786,9 @@ function DashboardPageContent() {
   }
 
   const handleCreate = async () => {
-    if (!dreamText.trim() || !user) return
+    if (!dreamText.trim() || !user) {
+      return
+    }
 
     if (!canCreateDream(userTier, dreams.length)) {
       setShowUpgrade(true)
@@ -809,9 +811,8 @@ function DashboardPageContent() {
     setPanels(newPanels)
     setCurrentGeneratingIndex(0)
     setDreamText('')
-    clearDraft() // Clear saved draft after successful creation
+    clearDraft()
     setShowCreateModal(false)
-    updateTabInUrl('Comics') // Stay on Comics tab to show generation progress
 
     try {
       const createdDream = await saveDream({
