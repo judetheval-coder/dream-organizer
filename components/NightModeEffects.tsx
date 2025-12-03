@@ -21,11 +21,6 @@ export default function NightModeEffects() {
             <div className="dream-orb dream-orb-4" />
             <div className="dream-orb dream-orb-5" />
 
-            {/* Shooting stars - occasional streaks across the sky */}
-            <div className="shooting-star shooting-star-1" />
-            <div className="shooting-star shooting-star-2" />
-            <div className="shooting-star shooting-star-3" />
-
             {/* Twinkling stars - subtle sparkles in the background */}
             <div className="twinkle-star" />
             <div className="twinkle-star" />

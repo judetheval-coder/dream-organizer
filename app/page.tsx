@@ -439,12 +439,12 @@ export default function LandingPage() {
                 }}
               >
                 {/* Hover glow effect */}
-                <div 
+                <div
                   className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
                   style={{ background: 'radial-gradient(circle at center, rgba(124, 58, 237, 0.15) 0%, transparent 70%)' }}
                 />
-                
-                <div 
+
+                <div
                   className="w-14 h-14 rounded-xl flex items-center justify-center text-3xl mb-4 transition-transform duration-300 group-hover:scale-110"
                   style={{ background: 'linear-gradient(135deg, rgba(124, 58, 237, 0.3), rgba(6, 182, 212, 0.2))' }}
                 >
@@ -466,7 +466,7 @@ export default function LandingPage() {
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-purple-500/5 rounded-full blur-3xl" />
         </div>
-        
+
         <div className="max-w-6xl mx-auto relative z-10">
           <div className="text-center mb-16">
             <span className="inline-block px-4 py-1.5 rounded-full text-sm font-medium mb-4" style={{ background: 'rgba(6, 182, 212, 0.2)', color: colors.cyan }}>
@@ -548,7 +548,7 @@ export default function LandingPage() {
           <div className="absolute top-1/3 left-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl" />
           <div className="absolute bottom-1/4 right-0 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
         </div>
-        
+
         <div className="max-w-6xl mx-auto relative z-10">
           <div className="text-center mb-16">
             <span className="inline-block px-4 py-1.5 rounded-full text-sm font-medium mb-4" style={{ background: 'rgba(236, 72, 153, 0.2)', color: colors.pink }}>
@@ -567,16 +567,16 @@ export default function LandingPage() {
               <div
                 key={i}
                 className="group p-6 rounded-2xl transition-all duration-300 hover:-translate-y-1 hover:shadow-xl relative"
-                style={{ 
+                style={{
                   background: `linear-gradient(145deg, ${colors.surface}, rgba(26, 16, 37, 0.9))`,
-                  border: `1px solid ${colors.border}` 
+                  border: `1px solid ${colors.border}`
                 }}
               >
                 {/* Quote decoration */}
                 <div className="absolute top-4 right-4 text-4xl opacity-10" style={{ color: colors.purple }}>
                   &ldquo;
                 </div>
-                
+
                 <div className="flex items-center gap-3 mb-4">
                   <div
                     className="w-14 h-14 rounded-full flex items-center justify-center text-2xl transition-transform duration-300 group-hover:scale-110"
@@ -594,7 +594,7 @@ export default function LandingPage() {
                   </div>
                 </div>
                 <p className="italic" style={{ color: colors.textSecondary }}>&ldquo;{testimonial.text}&rdquo;</p>
-                
+
                 {/* Star rating */}
                 <div className="mt-4 flex gap-1">
                   {[...Array(5)].map((_, j) => (
@@ -647,14 +647,14 @@ export default function LandingPage() {
           <div className="absolute bottom-0 right-1/4 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl" />
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-pink-500/10 rounded-full blur-3xl" />
         </div>
-        
+
         <div className="max-w-4xl mx-auto text-center relative z-10">
           <div className="mb-8">
             <span className="text-6xl mb-6 inline-block animate-bounce">🌙</span>
           </div>
-          <h2 className="text-4xl md:text-5xl font-bold mb-6" style={{ 
-            background: gradients.purpleCyan, 
-            WebkitBackgroundClip: 'text', 
+          <h2 className="text-4xl md:text-5xl font-bold mb-6" style={{
+            background: gradients.purpleCyan,
+            WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
           }}>
@@ -668,7 +668,7 @@ export default function LandingPage() {
             className="inline-flex items-center gap-3 px-12 py-5 rounded-2xl font-bold text-xl transition-all hover:scale-105 hover:shadow-2xl group"
             style={{ background: gradients.button, color: colors.white, boxShadow: `0 0 60px rgba(124, 58, 237, 0.4)` }}
           >
-            Start Free Today 
+            Start Free Today
             <span className="group-hover:translate-x-1 transition-transform">🚀</span>
           </Link>
           <p className="mt-6 text-sm" style={{ color: colors.textMuted }}>

@@ -811,7 +811,7 @@ function DashboardPageContent() {
     setDreamText('')
     clearDraft() // Clear saved draft after successful creation
     setShowCreateModal(false)
-    updateTabInUrl('Comics')
+    updateTabInUrl('My Dreams')
 
     try {
       const createdDream = await saveDream({

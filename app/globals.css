@@ -448,9 +448,12 @@ body::after {
 }
 
 @keyframes hero-float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0) scale(1);
   }
+
   50% {
     transform: translateY(-15px) scale(1.02);
   }
@@ -463,9 +466,12 @@ body::after {
 }
 
 @keyframes gradient-x {
-  0%, 100% {
+
+  0%,
+  100% {
     background-position: 0% 50%;
   }
+
   50% {
     background-position: 100% 50%;
   }
@@ -477,12 +483,16 @@ body::after {
 }
 
 @keyframes wiggle {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: rotate(0deg);
   }
+
   25% {
     transform: rotate(-2deg);
   }
+
   75% {
     transform: rotate(2deg);
   }
@@ -498,6 +508,7 @@ body::after {
     opacity: 0;
     transform: translateY(30px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -510,9 +521,12 @@ body::after {
 }
 
 @keyframes pulse-glow {
-  0%, 100% {
+
+  0%,
+  100% {
     box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
   }
+
   50% {
     box-shadow: 0 0 40px rgba(124, 58, 237, 0.6), 0 0 60px rgba(6, 182, 212, 0.3);
   }
@@ -1672,59 +1686,6 @@ button:active:not(:disabled) {
   50% {
     opacity: 0.15;
     transform: translate(-50%, -50%) scale(1.2);
-  }
-}
-
-/* Shooting star effect - occasional streaks across the screen */
-.shooting-star {
-  position: fixed;
-  width: 100px;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
-  opacity: 0;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.shooting-star-1 {
-  top: 15%;
-  left: -100px;
-  animation: shoot 8s ease-in 2s infinite;
-  transform: rotate(-15deg);
-}
-
-.shooting-star-2 {
-  top: 45%;
-  left: -100px;
-  animation: shoot 12s ease-in 7s infinite;
-  transform: rotate(-8deg);
-}
-
-.shooting-star-3 {
-  top: 75%;
-  left: -100px;
-  animation: shoot 15s ease-in 12s infinite;
-  transform: rotate(-20deg);
-}
-
-@keyframes shoot {
-  0% {
-    left: -100px;
-    opacity: 0;
-  }
-
-  2% {
-    opacity: 1;
-  }
-
-  15% {
-    left: 120%;
-    opacity: 0;
-  }
-
-  100% {
-    left: 120%;
-    opacity: 0;
   }
 }
 

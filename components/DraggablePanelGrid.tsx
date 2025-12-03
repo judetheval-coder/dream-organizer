@@ -124,7 +124,7 @@ export default function DraggablePanelGrid({
       </div>
 
       {/* Panels grid */}
-      <div className="grid gap-6">
+      <div className="grid gap-6 max-w-2xl mx-auto">
         {panels.map((panel, index) => (
           <div
             key={panel.id}

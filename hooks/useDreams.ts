@@ -39,6 +39,7 @@ interface UseDreamsResult {
   hasMore: boolean
   error: string | null
   userTier: SubscriptionTier
+  userSynced: boolean
   refreshDreams: () => Promise<void>
   saveDream: (dreamData: SaveDreamInput) => Promise<DreamWithPanels>
   updatePanel: (panelId: string, imageDataURL: string, dreamId: string, sceneNumber: number) => Promise<string>
@@ -61,6 +62,7 @@ export function useDreams(): UseDreamsResult {
   const [hasMore, setHasMore] = useState(false)
   const [loadingMore, setLoadingMore] = useState(false)
   const [demoCreated, setDemoCreated] = useState(false)
+  const [userSynced, setUserSynced] = useState(false)
   const [insights, setInsights] = useState<string | null>(null)
   const [analyzing, setAnalyzing] = useState(false)
   const [analysisError, setAnalysisError] = useState<string | null>(null)
@@ -101,8 +103,11 @@ export function useDreams(): UseDreamsResult {
           } catch {
             // Not JSON or no demo flag; ignore
           }
+          setUserSynced(true)
         } catch (err) {
           console.error('Error syncing user:', err)
+          // Still mark as synced so user can attempt to use the app
+          setUserSynced(true)
         }
       }
     }
@@ -200,6 +205,12 @@ export function useDreams(): UseDreamsResult {
     if (!user) {
       console.error('[saveDream] No authenticated user')
       throw new Error('Not authenticated')
+    }
+
+    if (!userSynced) {
+      console.log('[saveDream] Waiting for user sync...')
+      // Wait briefly for sync to complete
+      await new Promise(resolve => setTimeout(resolve, 1000))
     }
 
     console.log('[saveDream] Starting save for user:', user.id, 'Data:', {
@@ -313,6 +324,7 @@ export function useDreams(): UseDreamsResult {
     hasMore,
     error,
     userTier,
+    userSynced,
     refreshDreams,
     saveDream,
     updatePanel,
