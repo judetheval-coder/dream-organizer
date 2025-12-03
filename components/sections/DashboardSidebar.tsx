@@ -50,10 +50,9 @@ export const SIDEBAR_CATEGORIES = [
     ],
   },
   {
-    name: 'Account',
+    name: 'Settings',
     icon: '⚙️',
     tabs: [
-      { key: 'Subscription', label: 'Subscription', icon: '💎' },
       { key: 'Settings', label: 'Settings', icon: '⚙️' },
     ],
   },
@@ -204,7 +203,49 @@ export function DashboardSidebar({ currentTab, onTabChange }: SidebarProps) {
         })}
       </nav>
 
-      <div className="mt-12 pt-6" style={{ borderTop: `1px solid ${colors.surface}` }}>
+      {/* Premium Upgrade CTA - Separate & Eye-Catching */}
+      <div className="mt-6 mx-2">
+        <button
+          onClick={() => onTabChange?.('Subscription')}
+          className="w-full relative overflow-hidden rounded-xl p-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 group"
+          style={{
+            background: currentTab === 'Subscription' 
+              ? colors.purple 
+              : `linear-gradient(135deg, ${colors.purple}90, ${colors.pink}90)`,
+            border: 'none',
+          }}
+        >
+          {/* Shimmer effect */}
+          <div 
+            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            style={{
+              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+              animation: 'shimmer 2s infinite',
+            }}
+          />
+          
+          <div className="relative z-10 text-left">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-lg">✨</span>
+              <span className="font-bold text-white text-sm">Unlock Your Dreams</span>
+            </div>
+            <p className="text-xs text-white/80 leading-tight">
+              Unlimited comics • HD exports • AI insights
+            </p>
+            <div className="mt-2 flex items-center gap-1">
+              <span 
+                className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                style={{ background: 'rgba(255,255,255,0.2)', color: colors.white }}
+              >
+                🔥 50% OFF
+              </span>
+              <span className="text-[10px] text-white/70">Limited time</span>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      <div className="mt-6 pt-6" style={{ borderTop: `1px solid ${colors.surface}` }}>
         <p className="text-xs" style={{ color: colors.textMuted }}>
           v1.0 • The Dream Machine
         </p>
