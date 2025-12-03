@@ -35,7 +35,11 @@
       "form_factor": "narrow"
     }
   ],
-  "categories": ["lifestyle", "entertainment", "productivity"],
+  "categories": [
+    "lifestyle",
+    "entertainment",
+    "productivity"
+  ],
   "lang": "en-US",
   "dir": "ltr"
 }

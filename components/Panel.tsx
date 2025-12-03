@@ -187,7 +187,7 @@ export default function Panel({
   return (
     <div
       ref={ref}
-      className={`relative overflow-hidden transition-all duration-300 ${isDragging ? 'opacity-50 scale-95' : ''}`}
+      className={`dream-panel relative overflow-hidden transition-all duration-300 ${isDragging ? 'opacity-50 scale-95' : ''}`}
       style={{
         aspectRatio: "16/10",
         ...FRAMES[frameStyle],
@@ -205,6 +205,12 @@ export default function Panel({
       {/* Loading State */}
       {loading && (
         <div className="absolute inset-0 flex flex-col items-center justify-center z-10" style={{ background: 'linear-gradient(135deg, #0a0118 0%, #1a0a2e 100%)' }}>
+          {/* Enhanced loading with dream dust animation */}
+          <div className="loading-dream-dust mb-4">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
           <div className="relative w-20 h-20 mb-4">
             <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
               <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="5" />
@@ -225,7 +231,7 @@ export default function Panel({
               <span className="text-lg font-semibold text-white/80">{Math.round(progress)}%</span>
             </div>
           </div>
-          <p className="text-sm text-white/50">Creating dream...</p>
+          <p className="text-sm text-white/50">Creating your dream...</p>
         </div>
       )}
 

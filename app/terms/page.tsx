@@ -10,8 +10,8 @@ export default function TermsPage() {
   return (
     <div className="min-h-screen py-20 px-6" style={{ background: gradients.page }}>
       <div className="max-w-4xl mx-auto">
-        <Link 
-          href="/" 
+        <Link
+          href="/"
           className="inline-flex items-center gap-2 mb-8 hover:opacity-80 transition-opacity"
           style={{ color: colors.cyan }}
         >
@@ -32,7 +32,7 @@ export default function TermsPage() {
               1. Acceptance of Terms
             </h2>
             <p>
-              By accessing or using The Dream Machine (&quot;the Service&quot;), you agree to be bound by these 
+              By accessing or using The Dream Machine (&quot;the Service&quot;), you agree to be bound by these
               Terms of Service. If you do not agree to these terms, please do not use the Service.
             </p>
           </section>
@@ -77,7 +77,7 @@ export default function TermsPage() {
             <p>
               The free tier includes limited access to features as described on our pricing page.
             </p>
-            
+
             <h3 className="text-xl font-medium" style={{ color: colors.textPrimary }}>
               4.2 Paid Subscriptions
             </h3>
@@ -92,7 +92,7 @@ export default function TermsPage() {
               4.3 Refunds
             </h3>
             <p>
-              We offer a 7-day money-back guarantee for new paid subscriptions. Contact support 
+              We offer a 7-day money-back guarantee for new paid subscriptions. Contact support
               within 7 days of your first payment for a full refund.
             </p>
           </section>
@@ -105,7 +105,7 @@ export default function TermsPage() {
               5.1 Ownership
             </h3>
             <p>
-              You retain ownership of the dream text and descriptions you submit. AI-generated 
+              You retain ownership of the dream text and descriptions you submit. AI-generated
               images are created for your personal use under a non-exclusive license.
             </p>
 
@@ -125,8 +125,8 @@ export default function TermsPage() {
               5.3 AI Generation Limitations
             </h3>
             <p>
-              Our AI system may refuse to generate images for content that violates OpenAI&apos;s 
-              usage policies. We are not responsible for any limitations imposed by third-party 
+              Our AI system may refuse to generate images for content that violates OpenAI&apos;s
+              usage policies. We are not responsible for any limitations imposed by third-party
               AI providers.
             </p>
           </section>
@@ -151,8 +151,8 @@ export default function TermsPage() {
               7. Intellectual Property
             </h2>
             <p>
-              The Service, including its design, code, and branding, is owned by The Dream Machine 
-              and protected by intellectual property laws. You may not copy, modify, or distribute 
+              The Service, including its design, code, and branding, is owned by The Dream Machine
+              and protected by intellectual property laws. You may not copy, modify, or distribute
               our proprietary materials without permission.
             </p>
           </section>
@@ -177,12 +177,12 @@ export default function TermsPage() {
               9. Limitation of Liability
             </h2>
             <p>
-              TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE DREAM MACHINE SHALL NOT BE LIABLE FOR 
-              ANY INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOSS OF 
+              TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE DREAM MACHINE SHALL NOT BE LIABLE FOR
+              ANY INDIRECT, INCIDENTAL, SPECIAL, OR CONSEQUENTIAL DAMAGES, INCLUDING LOSS OF
               DATA, PROFITS, OR GOODWILL.
             </p>
             <p>
-              Our total liability shall not exceed the amount you paid us in the 12 months 
+              Our total liability shall not exceed the amount you paid us in the 12 months
               preceding the claim.
             </p>
           </section>
@@ -192,8 +192,8 @@ export default function TermsPage() {
               10. Termination
             </h2>
             <p>
-              We may suspend or terminate your access to the Service at any time for violation 
-              of these terms or for any other reason at our discretion. Upon termination, your 
+              We may suspend or terminate your access to the Service at any time for violation
+              of these terms or for any other reason at our discretion. Upon termination, your
               right to use the Service ceases immediately.
             </p>
           </section>
@@ -203,8 +203,8 @@ export default function TermsPage() {
               11. Changes to Terms
             </h2>
             <p>
-              We may modify these terms at any time. We will notify you of significant changes 
-              via email or through the Service. Continued use after changes constitutes acceptance 
+              We may modify these terms at any time. We will notify you of significant changes
+              via email or through the Service. Continued use after changes constitutes acceptance
               of the new terms.
             </p>
           </section>
@@ -214,7 +214,7 @@ export default function TermsPage() {
               12. Governing Law
             </h2>
             <p>
-              These terms are governed by the laws of the United States. Any disputes shall be 
+              These terms are governed by the laws of the United States. Any disputes shall be
               resolved in the courts of [Your Jurisdiction].
             </p>
           </section>
@@ -226,8 +226,8 @@ export default function TermsPage() {
             <p>
               For questions about these terms, contact us at:
             </p>
-              <p style={{ color: colors.cyan }}>
-                support@lucidlaboratories.net
+            <p style={{ color: colors.cyan }}>
+              support@lucidlaboratories.net
             </p>
           </section>
         </div>

@@ -116,14 +116,23 @@ export function DashboardSidebar({ currentTab, onTabChange }: SidebarProps) {
     <div
       className="fixed left-0 top-0 h-screen w-64 p-6 overflow-y-auto z-50"
       style={{
-        background: colors.backgroundDark,
+        background: `linear-gradient(180deg, ${colors.backgroundDark} 0%, rgba(26,16,37,0.98) 100%)`,
         borderRight: `1px solid ${colors.surface}`,
+        boxShadow: '4px 0 24px rgba(0,0,0,0.3)',
       }}
     >
-      <div className="mb-8">
+      {/* Subtle animated glow at top */}
+      <div
+        className="absolute top-0 left-0 right-0 h-32 pointer-events-none"
+        style={{
+          background: 'radial-gradient(ellipse at top, rgba(124,58,237,0.15) 0%, transparent 70%)',
+        }}
+      />
+
+      <div className="mb-8 relative">
         <Logo size="md" />
       </div>
-      <nav className="space-y-1 mt-10">
+      <nav className="space-y-1 mt-10 relative">
         {SIDEBAR_CATEGORIES.map((category) => {
           const isExpanded = expandedCategories.has(category.name)
           const hasActiveTab = category.tabs.some(tab => tab.key === currentTab)
@@ -135,32 +144,44 @@ export function DashboardSidebar({ currentTab, onTabChange }: SidebarProps) {
               <button
                 key={tab.key}
                 onClick={() => onTabChange?.(tab.key)}
-                className="w-full text-left px-4 py-3 rounded-lg transition-all cursor-pointer hover:opacity-80 font-medium focus-visible:outline-none focus-visible:ring-2"
+                className="sidebar-item w-full text-left px-4 py-3 rounded-lg transition-all cursor-pointer hover:opacity-80 font-medium focus-visible:outline-none focus-visible:ring-2"
                 aria-current={currentTab === tab.key ? 'page' : undefined}
                 style={{
-                  background: currentTab === tab.key ? colors.purple : 'transparent',
+                  background: currentTab === tab.key
+                    ? `linear-gradient(90deg, ${colors.purple}, ${colors.purple}dd)`
+                    : 'transparent',
                   color: currentTab === tab.key ? colors.white : colors.textMuted,
                   border: 'none',
+                  boxShadow: currentTab === tab.key ? `0 4px 20px ${colors.purple}40` : 'none',
                 }}
               >
-                {tab.icon} {tab.label}
+                <span className="sidebar-icon inline-block mr-2">{tab.icon}</span>
+                {tab.label}
               </button>
             )
           }
 
           return (
             <div key={category.name} className="mb-1">
+              {/* Section Divider before category groups (except first) */}
+              {category.name !== 'Home' && (
+                <div className="section-divider my-3 mx-2" />
+              )}
+
               {/* Category Header */}
               <button
                 onClick={() => toggleCategory(category.name)}
-                className="w-full text-left px-4 py-2.5 rounded-lg transition-all cursor-pointer hover:opacity-80 font-semibold flex items-center justify-between focus-visible:outline-none focus-visible:ring-2"
+                className="sidebar-item w-full text-left px-4 py-2.5 rounded-lg transition-all cursor-pointer hover:opacity-80 font-semibold flex items-center justify-between focus-visible:outline-none focus-visible:ring-2"
                 style={{
                   background: hasActiveTab && !isExpanded ? `${colors.purple}20` : 'transparent',
                   color: hasActiveTab ? colors.purple : colors.textMuted,
                   border: 'none',
                 }}
               >
-                <span>{category.icon} {category.name}</span>
+                <span>
+                  <span className="sidebar-icon inline-block mr-2">{category.icon}</span>
+                  {category.name}
+                </span>
                 <span
                   className="text-xs transition-transform duration-200"
                   style={{
@@ -185,15 +206,19 @@ export function DashboardSidebar({ currentTab, onTabChange }: SidebarProps) {
                     <button
                       key={key}
                       onClick={() => handleTabClick(key, category.name)}
-                      className="w-full text-left px-3 py-2 rounded-lg transition-all cursor-pointer hover:opacity-80 text-sm focus-visible:outline-none focus-visible:ring-2"
+                      className={`sidebar-item w-full text-left px-3 py-2 rounded-lg transition-all cursor-pointer text-sm focus-visible:outline-none focus-visible:ring-2 ${currentTab === key ? 'active' : ''}`}
                       aria-current={currentTab === key ? 'page' : undefined}
                       style={{
-                        background: currentTab === key ? colors.purple : 'transparent',
+                        background: currentTab === key
+                          ? `linear-gradient(90deg, ${colors.purple}, ${colors.purple}dd)`
+                          : 'transparent',
                         color: currentTab === key ? colors.white : colors.textMuted,
                         border: 'none',
+                        boxShadow: currentTab === key ? `0 4px 16px ${colors.purple}30` : 'none',
                       }}
                     >
-                      {icon} {label}
+                      <span className="sidebar-icon inline-block mr-2">{icon}</span>
+                      {label}
                     </button>
                   ))}
                 </div>
@@ -207,37 +232,25 @@ export function DashboardSidebar({ currentTab, onTabChange }: SidebarProps) {
       <div className="mt-6 mx-2">
         <button
           onClick={() => onTabChange?.('Subscription')}
-          className="w-full relative overflow-hidden rounded-xl p-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 group"
+          className="premium-card gold-shimmer w-full rounded-xl p-4 transition-all duration-300 hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 group"
           style={{
-            background: currentTab === 'Subscription'
-              ? colors.purple
-              : `linear-gradient(135deg, ${colors.purple}90, ${colors.pink}90)`,
             border: 'none',
           }}
         >
-          {/* Shimmer effect */}
-          <div
-            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-            style={{
-              background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
-              animation: 'shimmer 2s infinite',
-            }}
-          />
-
           <div className="relative z-10 text-left">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-lg">✨</span>
+              <span className="text-lg float-gentle">✨</span>
               <span className="font-bold text-white text-sm">Unlock Your Dreams</span>
             </div>
             <p className="text-xs text-white/80 leading-tight">
-              Unlimited comics • HD exports • AI insights
+              Unlimited comics • HD exports • Premium insights
             </p>
             <div className="mt-2 flex items-center gap-1">
               <span
-                className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                style={{ background: 'rgba(255,255,255,0.2)', color: colors.white }}
+                className="text-[10px] font-semibold px-2 py-0.5 rounded-full streak-flame"
+                style={{ background: 'rgba(234,179,8,0.3)', color: '#ffd700' }}
               >
-                🔥 50% OFF
+                50% OFF
               </span>
               <span className="text-[10px] text-white/70">Limited time</span>
             </div>
@@ -245,8 +258,8 @@ export function DashboardSidebar({ currentTab, onTabChange }: SidebarProps) {
         </button>
       </div>
 
-      <div className="mt-6 pt-6" style={{ borderTop: `1px solid ${colors.surface}` }}>
-        <p className="text-xs" style={{ color: colors.textMuted }}>
+      <div className="mt-6 pt-6 section-divider" style={{ borderTop: `1px solid ${colors.surface}` }}>
+        <p className="text-xs mt-4" style={{ color: colors.textMuted }}>
           v1.0 • The Dream Machine
         </p>
       </div>

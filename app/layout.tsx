@@ -100,6 +100,10 @@ export default function RootLayout({
           <link rel="preconnect" href="https://app.posthog.com" />
         </head>
         <body className={`${inter.variable} font-sans antialiased`}>
+          {/* Animated nebula background */}
+          <div className="nebula-bg" />
+          <div className="dream-dust-layer" />
+
           <ErrorBoundary>
             <ToastProvider>
               <PostHogProvider>{children}</PostHogProvider>

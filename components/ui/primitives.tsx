@@ -145,23 +145,51 @@ export function EmptyState({ icon = '✨', title, description, action }: { icon?
 
 // ============= STAT CARD =============
 type StatColor = 'purple' | 'cyan' | 'pink'
-const STAT_COLORS: Record<StatColor, { from: string; to: string }> = {
-  purple: { from: colors.purple, to: colors.purpleLight },
-  cyan: { from: colors.cyan, to: colors.cyanLight },
-  pink: { from: colors.pink, to: '#f472b6' },
+const STAT_COLORS: Record<StatColor, { from: string; to: string; glowClass: string }> = {
+  purple: { from: colors.purple, to: colors.purpleLight, glowClass: 'card-glow' },
+  cyan: { from: colors.cyan, to: colors.cyanLight, glowClass: 'card-glow-cyan' },
+  pink: { from: colors.pink, to: '#f472b6', glowClass: 'card-glow-pink' },
 }
 
 export function StatCard({ icon, label, value, trend, color = 'purple' }: { icon: string; label: string; value: string | number; trend?: string; color?: StatColor }) {
   const c = STAT_COLORS[color]
   return (
-    <div className="p-6 rounded-xl relative overflow-hidden group cursor-pointer transition-all hover:scale-105" style={{ background: colors.surface, border: `1px solid ${colors.border}` }}>
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity" style={{ background: `linear-gradient(135deg, ${c.from}10 0%, ${c.to}10 100%)` }} />
+    <div
+      className={`p-6 rounded-xl relative overflow-hidden group cursor-pointer transition-all hover:scale-105 hover:-translate-y-1 ${c.glowClass}`}
+      style={{
+        background: colors.surface,
+        border: `1px solid ${colors.border}`,
+        boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
+      }}
+    >
+      {/* Gradient overlay on hover */}
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{ background: `linear-gradient(135deg, ${c.from}15 0%, ${c.to}15 100%)` }} />
+
+      {/* Corner accent */}
+      <div
+        className="absolute top-0 right-0 w-16 h-16 opacity-20 group-hover:opacity-40 transition-opacity"
+        style={{
+          background: `radial-gradient(circle at top right, ${c.from} 0%, transparent 70%)`
+        }}
+      />
+
       <div className="relative z-10">
         <div className="flex items-center justify-between mb-4">
-          <span className="text-3xl">{icon}</span>
-          {trend && <span className="text-xs px-2 py-1 rounded-full" style={{ background: colors.backgroundDark, color: colors.cyan }}>{trend}</span>}
+          <span className="text-3xl float-gentle">{icon}</span>
+          {trend && (
+            <span
+              className="text-xs px-2 py-1 rounded-full font-medium"
+              style={{
+                background: `linear-gradient(135deg, ${colors.backgroundDark}, rgba(6,182,212,0.2))`,
+                color: colors.cyan,
+                border: `1px solid rgba(6,182,212,0.3)`,
+              }}
+            >
+              {trend}
+            </span>
+          )}
         </div>
-        <div className="text-3xl font-bold mb-1" style={{ color: colors.textPrimary }}>{value}</div>
+        <div className="text-3xl font-bold mb-1 stat-counter" style={{ color: colors.textPrimary }}>{value}</div>
         <div className="text-sm" style={{ color: colors.textMuted }}>{label}</div>
       </div>
     </div>

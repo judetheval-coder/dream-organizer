@@ -10,8 +10,8 @@ export default function PrivacyPage() {
   return (
     <div className="min-h-screen py-20 px-6" style={{ background: gradients.page }}>
       <div className="max-w-4xl mx-auto">
-        <Link 
-          href="/" 
+        <Link
+          href="/"
           className="inline-flex items-center gap-2 mb-8 hover:opacity-80 transition-opacity"
           style={{ color: colors.cyan }}
         >
@@ -32,8 +32,8 @@ export default function PrivacyPage() {
               1. Introduction
             </h2>
             <p>
-              The Dream Machine (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) respects your privacy and is committed to protecting 
-              your personal data. This privacy policy explains how we collect, use, and safeguard your 
+              The Dream Machine (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) respects your privacy and is committed to protecting
+              your personal data. This privacy policy explains how we collect, use, and safeguard your
               information when you use our dream journaling and AI comic generation service.
             </p>
           </section>
@@ -91,8 +91,8 @@ export default function PrivacyPage() {
               4. Data Storage and Security
             </h2>
             <p>
-              Your data is stored securely using Supabase (PostgreSQL database) with row-level security 
-              policies ensuring you can only access your own data. Images are stored in Supabase Storage 
+              Your data is stored securely using Supabase (PostgreSQL database) with row-level security
+              policies ensuring you can only access your own data. Images are stored in Supabase Storage
               with appropriate access controls.
             </p>
             <p>
@@ -133,7 +133,7 @@ export default function PrivacyPage() {
               7. Data Retention
             </h2>
             <p>
-              We retain your data for as long as your account is active. When you delete your account, 
+              We retain your data for as long as your account is active. When you delete your account,
               we will delete all your dreams, panels, and personal information within 30 days.
             </p>
           </section>
@@ -143,8 +143,8 @@ export default function PrivacyPage() {
               8. Cookies
             </h2>
             <p>
-              We use essential cookies for authentication and session management. We may also use 
-              analytics cookies to understand how our service is used. You can control cookie 
+              We use essential cookies for authentication and session management. We may also use
+              analytics cookies to understand how our service is used. You can control cookie
               preferences through your browser settings.
             </p>
           </section>
@@ -154,7 +154,7 @@ export default function PrivacyPage() {
               9. Children&apos;s Privacy
             </h2>
             <p>
-              Our service is not intended for children under 13. We do not knowingly collect 
+              Our service is not intended for children under 13. We do not knowingly collect
               information from children under 13.
             </p>
           </section>
@@ -164,7 +164,7 @@ export default function PrivacyPage() {
               10. Changes to This Policy
             </h2>
             <p>
-              We may update this privacy policy from time to time. We will notify you of any 
+              We may update this privacy policy from time to time. We will notify you of any
               significant changes via email or through the service.
             </p>
           </section>
