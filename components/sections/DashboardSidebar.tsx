@@ -59,8 +59,24 @@ export const SIDEBAR_CATEGORIES = [
   },
 ] as const
 
-// Flatten for type extraction
-export const DASHBOARD_TABS = SIDEBAR_CATEGORIES.flatMap(cat => cat.tabs)
+// All tabs flattened - explicitly typed
+export const DASHBOARD_TABS = [
+  { key: 'Dashboard', label: 'Dashboard', icon: '🏠' },
+  { key: 'My Dreams', label: 'My Dreams', icon: '💭' },
+  { key: 'Comics', label: 'Comics', icon: '🎨' },
+  { key: 'Insights', label: 'Insights', icon: '✨' },
+  { key: 'Gallery', label: 'Public Gallery', icon: '🌟' },
+  { key: 'Groups', label: 'Dream Groups', icon: '👥' },
+  { key: 'Leaderboard', label: 'Leaderboard', icon: '🥇' },
+  { key: 'Challenges', label: 'Daily Challenges', icon: '🏆' },
+  { key: 'Events', label: 'Events & Contests', icon: '🎉' },
+  { key: 'Badges', label: 'My Badges', icon: '🏅' },
+  { key: 'Referrals', label: 'Invite Friends', icon: '🎁' },
+  { key: 'Dictionary', label: 'Dream Dictionary', icon: '📖' },
+  { key: 'Patterns', label: 'Global Patterns', icon: '🌌' },
+  { key: 'Subscription', label: 'Subscription', icon: '💎' },
+  { key: 'Settings', label: 'Settings', icon: '⚙️' },
+] as const
 
 export type DashboardTab = typeof DASHBOARD_TABS[number]['key']
 
@@ -73,7 +89,7 @@ export function DashboardSidebar({ currentTab, onTabChange }: SidebarProps) {
   // Track which categories are expanded (all expanded by default initially, then collapse)
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(() => {
     // Find which category contains the current tab and expand it
-    const activeCategory = SIDEBAR_CATEGORIES.find(cat => 
+    const activeCategory = SIDEBAR_CATEGORIES.find(cat =>
       cat.tabs.some(tab => tab.key === currentTab)
     )
     return new Set(activeCategory ? [activeCategory.name] : ['Home'])
@@ -112,7 +128,7 @@ export function DashboardSidebar({ currentTab, onTabChange }: SidebarProps) {
         {SIDEBAR_CATEGORIES.map((category) => {
           const isExpanded = expandedCategories.has(category.name)
           const hasActiveTab = category.tabs.some(tab => tab.key === currentTab)
-          
+
           // For single-tab categories like Home, just show the tab directly
           if (category.tabs.length === 1) {
             const tab = category.tabs[0]
@@ -132,7 +148,7 @@ export function DashboardSidebar({ currentTab, onTabChange }: SidebarProps) {
               </button>
             )
           }
-          
+
           return (
             <div key={category.name} className="mb-1">
               {/* Category Header */}
@@ -146,17 +162,17 @@ export function DashboardSidebar({ currentTab, onTabChange }: SidebarProps) {
                 }}
               >
                 <span>{category.icon} {category.name}</span>
-                <span 
+                <span
                   className="text-xs transition-transform duration-200"
-                  style={{ 
+                  style={{
                     transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-                    color: colors.textMuted 
+                    color: colors.textMuted
                   }}
                 >
                   ▼
                 </span>
               </button>
-              
+
               {/* Expandable Tabs */}
               <div
                 className="overflow-hidden transition-all duration-200"
