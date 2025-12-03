@@ -38,6 +38,316 @@ import { canCreateDream, getTierName, getTierFeatures, SUBSCRIPTION_TIERS } from
 import type { DreamRecord } from '@/components/dashboard/DreamList'
 import type { DreamWithPanels, Panel } from '@/lib/supabase'
 
+// ============================================
+// DAILY CHALLENGES SECTION
+// ============================================
+interface DailyChallenge {
+  id: number
+  prompt: string
+  style: string
+  mood: string
+  challenge_date: string
+}
+
+interface Submission {
+  id: number
+  dream_id: number
+  votes: number
+  user_id: string
+  dream?: {
+    text: string
+    panels: Array<{ image_url: string; description: string }>
+  }
+}
+
+function DailyChallengesSection() {
+  const [challenge, setChallenge] = useState<DailyChallenge | null>(null)
+  const [submissions, setSubmissions] = useState<Submission[]>([])
+  const [loading, setLoading] = useState(true)
+  const [voting, setVoting] = useState<number | null>(null)
+
+  useEffect(() => {
+    fetchChallenge()
+  }, [])
+
+  const fetchChallenge = async () => {
+    try {
+      const response = await fetch('/api/challenge/today')
+      const data = await response.json()
+      setChallenge(data.challenge)
+      setSubmissions(data.submissions || [])
+    } catch (error) {
+      console.error('Error fetching challenge:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleVote = async (submissionId: number) => {
+    setVoting(submissionId)
+    try {
+      await fetch('/api/challenge/vote', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ submissionId })
+      })
+      fetchChallenge()
+    } catch (error) {
+      console.error('Error voting:', error)
+    } finally {
+      setVoting(null)
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="text-center py-16">
+        <div className="animate-bounce text-6xl mb-4">🏆</div>
+        <p style={{ color: colors.textMuted }}>Loading today's challenge...</p>
+      </div>
+    )
+  }
+
+  if (!challenge) {
+    return (
+      <Card className="text-center py-12">
+        <div className="text-6xl mb-4">📅</div>
+        <h2 className="text-2xl font-bold mb-2" style={{ color: colors.textPrimary }}>
+          No Challenge Today
+        </h2>
+        <p style={{ color: colors.textMuted }}>Check back tomorrow for a new dream challenge!</p>
+      </Card>
+    )
+  }
+
+  return (
+    <div className="space-y-8">
+      {/* Today's Challenge */}
+      <Card>
+        <div className="text-center p-6">
+          <div className="text-5xl mb-4">🏆</div>
+          <h2 className="text-2xl font-bold mb-2" style={{ color: colors.textPrimary }}>
+            Today's Dream Challenge
+          </h2>
+          <p className="text-sm mb-4" style={{ color: colors.textMuted }}>
+            {new Date(challenge.challenge_date).toLocaleDateString('en-US', {
+              weekday: 'long', month: 'long', day: 'numeric'
+            })}
+          </p>
+          
+          <div 
+            className="p-6 rounded-xl mb-6"
+            style={{ 
+              background: `linear-gradient(135deg, ${colors.purple}20 0%, ${colors.cyan}20 100%)`,
+              border: `1px solid ${colors.purple}40`
+            }}
+          >
+            <p className="text-xl font-medium" style={{ color: colors.cyan }}>
+              "{challenge.prompt}"
+            </p>
+            <div className="flex items-center justify-center gap-4 mt-3 text-sm" style={{ color: colors.textMuted }}>
+              <span>🎨 {challenge.style}</span>
+              <span>•</span>
+              <span>💭 {challenge.mood}</span>
+            </div>
+          </div>
+
+          <a
+            href="/dashboard?tab=Dashboard"
+            className="inline-block px-8 py-3 rounded-lg font-bold transition-all hover:scale-105"
+            style={{
+              background: `linear-gradient(135deg, ${colors.purple} 0%, ${colors.cyan} 100%)`,
+              color: 'white'
+            }}
+          >
+            Create Your Entry ✨
+          </a>
+        </div>
+      </Card>
+
+      {/* Submissions */}
+      {submissions.length > 0 && (
+        <div>
+          <h3 className="text-xl font-bold mb-4" style={{ color: colors.textPrimary }}>
+            🌟 Top Submissions ({submissions.length})
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {submissions.slice(0, 6).map((submission, idx) => (
+              <Card key={submission.id} className="p-4">
+                <div className="flex items-start gap-4">
+                  <div 
+                    className="w-20 h-20 rounded-lg flex items-center justify-center text-2xl"
+                    style={{ background: colors.surface }}
+                  >
+                    {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '💭'}
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm line-clamp-2" style={{ color: colors.textSecondary }}>
+                      {submission.dream?.text || 'Dream entry'}
+                    </p>
+                    <div className="flex items-center gap-3 mt-2">
+                      <button
+                        onClick={() => handleVote(submission.id)}
+                        disabled={voting === submission.id}
+                        className="px-3 py-1.5 rounded-lg text-sm font-medium transition-all hover:scale-105 disabled:opacity-50"
+                        style={{ background: colors.purple, color: 'white' }}
+                      >
+                        {voting === submission.id ? '...' : `❤️ ${submission.votes}`}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ============================================
+// LEADERBOARD SECTION
+// ============================================
+interface LeaderboardUser {
+  user_id: string
+  dream_count: number
+  total_likes: number
+  total_shares: number
+  total_views: number
+}
+
+function LeaderboardSection() {
+  const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([])
+  const [loading, setLoading] = useState(true)
+  const [timeframe, setTimeframe] = useState<'all' | 'month' | 'week'>('all')
+
+  useEffect(() => {
+    fetchLeaderboard()
+  }, [timeframe])
+
+  const fetchLeaderboard = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch(`/api/leaderboard?timeframe=${timeframe}`)
+      const data = await response.json()
+      setLeaderboard(data.leaderboard || [])
+    } catch (error) {
+      console.error('Error fetching leaderboard:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const getRankDisplay = (rank: number) => {
+    if (rank === 1) return { emoji: '🥇', bg: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)' }
+    if (rank === 2) return { emoji: '🥈', bg: 'linear-gradient(135deg, #C0C0C0 0%, #A0A0A0 100%)' }
+    if (rank === 3) return { emoji: '🥉', bg: 'linear-gradient(135deg, #CD7F32 0%, #8B4513 100%)' }
+    return { emoji: `#${rank}`, bg: colors.surface }
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Timeframe Selector */}
+      <div className="flex justify-center gap-3">
+        {(['all', 'month', 'week'] as const).map((period) => (
+          <button
+            key={period}
+            onClick={() => setTimeframe(period)}
+            className="px-5 py-2 rounded-lg font-semibold transition-all hover:scale-105"
+            style={{
+              background: timeframe === period
+                ? `linear-gradient(135deg, ${colors.purple} 0%, ${colors.cyan} 100%)`
+                : colors.surface,
+              color: timeframe === period ? 'white' : colors.textSecondary,
+              border: `1px solid ${colors.border}`
+            }}
+          >
+            {period === 'all' ? '🏆 All Time' : period === 'month' ? '📅 This Month' : '📆 This Week'}
+          </button>
+        ))}
+      </div>
+
+      {/* Leaderboard */}
+      <Card>
+        {loading ? (
+          <div className="text-center py-12">
+            <div className="animate-pulse text-4xl mb-3">⏳</div>
+            <p style={{ color: colors.textMuted }}>Loading leaderboard...</p>
+          </div>
+        ) : leaderboard.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-5xl mb-4">🚀</div>
+            <h3 className="text-xl font-bold mb-2" style={{ color: colors.textPrimary }}>
+              Be the First!
+            </h3>
+            <p style={{ color: colors.textMuted }}>Create dreams to appear on the leaderboard</p>
+          </div>
+        ) : (
+          <div className="divide-y" style={{ borderColor: colors.border }}>
+            {leaderboard.map((user, index) => {
+              const rank = getRankDisplay(index + 1)
+              return (
+                <div
+                  key={user.user_id}
+                  className="p-5 flex items-center gap-4 hover:bg-white/5 transition-colors"
+                >
+                  {/* Rank Badge */}
+                  <div 
+                    className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg"
+                    style={{ 
+                      background: typeof rank.bg === 'string' && rank.bg.includes('gradient') ? rank.bg : rank.bg,
+                      color: index < 3 ? '#000' : colors.textPrimary
+                    }}
+                  >
+                    {rank.emoji}
+                  </div>
+
+                  {/* User Info */}
+                  <div className="flex-1">
+                    <div className="font-semibold" style={{ color: colors.textPrimary }}>
+                      Dreamer {user.user_id.substring(0, 8)}...
+                    </div>
+                    <div className="text-sm" style={{ color: colors.textMuted }}>
+                      {user.dream_count} dreams created
+                    </div>
+                  </div>
+
+                  {/* Stats */}
+                  <div className="flex gap-6 text-sm">
+                    <div className="text-center">
+                      <div className="font-bold text-lg" style={{ color: colors.pink }}>
+                        {user.total_likes || 0}
+                      </div>
+                      <div style={{ color: colors.textMuted }}>❤️ Likes</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-bold text-lg" style={{ color: colors.cyan }}>
+                        {user.total_views || 0}
+                      </div>
+                      <div style={{ color: colors.textMuted }}>👁️ Views</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="font-bold text-lg" style={{ color: colors.purple }}>
+                        {user.total_shares || 0}
+                      </div>
+                      <div style={{ color: colors.textMuted }}>🔗 Shares</div>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </Card>
+    </div>
+  )
+}
+
+// ============================================
+// MAIN DASHBOARD
+// ============================================
+
 const TAB_QUERY_KEY = 'tab'
 const DEFAULT_TAB: DashboardTab = DASHBOARD_TABS[0].key
 
@@ -888,21 +1198,11 @@ function DashboardPageContent() {
           )}
 
           {currentTab === 'Challenges' && (
-            <div className="text-center py-12">
-              <p style={{ color: colors.textMuted }}>
-                Redirecting to Daily Challenges...
-              </p>
-              <script dangerouslySetInnerHTML={{ __html: "window.location.href='/challenges'" }} />
-            </div>
+            <DailyChallengesSection />
           )}
 
           {currentTab === 'Leaderboard' && (
-            <div className="text-center py-12">
-              <p style={{ color: colors.textMuted }}>
-                Redirecting to Leaderboard...
-              </p>
-              <script dangerouslySetInnerHTML={{ __html: "window.location.href='/leaderboard'" }} />
-            </div>
+            <LeaderboardSection />
           )}
 
           {currentTab === 'Referrals' && (

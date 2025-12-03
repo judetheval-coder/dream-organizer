@@ -209,21 +209,21 @@ export function DashboardSidebar({ currentTab, onTabChange }: SidebarProps) {
           onClick={() => onTabChange?.('Subscription')}
           className="w-full relative overflow-hidden rounded-xl p-4 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 group"
           style={{
-            background: currentTab === 'Subscription' 
-              ? colors.purple 
+            background: currentTab === 'Subscription'
+              ? colors.purple
               : `linear-gradient(135deg, ${colors.purple}90, ${colors.pink}90)`,
             border: 'none',
           }}
         >
           {/* Shimmer effect */}
-          <div 
+          <div
             className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
             style={{
               background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
               animation: 'shimmer 2s infinite',
             }}
           />
-          
+
           <div className="relative z-10 text-left">
             <div className="flex items-center gap-2 mb-1">
               <span className="text-lg">✨</span>
@@ -233,7 +233,7 @@ export function DashboardSidebar({ currentTab, onTabChange }: SidebarProps) {
               Unlimited comics • HD exports • AI insights
             </p>
             <div className="mt-2 flex items-center gap-1">
-              <span 
+              <span
                 className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
                 style={{ background: 'rgba(255,255,255,0.2)', color: colors.white }}
               >
