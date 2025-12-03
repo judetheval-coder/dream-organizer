@@ -141,10 +141,17 @@ export function useDreams(): UseDreamsResult {
         setLoadingMore(true)
       }
 
-      const { dreams: fetchedDreams, nextCursor: newCursor } = await getUserDreams(user.id, {
-        limit: PAGE_SIZE,
-        cursor: reset ? undefined : cursor ?? undefined,
-      })
+      // Use API route for fetching dreams (bypasses RLS with service key)
+      const params = new URLSearchParams({ limit: PAGE_SIZE.toString() })
+      if (!reset && cursor) {
+        params.set('cursor', cursor)
+      }
+      const res = await fetch(`/api/dreams?${params.toString()}`)
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.error || 'Failed to fetch dreams')
+      }
+      const { dreams: fetchedDreams, nextCursor: newCursor } = await res.json()
 
       // Prevent race conditions
       if (fetchId !== fetchIdRef.current) return
@@ -221,22 +228,28 @@ export function useDreams(): UseDreamsResult {
     })
 
     try {
-      // Create dream
-      console.log('[saveDream] Creating dream record...')
-      const dream = await createDream(user.id, {
-        text: dreamData.text,
-        style: dreamData.style,
-        mood: dreamData.mood
+      // Use API route for creating dreams (bypasses RLS with service key)
+      console.log('[saveDream] Creating dream via API route...')
+      const res = await fetch('/api/dreams', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text: dreamData.text,
+          style: dreamData.style,
+          mood: dreamData.mood,
+          panels: dreamData.panels
+        })
       })
-      console.log('[saveDream] Dream created with ID:', dream.id)
 
-      // Create panels
-      console.log('[saveDream] Creating', dreamData.panels.length, 'panels...')
-      const panels = await createPanels(dream.id, dreamData.panels)
-      console.log('[saveDream] Panels created:', panels.length)
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.error || 'Failed to save dream')
+      }
+
+      const newDream = await res.json()
+      console.log('[saveDream] Dream created with ID:', newDream.id)
 
       // Update local state and invalidate cache
-      const newDream = { ...dream, panels }
       setDreams(prev => [newDream, ...prev])
       invalidateCache(user.id)
 

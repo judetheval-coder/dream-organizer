@@ -267,7 +267,7 @@ export async function seedFakeData(supabase: SupabaseClient): Promise<SeedResult
 
     // Insert group memberships
     for (const membership of fakeGroupMemberships) {
-      const res = await supabase.from('group_memberships').upsert(membership, { onConflict: 'group_id,user_id' })
+      const res = await supabase.from('group_members').upsert(membership, { onConflict: 'group_id,user_id' })
       const { error } = res
       // @ts-ignore
       const data = (res as unknown as { data?: DevGroupMembership[] })?.data ?? null

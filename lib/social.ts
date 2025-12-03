@@ -369,7 +369,7 @@ export interface DreamGroup {
 export async function joinGroup(groupId: string, userId: string): Promise<{ success: boolean; error?: string }> {
   try {
     const { error } = await supabase
-      .from('group_memberships')
+      .from('group_members')
       .upsert({
         group_id: groupId,
         user_id: userId,
@@ -386,7 +386,7 @@ export async function joinGroup(groupId: string, userId: string): Promise<{ succ
 export async function leaveGroup(groupId: string, userId: string): Promise<{ success: boolean; error?: string }> {
   try {
     const { error } = await supabase
-      .from('group_memberships')
+      .from('group_members')
       .delete()
       .eq('group_id', groupId)
       .eq('user_id', userId)
@@ -401,7 +401,7 @@ export async function leaveGroup(groupId: string, userId: string): Promise<{ suc
 export async function getJoinedGroups(userId: string): Promise<string[]> {
   try {
     const { data, error } = await supabase
-      .from('group_memberships')
+      .from('group_members')
       .select('group_id')
       .eq('user_id', userId)
 
@@ -474,7 +474,7 @@ export async function createGroup(
 
     // Auto-join the creator as admin
     await supabase
-      .from('group_memberships')
+      .from('group_members')
       .insert({
         group_id: data.id,
         user_id: userId,

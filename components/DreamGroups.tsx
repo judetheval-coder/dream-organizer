@@ -7,39 +7,63 @@ import { colors, gradients } from '@/lib/design'
 import { Card, Button, EmptyState } from '@/components/ui/primitives'
 import UpgradePrompt from '@/components/UpgradePrompt'
 import { DEFAULT_GROUPS, type DreamGroup } from '@/lib/mock-data'
-import { joinGroup, leaveGroup, getJoinedGroups, createGroup } from '@/lib/social'
 
-export default function DreamGroups({ groups: initialGroups = DEFAULT_GROUPS }: { groups?: DreamGroup[] }) {
+export default function DreamGroups() {
   const { user } = useUser()
   const userId = user?.id || ''
   const { userTier } = useDreams()
 
-  const [groups, setGroups] = useState<DreamGroup[]>(initialGroups)
+  const [groups, setGroups] = useState<DreamGroup[]>([])
+  const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<'all' | 'joined' | 'suggested'>('all')
   const [search, setSearch] = useState('')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [showUpgradePrompt, setShowUpgradePrompt] = useState(false)
   const [newGroup, setNewGroup] = useState({ name: '', description: '', emoji: '✨', isPrivate: false, category: 'general' })
 
-  // Load joined status from Supabase
+  // Load groups from API
   useEffect(() => {
-    if (!userId) return
-    getJoinedGroups(userId).then(joinedIds => {
-      setGroups(prev => prev.map(g => ({ ...g, isJoined: joinedIds.includes(g.id) })))
-    })
+    async function loadGroups() {
+      setLoading(true)
+      try {
+        const res = await fetch('/api/groups')
+        if (!res.ok) throw new Error('Failed to fetch groups')
+        const data = await res.json()
+        // If no groups exist in database, show default starter groups
+        if (!data.groups || data.groups.length === 0) {
+          setGroups(DEFAULT_GROUPS)
+        } else {
+          setGroups(data.groups)
+        }
+      } catch (err) {
+        console.error('Error loading groups:', err)
+        setGroups(DEFAULT_GROUPS)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadGroups()
   }, [userId])
 
   const handleJoin = async (groupId: string) => {
-    const result = await joinGroup(groupId, userId)
-    if (result.success) {
-      setGroups(prev => prev.map(g => g.id === groupId ? { ...g, isJoined: true, memberCount: g.memberCount + 1 } : g))
+    try {
+      const res = await fetch(`/api/groups/${groupId}`, { method: 'POST' })
+      if (res.ok) {
+        setGroups(prev => prev.map(g => g.id === groupId ? { ...g, isJoined: true, memberCount: g.memberCount + 1 } : g))
+      }
+    } catch (err) {
+      console.error('Error joining group:', err)
     }
   }
 
   const handleLeave = async (groupId: string) => {
-    const result = await leaveGroup(groupId, userId)
-    if (result.success) {
-      setGroups(prev => prev.map(g => g.id === groupId ? { ...g, isJoined: false, memberCount: Math.max(0, g.memberCount - 1) } : g))
+    try {
+      const res = await fetch(`/api/groups/${groupId}`, { method: 'DELETE' })
+      if (res.ok) {
+        setGroups(prev => prev.map(g => g.id === groupId ? { ...g, isJoined: false, memberCount: Math.max(0, g.memberCount - 1) } : g))
+      }
+    } catch (err) {
+      console.error('Error leaving group:', err)
     }
   }
 
@@ -56,17 +80,28 @@ export default function DreamGroups({ groups: initialGroups = DEFAULT_GROUPS }: 
       return
     }
 
-    const result = await createGroup({
-      name: newGroup.name,
-      description: newGroup.description,
-      category: newGroup.category,
-      isPrivate: newGroup.isPrivate,
-    }, userId)
+    try {
+      const res = await fetch('/api/groups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newGroup.name,
+          description: newGroup.description,
+          category: newGroup.category,
+          isPrivate: newGroup.isPrivate,
+        })
+      })
 
-    if (result.success && result.group) {
-      setGroups(prev => [result.group!, ...prev])
-      setShowCreateModal(false)
-      setNewGroup({ name: '', description: '', emoji: '✨', isPrivate: false, category: 'general' })
+      if (res.ok) {
+        const data = await res.json()
+        if (data.group) {
+          setGroups(prev => [data.group, ...prev])
+          setShowCreateModal(false)
+          setNewGroup({ name: '', description: '', emoji: '✨', isPrivate: false, category: 'general' })
+        }
+      }
+    } catch (err) {
+      console.error('Error creating group:', err)
     }
   }
 
@@ -83,6 +118,21 @@ export default function DreamGroups({ groups: initialGroups = DEFAULT_GROUPS }: 
   })
 
   const joinedCount = groups.filter(g => g.isJoined).length
+
+  if (loading) {
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-between gap-4">
+          <h2 className="text-2xl font-extrabold" style={{ color: colors.textPrimary }}>Groups</h2>
+        </div>
+        <div className="flex items-center justify-center py-12">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: colors.purple }}></div>
+          <span className="ml-3" style={{ color: colors.textSecondary }}>Loading groups...</span>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-8">
       {/* Header */}

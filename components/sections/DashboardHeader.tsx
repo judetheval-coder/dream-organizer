@@ -71,10 +71,17 @@ export function DashboardHeader({ tab }: HeaderProps) {
 
   return (
     <div className="mb-8">
-      <h2 className="text-4xl font-bold mb-2 bg-clip-text text-transparent" style={{ background: gradients.purpleCyan }}>
+      <h2
+        className="text-4xl font-bold mb-2"
+        style={{
+          background: gradients.purpleCyan,
+          WebkitBackgroundClip: 'text',
+          backgroundClip: 'text',
+          color: 'transparent'
+        }}
+      >
         {headline.title}
       </h2>
-      <div className="h-1 w-40 rounded-full mb-2" style={{ background: gradients.purpleCyan, opacity: 0.15 }} />
       <p className="text-base" style={{ color: colors.textMuted }}>{headline.subtitle}</p>
     </div>
   )
