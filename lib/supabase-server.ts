@@ -87,6 +87,77 @@ export async function syncUserToSupabase(userId: string, email: string): Promise
   return demoCreated ? { demoCreated: true } : undefined
 }
 
+// Process a referral when a new user signs up
+export async function processReferral(newUserId: string, referralCode: string): Promise<{ success: boolean }> {
+  try {
+    const admin = getClient()
+
+    // Find the referrer by their referral code
+    const { data: referrer, error: findError } = await admin
+      .from('referrals')
+      .select('user_id')
+      .eq('code', referralCode)
+      .single()
+
+    if (findError || !referrer) {
+      console.log('Referral code not found:', referralCode)
+      return { success: false }
+    }
+
+    // Don't allow self-referrals
+    if (referrer.user_id === newUserId) {
+      return { success: false }
+    }
+
+    // Check if this user was already referred
+    const { data: existing } = await admin
+      .from('referral_signups')
+      .select('id')
+      .eq('referred_user_id', newUserId)
+      .single()
+
+    if (existing) {
+      return { success: false } // Already referred
+    }
+
+    // Record the referral signup
+    const { error: insertError } = await admin
+      .from('referral_signups')
+      .insert({
+        referrer_id: referrer.user_id,
+        referred_user_id: newUserId,
+        referral_code: referralCode,
+      })
+
+    if (insertError) {
+      console.error('Error recording referral:', insertError)
+      return { success: false }
+    }
+
+    // Update referral stats (increment successful referrals count)
+    // First get current count, then increment
+    const { data: referralData } = await admin
+      .from('referrals')
+      .select('successful_referrals')
+      .eq('code', referralCode)
+      .single()
+
+    if (referralData) {
+      await admin
+        .from('referrals')
+        .update({ 
+          successful_referrals: (referralData.successful_referrals || 0) + 1
+        })
+        .eq('code', referralCode)
+    }
+
+    return { success: true }
+  } catch (error) {
+    console.error('Error processing referral:', error)
+    return { success: false }
+  }
+}
+
 // Fetch a published dream (for public page rendering)
 export async function getPublicDreamById(dreamId: string) {
   const admin = getClient()

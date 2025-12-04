@@ -523,6 +523,34 @@ function DashboardPageContent() {
     })
   }, [dreams, lastCreatedDreamId, panels, refreshDreams, showToast, updatePanel, user])
 
+  const handlePanelReorder = useCallback(async (reorderedPanels: LocalPanel[]) => {
+    // Update local state immediately
+    setPanels(reorderedPanels)
+
+    // Persist to database
+    const targetDreamId = lastCreatedDreamId || dreams[0]?.id
+    if (targetDreamId) {
+      try {
+        const panelOrder = reorderedPanels.map((panel, index) => ({
+          id: panel.id,
+          sceneNumber: index
+        }))
+        
+        const res = await fetch('/api/panels/reorder', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ dreamId: targetDreamId, panels: panelOrder })
+        })
+        
+        if (!res.ok) {
+          console.error('Failed to persist panel order')
+        }
+      } catch (err) {
+        console.error('Error reordering panels:', err)
+      }
+    }
+  }, [lastCreatedDreamId, dreams])
+
   const handleEnhance = async () => {
     if (!dreamText.trim()) return
     setEnhancing(true)
@@ -617,6 +645,7 @@ function DashboardPageContent() {
                     panels={panels}
                     currentGeneratingIndex={currentGeneratingIndex}
                     onImageReady={handlePanelImageReady}
+                    onReorder={handlePanelReorder}
                   />
                 </section>
               )}
@@ -660,6 +689,7 @@ function DashboardPageContent() {
                   panels={panels}
                   currentGeneratingIndex={currentGeneratingIndex}
                   onImageReady={handlePanelImageReady}
+                  onReorder={handlePanelReorder}
                 />
               )}
               {!panels.length && !dreamsWithPanels.length && (

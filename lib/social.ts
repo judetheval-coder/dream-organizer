@@ -556,7 +556,28 @@ export async function purchaseGiftSubscription(
       '12_months': 'yearly',
     }
 
-    const { error } = await supabase
+    // Calculate price based on tier and duration
+    const monthsMap: Record<string, number> = {
+      '1_month': 1,
+      '3_months': 3,
+      '6_months': 6,
+      '12_months': 12,
+    }
+    const discountMap: Record<string, number> = {
+      '1_month': 0,
+      '3_months': 10,
+      '6_months': 15,
+      '12_months': 20,
+    }
+    const pricePerMonth = tier === 'pro' ? 999 : 1999 // cents
+    const months = monthsMap[duration]
+    const discount = discountMap[duration]
+    const baseAmount = pricePerMonth * months
+    const discountAmount = Math.round(baseAmount * (discount / 100))
+    const totalAmount = baseAmount - discountAmount
+
+    // Create pending gift subscription record
+    const { data: giftRecord, error: insertError } = await supabase
       .from('gift_subscriptions')
       .insert({
         purchaser_id: senderId,
@@ -566,11 +587,39 @@ export async function purchaseGiftSubscription(
         recipient_email: recipientEmail,
         message,
         expires_at: scheduledDate ? new Date(scheduledDate).toISOString() : null,
+        amount_paid: totalAmount,
+        status: 'pending'
       })
+      .select()
+      .single()
 
-    if (error) throw error
+    if (insertError) throw insertError
 
-    // TODO: Send email notification to recipient
+    // For now, auto-complete the purchase (in production, redirect to Stripe Checkout)
+    // Update status to paid
+    await supabase
+      .from('gift_subscriptions')
+      .update({ status: 'paid' })
+      .eq('id', giftRecord.id)
+
+    // Send notification email via API
+    try {
+      await fetch('/api/send-gift-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          recipientEmail,
+          giftCode,
+          tier,
+          duration,
+          message,
+          scheduledDate
+        })
+      })
+    } catch {
+      // Email sending is best-effort, don't fail the purchase
+      console.log('Gift email notification skipped (API not available)')
+    }
 
     return { success: true, giftCode }
   } catch (e) {

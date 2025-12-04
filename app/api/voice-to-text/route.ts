@@ -2,15 +2,16 @@ export const runtime = 'nodejs'
 
 export async function POST(request: Request) {
   try {
-    const { audioBase64 } = await request.json()
+    const formData = await request.formData()
+    const audioFile = formData.get('audio') as File | null
+    const audioBase64 = formData.get('audioBase64') as string | null
 
-    if (!audioBase64) {
+    if (!audioFile && !audioBase64) {
       return Response.json({ error: 'audio data required' }, { status: 400 })
     }
 
     // Basic rate limit by IP since this route is unauthenticated
     const ip = (request.headers.get('x-forwarded-for') || '').split(',')[0]?.trim() || '0.0.0.0'
-    // lightweight in-memory limiter via globalThis cache
     const key = `voice:${ip}`
     const now = Date.now()
     type VoiceLimiterEntry = { count: number; resetAt: number }
@@ -26,15 +27,66 @@ export async function POST(request: Request) {
       entry.count++
     }
 
-    // Mock transcription - in production would use Whisper API or similar
+    // Check if OpenAI API key is available
+    const openaiKey = process.env.OPENAI_API_KEY
+    if (!openaiKey) {
+      return Response.json({ 
+        error: 'Voice transcription not configured',
+        text: '',
+        success: false 
+      }, { status: 503 })
+    }
+
+    // Prepare audio data for OpenAI Whisper API
+    let audioBlob: Blob
+
+    if (audioFile) {
+      audioBlob = audioFile
+    } else if (audioBase64) {
+      // Convert base64 to blob
+      const base64Data = audioBase64.replace(/^data:audio\/\w+;base64,/, '')
+      const binaryData = Buffer.from(base64Data, 'base64')
+      audioBlob = new Blob([binaryData], { type: 'audio/webm' })
+    } else {
+      return Response.json({ error: 'Invalid audio data' }, { status: 400 })
+    }
+
+    // Create form data for OpenAI API
+    const whisperFormData = new FormData()
+    whisperFormData.append('file', audioBlob, 'audio.webm')
+    whisperFormData.append('model', 'whisper-1')
+    whisperFormData.append('language', 'en')
+
+    // Call OpenAI Whisper API
+    const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openaiKey}`,
+      },
+      body: whisperFormData,
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      console.error('Whisper API error:', errorData)
+      return Response.json({ 
+        error: 'Transcription failed',
+        text: '',
+        success: false 
+      }, { status: 500 })
+    }
+
+    const result = await response.json()
+
     return Response.json({
-      text: 'This is a mock transcription. In production, this would use speech-to-text AI.',
+      text: result.text || '',
       success: true,
       confidence: 0.95
     })
 
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Unexpected error'
-    return Response.json({ error: message }, { status: 500 })
+    console.error('Voice-to-text error:', message)
+    return Response.json({ error: message, text: '', success: false }, { status: 500 })
   }
 }

@@ -1,7 +1,8 @@
 import { auth, currentUser } from '@clerk/nextjs/server'
 import { captureException } from '@/lib/sentry'
-import { syncUserToSupabase } from '@/lib/supabase-server'
+import { syncUserToSupabase, processReferral } from '@/lib/supabase-server'
 import { NextResponse } from 'next/server'
+import { cookies } from 'next/headers'
 
 export async function POST() {
   try {
@@ -19,6 +20,18 @@ export async function POST() {
     }
 
     const result = await syncUserToSupabase(userId, email)
+
+    // Check for referral code in cookie
+    const cookieStore = await cookies()
+    const referralCode = cookieStore.get('referral_code')?.value
+
+    if (referralCode) {
+      // Process the referral (credits the referrer)
+      await processReferral(userId, referralCode)
+      
+      // Clear the referral cookie
+      cookieStore.delete('referral_code')
+    }
 
     const demoCreated = (result as unknown as { demoCreated?: boolean })?.demoCreated ?? false
     return NextResponse.json({ success: true, demoCreated })

@@ -94,8 +94,10 @@ export default function PublicGallery({ initialDreams = [] }: PublicGalleryProps
     }
   }
 
-  const handleComment = (_dreamId: string) => {
-    // Comments feature planned for future release
+  const handleComment = (dreamId: string) => {
+    // Show comment input for this dream
+    setSelectedDream(dreamId)
+    // Focus will be handled by the comment section rendering
   }
 
   const filteredDreams = enrichedDreams.filter(d => {

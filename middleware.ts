@@ -31,14 +31,32 @@ const isPublicRoute = createRouteMatcher([
 ])
 
 export default clerkMiddleware(async (auth, req) => {
+  // Capture referral codes from URL and store in cookie
+  const { searchParams } = new URL(req.url)
+  const refCode = searchParams.get('ref')
+  
+  let response: NextResponse | undefined
+
+  if (refCode) {
+    // Store referral code in a cookie for later processing during sign-up
+    response = NextResponse.next()
+    response.cookies.set('referral_code', refCode, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/',
+    })
+  }
+
   // If Clerk is not configured, skip auth logic to avoid breaking deploy previews
   if (!CLERK_ENABLED) {
-    return
+    return response
   }
 
   // Allow public routes without auth
   if (isPublicRoute(req)) {
-    return
+    return response
   }
 
   // Protect dashboard and API routes - redirect to sign-in if not authenticated
@@ -51,6 +69,8 @@ export default clerkMiddleware(async (auth, req) => {
       return NextResponse.redirect(signInUrl)
     }
   }
+  
+  return response
 })
 
 export const config = {

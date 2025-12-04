@@ -61,6 +61,18 @@ export function DevPanel({ onClose }: DevPanelProps) {
   const [fakeUserForm, setFakeUserForm] = useState({ username: '', display_name: '', bio: '', profile_pic_url: '', follower_count: 0, post_count: 0 })
   const [stats, setStats] = useState<Record<string, any>>({})
 
+  // Feature flags state
+  const [featureFlags, setFeatureFlags] = useState({
+    mockApiResponses: false,
+    debugOverlay: false,
+    slowNetwork: false,
+    forceErrors: false,
+    verboseLogging: false
+  })
+  const [showFeatureFlags, setShowFeatureFlags] = useState(false)
+  const [showPerformance, setShowPerformance] = useState(false)
+  const [performanceData, setPerformanceData] = useState<any>(null)
+
   // NEW: Challenge management state
   const [challenges, setChallenges] = useState<Challenge[]>([])
   const [challengeForm, setChallengeForm] = useState({ prompt: '', style: 'Arcane', mood: 'Mysterious', challenge_date: '', bonus_xp: 100 })
@@ -452,10 +464,35 @@ export function DevPanel({ onClose }: DevPanelProps) {
                   </div>
                 )}
                 <Button
-                  onClick={() => {
-                    // TODO: Export data
-                    showToast('Export data - Not implemented yet', 'info')
-                    addLog('Attempted to export data (not implemented)')
+                  onClick={async () => {
+                    try {
+                      // Gather all dev panel data for export
+                      const exportData = {
+                        exportedAt: new Date().toISOString(),
+                        groups,
+                        contests,
+                        media,
+                        fakeUsers,
+                        challenges,
+                        stats,
+                        featureFlags,
+                        logs
+                      }
+                      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+                      const url = URL.createObjectURL(blob)
+                      const a = document.createElement('a')
+                      a.href = url
+                      a.download = `dev-export-${new Date().toISOString().split('T')[0]}.json`
+                      document.body.appendChild(a)
+                      a.click()
+                      document.body.removeChild(a)
+                      URL.revokeObjectURL(url)
+                      showToast('Data exported successfully', 'success')
+                      addLog('Exported all dev data to JSON')
+                    } catch (err) {
+                      showToast('Failed to export data', 'error')
+                      addLog(`Export failed: ${err}`)
+                    }
                   }}
                   className="w-full justify-start"
                 >
@@ -481,23 +518,44 @@ export function DevPanel({ onClose }: DevPanelProps) {
                 </Button>
                 <Button
                   onClick={() => {
-                    // TODO: Toggle feature flags
-                    showToast('Feature flags - Not implemented yet', 'info')
-                    addLog('Attempted to toggle feature flags (not implemented)')
+                    setShowFeatureFlags(!showFeatureFlags)
+                    addLog('Toggled feature flags panel')
                   }}
                   className="w-full justify-start"
                 >
                   🚩 Feature Flags
                 </Button>
+                {showFeatureFlags && (
+                  <div className="bg-gray-800 rounded p-3 space-y-2">
+                    {Object.entries(featureFlags).map(([key, value]) => (
+                      <label key={key} className="flex items-center gap-2 text-gray-300 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={value}
+                          onChange={() => {
+                            const newFlags = { ...featureFlags, [key]: !value }
+                            setFeatureFlags(newFlags)
+                            localStorage.setItem('devFeatureFlags', JSON.stringify(newFlags))
+                            addLog(`Feature flag ${key}: ${!value}`)
+                          }}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-sm">{key.replace(/([A-Z])/g, ' $1').trim()}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
                 <Button
                   onClick={() => {
-                    // TODO: Mock API responses
-                    showToast('Mock APIs - Not implemented yet', 'info')
-                    addLog('Attempted to enable mock APIs (not implemented)')
+                    const mockEnabled = featureFlags.mockApiResponses
+                    setFeatureFlags({ ...featureFlags, mockApiResponses: !mockEnabled })
+                    localStorage.setItem('devFeatureFlags', JSON.stringify({ ...featureFlags, mockApiResponses: !mockEnabled }))
+                    showToast(mockEnabled ? 'Mock APIs disabled' : 'Mock APIs enabled', 'success')
+                    addLog(`Mock API responses: ${!mockEnabled}`)
                   }}
                   className="w-full justify-start"
                 >
-                  🎭 Mock APIs
+                  🎭 Mock APIs {featureFlags.mockApiResponses ? '(ON)' : '(OFF)'}
                 </Button>
               </div>
             </div>
@@ -525,14 +583,37 @@ export function DevPanel({ onClose }: DevPanelProps) {
                 </Button>
                 <Button
                   onClick={() => {
-                    // TODO: Performance metrics
-                    showToast('Performance metrics - Not implemented yet', 'info')
-                    addLog('Attempted to show performance metrics (not implemented)')
+                    // Get performance data
+                    const perf = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming
+                    const memory = (performance as any).memory
+                    const data = {
+                      pageLoad: perf ? `${Math.round(perf.loadEventEnd - perf.startTime)}ms` : 'N/A',
+                      domReady: perf ? `${Math.round(perf.domContentLoadedEventEnd - perf.startTime)}ms` : 'N/A',
+                      firstPaint: performance.getEntriesByType('paint').find(p => p.name === 'first-paint')
+                        ? `${Math.round(performance.getEntriesByType('paint').find(p => p.name === 'first-paint')!.startTime)}ms`
+                        : 'N/A',
+                      heapSize: memory ? `${Math.round(memory.usedJSHeapSize / 1024 / 1024)}MB / ${Math.round(memory.jsHeapSizeLimit / 1024 / 1024)}MB` : 'N/A',
+                      resources: performance.getEntriesByType('resource').length,
+                      connectionType: (navigator as any).connection?.effectiveType || 'Unknown'
+                    }
+                    setPerformanceData(data)
+                    setShowPerformance(!showPerformance)
+                    addLog('Collected performance metrics')
                   }}
                   className="w-full justify-start"
                 >
                   📈 Performance
                 </Button>
+                {showPerformance && performanceData && (
+                  <div className="bg-gray-800 rounded p-3 font-mono text-sm text-gray-300 space-y-1">
+                    <div>⏱️ Page Load: {performanceData.pageLoad}</div>
+                    <div>📄 DOM Ready: {performanceData.domReady}</div>
+                    <div>🎨 First Paint: {performanceData.firstPaint}</div>
+                    <div>💾 Heap: {performanceData.heapSize}</div>
+                    <div>📦 Resources: {performanceData.resources}</div>
+                    <div>🌐 Connection: {performanceData.connectionType}</div>
+                  </div>
+                )}
               </div>
             </div>
           )}

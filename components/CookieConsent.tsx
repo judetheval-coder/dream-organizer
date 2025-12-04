@@ -6,6 +6,26 @@ import { colors, shadows } from '@/lib/design'
 
 const COOKIE_CONSENT_KEY = 'dream-organizer-cookie-consent'
 
+// Helper to check if cookies are accepted
+export function areCookiesAccepted(): boolean {
+  if (typeof window === 'undefined') return false
+  return localStorage.getItem(COOKIE_CONSENT_KEY) === 'accepted'
+}
+
+// Helper to disable analytics/tracking
+function disableAnalytics() {
+  // Disable Google Analytics if present
+  if (typeof window !== 'undefined') {
+    // @ts-expect-error - GA global
+    window['ga-disable-UA-XXXXXXXX-X'] = true
+    // Block future tracking calls
+    // @ts-expect-error - gtag global
+    window.gtag = function() {}
+    // @ts-expect-error - ga global
+    window.ga = function() {}
+  }
+}
+
 export function CookieConsent() {
   const [showBanner, setShowBanner] = useState(false)
 
@@ -15,17 +35,31 @@ export function CookieConsent() {
       // Small delay so it doesn't appear immediately
       const timer = setTimeout(() => setShowBanner(true), 1500)
       return () => clearTimeout(timer)
+    } else if (consent === 'declined') {
+      // If previously declined, ensure analytics are disabled
+      disableAnalytics()
     }
   }, [])
 
   const handleAccept = () => {
     localStorage.setItem(COOKIE_CONSENT_KEY, 'accepted')
     setShowBanner(false)
+    // Analytics will work normally
   }
 
   const handleDecline = () => {
     localStorage.setItem(COOKIE_CONSENT_KEY, 'declined')
     setShowBanner(false)
+    // Disable any analytics/tracking
+    disableAnalytics()
+    // Clear any existing cookies (except essential ones)
+    document.cookie.split(';').forEach(cookie => {
+      const name = cookie.split('=')[0].trim()
+      // Don't clear essential cookies
+      if (!name.startsWith('__clerk') && !name.startsWith('__session')) {
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`
+      }
+    })
   }
 
   if (!showBanner) return null

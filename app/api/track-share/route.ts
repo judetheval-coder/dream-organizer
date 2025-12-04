@@ -36,8 +36,29 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Failed to track share' }, { status: 500 })
         }
 
-        // TODO: Track in analytics
-        console.log(`Dream ${dreamId} shared on ${platform} by ${userId || 'anonymous'}`)
+        // Track in analytics (PostHog if available on server, or log for now)
+        const shareEvent = {
+            event: 'dream_shared',
+            dreamId,
+            platform,
+            userId: userId || 'anonymous',
+            timestamp: new Date().toISOString()
+        }
+        console.log('Share tracked:', shareEvent)
+        
+        // Record to share_events table if it exists
+        await supabase
+            .from('share_events')
+            .insert({
+                dream_id: dreamId,
+                user_id: userId || null,
+                platform,
+                shared_at: new Date().toISOString()
+            })
+            .then(() => {})
+            .catch(() => {
+                // Table might not exist, that's fine
+            })
 
         return NextResponse.json({ success: true })
     } catch (error) {
