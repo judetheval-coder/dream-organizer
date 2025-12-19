@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import { colors } from '@/lib/design'
 
 interface OnboardingStep {
@@ -11,45 +12,62 @@ interface OnboardingStep {
     highlight?: string // CSS selector to highlight
     position?: 'center' | 'bottom-right' | 'top-center' | 'bottom-center'
     action?: string // What the user should do
+    navigate?: string // Optional route to push when this step starts
+    waitFor?: 'click' | 'element' // Whether to wait for interaction
 }
 
 const ONBOARDING_STEPS: OnboardingStep[] = [
     {
         id: 'welcome',
         title: 'Welcome to Visnoctis! 🌙',
-        description: 'Your journey into the world of dream visualization begins here. Let\'s take a quick tour to get you started.',
+        description: "This tour will walk you through the main screens: Dashboard, My Dreams, Comics, Calendar, and Settings.",
         emoji: '✨',
         position: 'center',
+        action: "Click 'Let's Go' to begin"
     },
     {
-        id: 'explain-concept',
-        title: 'How It Works',
-        description: 'Write down your dream, and our AI transforms it into beautiful comic panels. Each scene from your dream becomes a stunning visual story.',
-        emoji: '🎨',
-        position: 'center',
+        id: 'dashboard-overview',
+        title: 'Dashboard Overview',
+        description: 'The Dashboard is your hub — quick stats, recent comics, and insights. We will show you where to create and manage dreams.',
+        emoji: '📊',
+        navigate: '/dashboard',
+        highlight: '[data-onboarding="nav-dashboard"]',
+        position: 'top-center',
     },
     {
-        id: 'new-dream-button',
-        title: 'Create Your First Dream',
-        description: 'Click the "✨ New Dream" button to start recording your first dream. This opens the dream creation modal.',
+        id: 'my-dreams',
+        title: 'My Dreams',
+        description: 'All your saved dreams live here — edit, delete, or generate comics from existing entries.',
         emoji: '💭',
+        navigate: '/dreams',
+        highlight: '[data-onboarding="nav-dreams"]',
+        position: 'top-center',
+    },
+    {
+        id: 'create-first-dream',
+        title: 'Create a Dream',
+        description: 'Let\'s create your first dream. We\'ll open the creation modal and guide you through the fields.',
+        emoji: '💡',
+        navigate: '/dashboard',
         highlight: '[data-onboarding="new-dream-btn"]',
         position: 'bottom-center',
-        action: 'Click "New Dream" to continue',
+        action: 'Click the New Dream button',
+        waitFor: 'click'
     },
     {
         id: 'dream-text',
         title: 'Describe Your Dream',
-        description: 'Write what happened in your dream. Be descriptive! The more detail you add, the better the AI can visualize it.',
+        description: 'Type what happened in your dream — details help the model produce better panels.',
         emoji: '✍️',
         highlight: '[data-onboarding="dream-textarea"]',
         position: 'bottom-center',
-        action: 'Type your dream description',
+        action: 'Click the text area and type a short sentence',
+        waitFor: 'click'
     },
     {
         id: 'style-mood',
-        title: 'Choose Your Style',
-        description: 'Pick an art style and mood that matches your dream. Anime, Watercolor, Dark Fantasy — it\'s your vision!',
+        title: 'Choose Style & Mood',
+        description: 'Pick an art style and mood to control the visual tone of generated panels.',
         emoji: '🎭',
         highlight: '[data-onboarding="style-selector"]',
         position: 'bottom-center',
@@ -57,30 +75,42 @@ const ONBOARDING_STEPS: OnboardingStep[] = [
     {
         id: 'generate',
         title: 'Generate Your Comic',
-        description: 'Hit "Create Dream" and watch as AI transforms your words into comic panels. Each scene becomes a unique artwork!',
+        description: 'Click Create Dream to submit and watch the panels form. This step uploads images to Supabase and stores panel records.',
         emoji: '🚀',
         highlight: '[data-onboarding="create-btn"]',
         position: 'bottom-center',
-        action: 'Click "Create Dream" when ready',
+        action: 'Click Create Dream to continue',
+        waitFor: 'click'
     },
     {
         id: 'panels',
-        title: 'Your Dream Comics',
-        description: 'Your dream is now split into panels! Click "Generate" on each panel to create the AI artwork, or they\'ll generate automatically.',
+        title: 'Panels & Generation',
+        description: 'Each dream is split into panels; click Generate on a panel to produce an image or let it auto-generate.',
         emoji: '📖',
         position: 'center',
     },
     {
-        id: 'features',
-        title: 'Explore More Features',
-        description: 'Check out Insights for dream analysis, share your comics, track your dream streak, and earn achievements!',
-        emoji: '🏆',
-        position: 'center',
+        id: 'calendar',
+        title: 'Calendar & Streaks',
+        description: 'Use the calendar to see your dream streaks and activity over time.',
+        emoji: '📅',
+        navigate: '/calendar',
+        highlight: '[data-onboarding="nav-calendar"]',
+        position: 'top-center',
+    },
+    {
+        id: 'settings',
+        title: 'Settings & Sync',
+        description: 'Adjust account and sync settings. You can manage your subscription tier here.',
+        emoji: '⚙️',
+        navigate: '/settings',
+        highlight: '[data-onboarding="nav-settings"]',
+        position: 'top-center',
     },
     {
         id: 'complete',
         title: 'You\'re All Set!',
-        description: 'You\'re ready to turn your dreams into art. Sweet dreams, and happy creating! 🌙',
+        description: 'You can re-run this tour anytime from the sidebar. Happy creating! 🌙',
         emoji: '🎉',
         position: 'center',
     },
@@ -99,23 +129,59 @@ export function OnboardingTour({ onComplete, currentStep: externalStep, onStepCh
 
     const currentStep = externalStep ?? internalStep
     const step = ONBOARDING_STEPS[currentStep]
+    const router = useRouter()
 
-    // Update highlight position when step changes
+    // Update highlight position when step changes; also support navigation and interactive waits
     useEffect(() => {
-        if (step?.highlight) {
-            const el = document.querySelector(step.highlight)
-            if (el) {
-                const rect = el.getBoundingClientRect()
-                setHighlightRect(rect)
-                // Scroll element into view if needed
-                el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        let cleanupListener: (() => void) | null = null
+        let mounted = true
+
+        const doStep = async () => {
+            if (!mounted) return
+
+            // Navigate if requested
+            if (step?.navigate) {
+                try {
+                    router.push(step.navigate)
+                } catch (err) {
+                    // ignore navigation errors
+                }
+                // Give the page a moment to render
+                await new Promise((r) => setTimeout(r, 500))
+            }
+
+            if (step?.highlight) {
+                const el = document.querySelector(step.highlight)
+                if (el) {
+                    const rect = el.getBoundingClientRect()
+                    setHighlightRect(rect)
+                    // Scroll element into view if needed
+                    el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+
+                    // If this step wants to wait for a click on the element, attach a listener
+                    if (step.waitFor === 'click') {
+                        const handleClick = () => {
+                            // small delay to let UI update
+                            setTimeout(() => nextStep(), 100)
+                        }
+                        el.addEventListener('click', handleClick)
+                        cleanupListener = () => el.removeEventListener('click', handleClick)
+                    }
+                } else {
+                    setHighlightRect(null)
+                }
             } else {
                 setHighlightRect(null)
             }
-        } else {
-            setHighlightRect(null)
         }
-    }, [currentStep, step?.highlight])
+
+        doStep()
+
+        return () => {
+            mounted = false
+            if (cleanupListener) cleanupListener()
+        }
+    }, [currentStep, step?.highlight, step?.navigate, step?.waitFor])
 
     // Listen for window resize to update highlight
     useEffect(() => {

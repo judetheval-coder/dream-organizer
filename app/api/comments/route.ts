@@ -97,7 +97,7 @@ export async function POST(req: Request) {
                 .select('comment_count')
                 .eq('dream_id', dreamId)
                 .single()
-            
+
             if (pubDream) {
                 await supabase
                     .from('published_dreams')
@@ -108,8 +108,8 @@ export async function POST(req: Request) {
             // Comment count update is best-effort
         }
 
-        return NextResponse.json({ 
-            success: true, 
+        return NextResponse.json({
+            success: true,
             comment: {
                 id: comment.id,
                 content: comment.content,

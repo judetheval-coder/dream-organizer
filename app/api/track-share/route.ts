@@ -45,20 +45,19 @@ export async function POST(req: Request) {
             timestamp: new Date().toISOString()
         }
         console.log('Share tracked:', shareEvent)
-        
-        // Record to share_events table if it exists
-        await supabase
-            .from('share_events')
-            .insert({
+
+        // Record to share_events table if it exists (ignore errors if table absent)
+        try {
+            await supabase.from('share_events').insert({
                 dream_id: dreamId,
                 user_id: userId || null,
                 platform,
-                shared_at: new Date().toISOString()
+                shared_at: new Date().toISOString(),
             })
-            .then(() => {})
-            .catch(() => {
-                // Table might not exist, that's fine
-            })
+        } catch (err) {
+            // Table might not exist or insert failed; ignore silently
+            console.debug('share_events insert ignored:', err)
+        }
 
         return NextResponse.json({ success: true })
     } catch (error) {

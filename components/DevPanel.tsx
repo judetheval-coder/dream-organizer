@@ -1812,8 +1812,8 @@ export function DevPanel({ onClose }: DevPanelProps) {
                       <div
                         key={challenge.id}
                         className={`p-3 rounded border cursor-pointer transition-colors ${selectedChallenge?.id === challenge.id
-                            ? 'bg-purple-900/50 border-purple-500'
-                            : 'bg-gray-700 border-gray-600 hover:border-gray-500'
+                          ? 'bg-purple-900/50 border-purple-500'
+                          : 'bg-gray-700 border-gray-600 hover:border-gray-500'
                           }`}
                         onClick={() => {
                           setSelectedChallenge(challenge)
@@ -1941,8 +1941,8 @@ export function DevPanel({ onClose }: DevPanelProps) {
                       <div
                         key={user.id}
                         className={`p-3 rounded border cursor-pointer transition-colors ${selectedUser?.id === user.id
-                            ? 'bg-purple-900/50 border-purple-500'
-                            : 'bg-gray-700 border-gray-600 hover:border-gray-500'
+                          ? 'bg-purple-900/50 border-purple-500'
+                          : 'bg-gray-700 border-gray-600 hover:border-gray-500'
                           }`}
                         onClick={() => {
                           setSelectedUser(user)
@@ -2132,10 +2132,10 @@ export function DevPanel({ onClose }: DevPanelProps) {
                         <span className="text-white text-sm">{badge.name}</span>
                       </div>
                       <span className={`text-sm font-bold ${badge.rarity === 'legendary' ? 'text-yellow-400' :
-                          badge.rarity === 'epic' ? 'text-purple-400' :
-                            badge.rarity === 'rare' ? 'text-blue-400' :
-                              badge.rarity === 'uncommon' ? 'text-green-400' :
-                                'text-gray-400'
+                        badge.rarity === 'epic' ? 'text-purple-400' :
+                          badge.rarity === 'rare' ? 'text-blue-400' :
+                            badge.rarity === 'uncommon' ? 'text-green-400' :
+                              'text-gray-400'
                         }`}>
                         {badgeStats.badgeCounts?.[badge.id] || 0}
                       </span>
@@ -2171,12 +2171,12 @@ export function DevPanel({ onClose }: DevPanelProps) {
 
               {/* Connection status */}
               <div className={`p-4 rounded flex items-center gap-3 ${dbHealth?.status === 'healthy' ? 'bg-green-900/50 border border-green-500' :
-                  dbHealth?.status === 'degraded' ? 'bg-yellow-900/50 border border-yellow-500' :
-                    'bg-red-900/50 border border-red-500'
+                dbHealth?.status === 'degraded' ? 'bg-yellow-900/50 border border-yellow-500' :
+                  'bg-red-900/50 border border-red-500'
                 }`}>
                 <div className={`w-3 h-3 rounded-full animate-pulse ${dbHealth?.status === 'healthy' ? 'bg-green-400' :
-                    dbHealth?.status === 'degraded' ? 'bg-yellow-400' :
-                      'bg-red-400'
+                  dbHealth?.status === 'degraded' ? 'bg-yellow-400' :
+                    'bg-red-400'
                   }`} />
                 <div>
                   <div className="text-white font-medium">

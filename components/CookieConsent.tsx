@@ -20,9 +20,9 @@ function disableAnalytics() {
     window['ga-disable-UA-XXXXXXXX-X'] = true
     // Block future tracking calls
     // @ts-expect-error - gtag global
-    window.gtag = function() {}
+    window.gtag = function () { }
     // @ts-expect-error - ga global
-    window.ga = function() {}
+    window.ga = function () { }
   }
 }
 

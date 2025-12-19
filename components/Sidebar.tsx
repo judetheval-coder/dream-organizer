@@ -36,10 +36,12 @@ export default function Sidebar() {
       <nav className="flex-1 p-5 space-y-2">
         {navItems.map((item) => {
           const isActive = pathname === item.href
+          const dataOn = item.href === '/' ? 'nav-home' : `nav-${item.href.replace(/\//g, '')}`
           return (
             <Link
               key={item.href}
               href={item.href}
+              data-onboarding={dataOn}
               className={`
                 flex items-center gap-3 px-5 py-3 rounded-xl transition-all duration-300 font-semibold text-base
                 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#7c3aed] focus-visible:ring-offset-2
@@ -54,6 +56,11 @@ export default function Sidebar() {
             </Link>
           )
         })}
+
+        {/* Start Tour CTA */}
+        <div className="mt-4 px-2">
+          <Link href="/dashboard?tour=1" className="block text-sm w-full text-center py-2 rounded-lg bg-gradient-to-r from-[#7c3aed] to-[#06b6d4] text-white font-semibold">Start Tour</Link>
+        </div>
       </nav>
 
       {/* User Profile */}

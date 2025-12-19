@@ -133,13 +133,13 @@ export default function AccountPage() {
                 Your current plan: <span className="font-semibold text-purple-400">{getTierName(userTier)}</span>
             </p>
             <div className="space-y-4">
-                <Button 
+                <Button
                     onClick={() => window.location.href = '/pricing'}
                     className="w-full"
                 >
                     Upgrade or Manage Subscription
                 </Button>
-                
+
                 {/* Gift Code Redemption */}
                 <div className="pt-4 border-t border-gray-700">
                     <h4 className="font-medium mb-3" style={{ color: colors.textPrimary }}>🎁 Redeem Gift Code</h4>
@@ -195,9 +195,9 @@ export default function AccountPage() {
                 {/* Profile Settings */}
                 <div className="p-4 rounded-lg" style={{ background: colors.surface }}>
                     <h4 className="font-medium mb-3" style={{ color: colors.textPrimary }}>👤 Profile</h4>
-                    <Button 
+                    <Button
                         onClick={() => openUserProfile()}
-                        variant="secondary" 
+                        variant="secondary"
                         className="w-full"
                     >
                         Edit Profile (Name, Email, Password)
@@ -209,9 +209,9 @@ export default function AccountPage() {
                     <h4 className="font-medium mb-3" style={{ color: colors.textPrimary }}>🔔 Notifications</h4>
                     <div className="space-y-2">
                         <label className="flex items-center gap-3 cursor-pointer">
-                            <input 
-                                type="checkbox" 
-                                defaultChecked 
+                            <input
+                                type="checkbox"
+                                defaultChecked
                                 onChange={(e) => {
                                     localStorage.setItem('emailNotifications', String(e.target.checked))
                                     showToast('Preference saved', 'success')
@@ -221,8 +221,8 @@ export default function AccountPage() {
                             <span style={{ color: colors.textSecondary }}>Email notifications for new features</span>
                         </label>
                         <label className="flex items-center gap-3 cursor-pointer">
-                            <input 
-                                type="checkbox" 
+                            <input
+                                type="checkbox"
                                 defaultChecked
                                 onChange={(e) => {
                                     localStorage.setItem('weeklyDigest', String(e.target.checked))
@@ -313,8 +313,8 @@ export default function AccountPage() {
                         key={key}
                         onClick={() => setActiveTab(key)}
                         className={`flex items-center gap-2 px-4 py-2 rounded-md transition-all font-medium ${activeTab === key
-                                ? 'bg-purple-600 text-white shadow-lg'
-                                : 'text-gray-300 hover:text-white hover:bg-white/10'
+                            ? 'bg-purple-600 text-white shadow-lg'
+                            : 'text-gray-300 hover:text-white hover:bg-white/10'
                             }`}
                     >
                         <span>{icon}</span>

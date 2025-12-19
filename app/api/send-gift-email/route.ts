@@ -1,35 +1,35 @@
 import { NextResponse } from 'next/server'
 
 export async function POST(req: Request) {
-  try {
-    const { recipientEmail, giftCode, tier, duration, message, scheduledDate } = await req.json()
+    try {
+        const { recipientEmail, giftCode, tier, duration, message, scheduledDate } = await req.json()
 
-    if (!recipientEmail || !giftCode) {
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
-    }
+        if (!recipientEmail || !giftCode) {
+            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+        }
 
-    // If scheduled for later, just return success (would use a queue/cron in production)
-    if (scheduledDate && new Date(scheduledDate) > new Date()) {
-      console.log(`Gift email scheduled for ${scheduledDate}:`, { recipientEmail, giftCode })
-      return NextResponse.json({ success: true, scheduled: true })
-    }
+        // If scheduled for later, just return success (would use a queue/cron in production)
+        if (scheduledDate && new Date(scheduledDate) > new Date()) {
+            console.log(`Gift email scheduled for ${scheduledDate}:`, { recipientEmail, giftCode })
+            return NextResponse.json({ success: true, scheduled: true })
+        }
 
-    // Build email content
-    const tierName = tier === 'pro' ? 'Pro' : 'Premium'
-    const durationLabels: Record<string, string> = {
-      '1_month': '1 Month',
-      '3_months': '3 Months', 
-      '6_months': '6 Months',
-      '12_months': '1 Year'
-    }
-    const durationLabel = durationLabels[duration as string] || duration
+        // Build email content
+        const tierName = tier === 'pro' ? 'Pro' : 'Premium'
+        const durationLabels: Record<string, string> = {
+            '1_month': '1 Month',
+            '3_months': '3 Months',
+            '6_months': '6 Months',
+            '12_months': '1 Year'
+        }
+        const durationLabel = durationLabels[duration as string] || duration
 
-    // In production, use a service like Resend, SendGrid, or Postmark
-    // For now, log the email that would be sent
-    const emailContent = {
-      to: recipientEmail,
-      subject: `🎁 You've received a Dream Organizer ${tierName} gift subscription!`,
-      html: `
+        // In production, use a service like Resend, SendGrid, or Postmark
+        // For now, log the email that would be sent
+        const emailContent = {
+            to: recipientEmail,
+            subject: `🎁 You've received a Dream Organizer ${tierName} gift subscription!`,
+            html: `
         <div style="font-family: system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <h1 style="color: #7c3aed;">🎁 You've Received a Gift!</h1>
           <p>Someone special has gifted you a <strong>${tierName}</strong> subscription to Dream Organizer for <strong>${durationLabel}</strong>!</p>
@@ -47,37 +47,37 @@ export async function POST(req: Request) {
           <p style="color: #666; font-size: 14px;">This gift code never expires. Enjoy turning your dreams into beautiful comics!</p>
         </div>
       `
+        }
+
+        console.log('Gift email would be sent:', emailContent)
+
+        // Check if we have email service configured
+        if (process.env.RESEND_API_KEY) {
+            // Use Resend to send email
+            const response = await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    from: process.env.EMAIL_FROM || 'Dream Organizer <noreply@dreamorganizer.app>',
+                    to: recipientEmail,
+                    subject: emailContent.subject,
+                    html: emailContent.html
+                })
+            })
+
+            if (!response.ok) {
+                const error = await response.text()
+                console.error('Resend error:', error)
+                // Don't fail - email is best effort
+            }
+        }
+
+        return NextResponse.json({ success: true })
+    } catch (error) {
+        console.error('Send gift email error:', error)
+        return NextResponse.json({ error: 'Failed to send email' }, { status: 500 })
     }
-
-    console.log('Gift email would be sent:', emailContent)
-
-    // Check if we have email service configured
-    if (process.env.RESEND_API_KEY) {
-      // Use Resend to send email
-      const response = await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          from: process.env.EMAIL_FROM || 'Dream Organizer <noreply@dreamorganizer.app>',
-          to: recipientEmail,
-          subject: emailContent.subject,
-          html: emailContent.html
-        })
-      })
-
-      if (!response.ok) {
-        const error = await response.text()
-        console.error('Resend error:', error)
-        // Don't fail - email is best effort
-      }
-    }
-
-    return NextResponse.json({ success: true })
-  } catch (error) {
-    console.error('Send gift email error:', error)
-    return NextResponse.json({ error: 'Failed to send email' }, { status: 500 })
-  }
 }

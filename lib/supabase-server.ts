@@ -145,7 +145,7 @@ export async function processReferral(newUserId: string, referralCode: string): 
     if (referralData) {
       await admin
         .from('referrals')
-        .update({ 
+        .update({
           successful_referrals: (referralData.successful_referrals || 0) + 1
         })
         .eq('code', referralCode)

@@ -34,7 +34,7 @@ export default clerkMiddleware(async (auth, req) => {
   // Capture referral codes from URL and store in cookie
   const { searchParams } = new URL(req.url)
   const refCode = searchParams.get('ref')
-  
+
   let response: NextResponse | undefined
 
   if (refCode) {
@@ -69,7 +69,7 @@ export default clerkMiddleware(async (auth, req) => {
       return NextResponse.redirect(signInUrl)
     }
   }
-  
+
   return response
 })
 

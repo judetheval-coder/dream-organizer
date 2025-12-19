@@ -28,7 +28,7 @@ export async function POST() {
     if (referralCode) {
       // Process the referral (credits the referrer)
       await processReferral(userId, referralCode)
-      
+
       // Clear the referral cookie
       cookieStore.delete('referral_code')
     }

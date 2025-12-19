@@ -249,6 +249,17 @@ function DashboardPageContent() {
   // Onboarding tour
   const onboarding = useOnboardingTour()
 
+  // Trigger tour via ?tour=1 (e.g., Sidebar "Start Tour" link)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const tourFlag = searchParams.get('tour')
+    if (tourFlag === '1') {
+      onboarding.startTour()
+      // optional: remove query param so reloading doesn't re-trigger
+      // history.replaceState({}, '', '/dashboard')
+    }
+  }, [searchParams?.toString()])
+
   // Draft auto-save: Restore from localStorage on init
   const [dreamText, setDreamText] = useState(() => {
     if (typeof window === 'undefined') return ''
@@ -535,13 +546,13 @@ function DashboardPageContent() {
           id: panel.id,
           sceneNumber: index
         }))
-        
+
         const res = await fetch('/api/panels/reorder', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ dreamId: targetDreamId, panels: panelOrder })
         })
-        
+
         if (!res.ok) {
           console.error('Failed to persist panel order')
         }
@@ -595,6 +606,8 @@ function DashboardPageContent() {
           onGetStarted={() => {
             localStorage.setItem('has-visited', 'true')
             setShowWelcome(false)
+            // Begin the interactive tour after the welcome flow
+            onboarding.startTour()
           }}
         />
       </div>

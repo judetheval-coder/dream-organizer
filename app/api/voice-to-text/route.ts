@@ -30,10 +30,10 @@ export async function POST(request: Request) {
     // Check if OpenAI API key is available
     const openaiKey = process.env.OPENAI_API_KEY
     if (!openaiKey) {
-      return Response.json({ 
+      return Response.json({
         error: 'Voice transcription not configured',
         text: '',
-        success: false 
+        success: false
       }, { status: 503 })
     }
 
@@ -69,10 +69,10 @@ export async function POST(request: Request) {
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
       console.error('Whisper API error:', errorData)
-      return Response.json({ 
+      return Response.json({
         error: 'Transcription failed',
         text: '',
-        success: false 
+        success: false
       }, { status: 500 })
     }
 
