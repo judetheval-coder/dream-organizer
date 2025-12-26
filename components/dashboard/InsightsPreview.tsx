@@ -16,9 +16,13 @@ interface InsightsPreviewProps {
 export function InsightsPreview({ insights, analyzing, onAnalyze, hasDreams, error }: InsightsPreviewProps) {
   if (!hasDreams) {
     return (
-      <Card>
+      <Card className="text-center py-8">
+        <div className="text-4xl mb-4">💭</div>
+        <h3 className="text-lg font-semibold mb-2" style={{ color: colors.textPrimary }}>
+          No Dreams Yet
+        </h3>
         <p className="text-sm" style={{ color: colors.textMuted }}>
-          Save at least one dream to unlock insights.
+          Create your first dream to unlock AI-powered insights about your dream patterns, recurring themes, and symbols.
         </p>
       </Card>
     )
@@ -62,9 +66,15 @@ export function InsightsPreview({ insights, analyzing, onAnalyze, hasDreams, err
         </p>
       )}
       {!analyzing && !insights && (
-        <p className="text-sm" style={{ color: colors.textMuted }}>
-          Insights help you understand recurring themes, moods, and symbols.
-        </p>
+        <div className="text-center py-4">
+          <div className="text-3xl mb-3">🔮</div>
+          <p className="text-sm mb-3" style={{ color: colors.textMuted }}>
+            Click "Run analysis" to discover patterns in your dreams.
+          </p>
+          <p className="text-xs" style={{ color: colors.textMuted }}>
+            Our AI will analyze recurring themes, moods, and symbols across all your dreams.
+          </p>
+        </div>
       )}
     </Card>
   )

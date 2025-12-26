@@ -146,11 +146,30 @@ export function useDreams(): UseDreamsResult {
       if (!reset && cursor) {
         params.set('cursor', cursor)
       }
-      const res = await fetch(`/api/dreams?${params.toString()}`)
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}))
-        throw new Error(errData.error || 'Failed to fetch dreams')
+
+      // Retry logic for network failures
+      let res: Response | null = null
+      let lastError: Error | null = null
+      const maxRetries = 3
+
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          res = await fetch(`/api/dreams?${params.toString()}`)
+          if (res.ok) break
+          const errData = await res.json().catch(() => ({}))
+          lastError = new Error(errData.error || `Failed to fetch dreams (attempt ${attempt})`)
+        } catch (fetchErr) {
+          lastError = fetchErr instanceof Error ? fetchErr : new Error('Network error')
+          if (attempt < maxRetries) {
+            await new Promise(r => setTimeout(r, 1000 * attempt)) // Exponential backoff
+          }
+        }
       }
+
+      if (!res?.ok) {
+        throw lastError || new Error('Failed to fetch dreams after multiple attempts')
+      }
+
       const { dreams: fetchedDreams, nextCursor: newCursor } = await res.json()
 
       // Prevent race conditions

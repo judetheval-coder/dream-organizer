@@ -1,6 +1,7 @@
 import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { getClient } from '@/lib/supabase-server'
+import { SUBSCRIPTION_TIERS, type SubscriptionTier } from '@/lib/subscription-tiers'
 
 export async function POST(req: Request) {
     try {
@@ -17,6 +18,43 @@ export async function POST(req: Request) {
         }
 
         const supabase = getClient()
+
+        // Get user's subscription tier and check monthly limit
+        const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('subscription_tier, dreams_count_this_month')
+            .eq('id', userId)
+            .single()
+
+        if (userError && userError.code !== 'PGRST116') {
+            console.error('[API dreams] Error fetching user:', userError)
+            return NextResponse.json({ error: 'Failed to verify user limits' }, { status: 500 })
+        }
+
+        const tier = (userData?.subscription_tier || 'free') as SubscriptionTier
+        const currentCount = userData?.dreams_count_this_month || 0
+        const limit = SUBSCRIPTION_TIERS[tier].limits.dreamsPerMonth
+
+        // Check if user has reached their monthly limit (-1 means unlimited)
+        if (limit !== -1 && currentCount >= limit) {
+            return NextResponse.json({
+                error: `You've reached your monthly limit of ${limit} dreams. Upgrade to create more!`,
+                code: 'LIMIT_REACHED',
+                limit,
+                currentCount
+            }, { status: 403 })
+        }
+
+        // Check panel limit for this tier
+        const panelLimit = SUBSCRIPTION_TIERS[tier].limits.panelsPerDream
+        if (panels.length > panelLimit) {
+            return NextResponse.json({
+                error: `Your plan allows ${panelLimit} panels per dream. You submitted ${panels.length}.`,
+                code: 'PANEL_LIMIT_EXCEEDED',
+                limit: panelLimit,
+                submitted: panels.length
+            }, { status: 403 })
+        }
 
         // Create dream
         const { data: dream, error: dreamError } = await supabase
@@ -53,6 +91,14 @@ export async function POST(req: Request) {
             // Dream was created but panels failed - still return the dream
             return NextResponse.json({ ...dream, panels: [] })
         }
+
+        // Increment the monthly dream count for the user
+        await supabase
+            .from('users')
+            .update({
+                dreams_count_this_month: (currentCount || 0) + 1
+            })
+            .eq('id', userId)
 
         return NextResponse.json({ ...dream, panels: createdPanels })
     } catch (err) {

@@ -151,7 +151,23 @@ export function OnboardingTour({ onComplete, currentStep: externalStep, onStepCh
             }
 
             if (step?.highlight) {
-                const el = document.querySelector(step.highlight)
+                // Retry finding element a few times (for elements that render after navigation)
+                let el: Element | null = null
+                let attempts = 0
+                const maxAttempts = 10
+
+                const findElement = async (): Promise<Element | null> => {
+                    while (attempts < maxAttempts && mounted) {
+                        el = document.querySelector(step.highlight!)
+                        if (el) return el
+                        attempts++
+                        await new Promise(r => setTimeout(r, 200))
+                    }
+                    return null
+                }
+
+                el = await findElement()
+
                 if (el) {
                     const rect = el.getBoundingClientRect()
                     setHighlightRect(rect)
@@ -165,9 +181,10 @@ export function OnboardingTour({ onComplete, currentStep: externalStep, onStepCh
                             setTimeout(() => nextStep(), 100)
                         }
                         el.addEventListener('click', handleClick)
-                        cleanupListener = () => el.removeEventListener('click', handleClick)
+                        cleanupListener = () => el!.removeEventListener('click', handleClick)
                     }
                 } else {
+                    console.warn(`[Onboarding] Could not find element: ${step.highlight}`)
                     setHighlightRect(null)
                 }
             } else {
@@ -276,22 +293,36 @@ export function OnboardingTour({ onComplete, currentStep: externalStep, onStepCh
             >
                 {/* Spotlight cutout for highlighted element */}
                 {highlightRect && (
-                    <div
-                        className="absolute rounded-xl transition-all duration-300"
-                        style={{
-                            top: highlightRect.top - 8,
-                            left: highlightRect.left - 8,
-                            width: highlightRect.width + 16,
-                            height: highlightRect.height + 16,
-                            background: 'transparent',
-                            boxShadow: `
-                                0 0 0 4px ${colors.purple},
-                                0 0 20px ${colors.purple}80,
-                                0 0 40px ${colors.purple}40,
-                                0 0 0 9999px rgba(10, 1, 24, 0.85)
-                            `,
-                        }}
-                    />
+                    <>
+                        <div
+                            className="absolute rounded-xl transition-all duration-300 pointer-events-none"
+                            style={{
+                                top: highlightRect.top - 8,
+                                left: highlightRect.left - 8,
+                                width: highlightRect.width + 16,
+                                height: highlightRect.height + 16,
+                                background: 'transparent',
+                                boxShadow: `
+                                    0 0 0 4px ${colors.purple},
+                                    0 0 20px ${colors.purple}80,
+                                    0 0 40px ${colors.purple}40,
+                                    0 0 0 9999px rgba(10, 1, 24, 0.85)
+                                `,
+                            }}
+                        />
+                        {/* Animated arrow pointer */}
+                        <div
+                            className="absolute pointer-events-none animate-bounce"
+                            style={{
+                                top: highlightRect.top - 50,
+                                left: highlightRect.left + highlightRect.width / 2 - 16,
+                                fontSize: '32px',
+                                filter: `drop-shadow(0 0 10px ${colors.cyan})`,
+                            }}
+                        >
+                            👇
+                        </div>
+                    </>
                 )}
             </div>
 
