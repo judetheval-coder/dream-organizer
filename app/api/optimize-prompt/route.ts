@@ -11,7 +11,8 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-const RATE_LIMIT = 12
+// Allow enough requests for multi-panel comics (up to 8 panels + some retries)
+const RATE_LIMIT = 20
 const RATE_WINDOW = 5 * 60 * 1000
 
 export async function POST(req: NextRequest) {

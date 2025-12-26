@@ -165,6 +165,9 @@ export default function DraggablePanelGrid({
               onDragEnd={() => handleDragEnd()}
               dragIndex={index}
               onImageReady={(url) => onImageReady?.(panel.id, url)}
+              generateDelay={index * 3000}
+              sceneNumber={index + 1}
+              totalScenes={panels.length}
             />
           </div>
         ))}
