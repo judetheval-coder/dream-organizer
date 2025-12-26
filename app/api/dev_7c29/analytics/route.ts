@@ -73,6 +73,28 @@ export async function GET() {
         .select('*', { count: 'exact', head: true })
         .eq('is_online', true)
 
+    // Get users by subscription tier
+    const { data: tierData } = await supabase
+        .from('users')
+        .select('subscription_tier')
+
+    const usersByTier = {
+        free: 0,
+        pro: 0,
+        premium: 0
+    }
+    tierData?.forEach(u => {
+        const tier = (u.subscription_tier || 'free') as keyof typeof usersByTier
+        if (tier in usersByTier) usersByTier[tier]++
+    })
+
+    // Get dreams this week
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
+    const { count: dreamsThisWeek } = await supabase
+        .from('dreams')
+        .select('*', { count: 'exact', head: true })
+        .gte('created_at', weekAgo)
+
     const stats = {
         totalUsers: totalUsers || 0,
         totalDreams: totalDreams || 0,
@@ -96,10 +118,18 @@ export async function GET() {
         recentGroups: recentGroups || 0,
         recentContests: recentContests || 0,
         recentMedia: recentMedia || 0,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        // Additional fields for admin dashboard
+        usersByTier,
+        dreamsThisWeek: dreamsThisWeek || 0,
+        activeUsers: onlineUsers || 0
     }
 
-    return NextResponse.json({ stats })
+    // Return both flat and nested for compatibility
+    return NextResponse.json({
+        ...stats,
+        stats
+    })
 }
 
 export async function POST(request: Request) {
