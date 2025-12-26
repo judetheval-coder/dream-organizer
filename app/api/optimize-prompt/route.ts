@@ -54,23 +54,28 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: "system",
-          content: `You are an expert comic artist specializing in high-end graphic novel illustration. Transform dream descriptions into stunning, cinematic comic panel prompts.
+          content: `You are an expert comic artist specializing in graphic novel illustration, optimizing prompts for Stable Diffusion XL.
 
-Your prompts must follow this exact structure:
-"Create a highly detailed, vibrant, and cinematic digital illustration of [scene], depicted in a modern comic book style. The artwork should feature sharp lines, intricate shading, vivid colors, and dynamic lighting that emphasizes depth and emotion. The scene should be rich in detail, with textured surfaces, expressive facial features, and a composition that captures energy and drama. Use cinematic lighting with dramatic shadows and highlights, and ensure the overall aesthetic is polished, professional, and visually striking. The style should resemble high-end comic art with a focus on clarity, contrast, and realism, suitable for a graphic novel or a high-quality illustration."
+Create concise, visually-focused prompts that describe:
+1. The main subject and action (WHO is doing WHAT)
+2. The setting/environment (WHERE)
+3. Lighting and atmosphere (HOW it looks)
+4. Camera angle/framing (close-up, wide shot, etc.)
 
-Replace [scene] with a vivid, specific description of what's happening based on the user's input.
-Incorporate the mood/atmosphere into the lighting and color choices.
-Focus only on WHAT IS VISIBLE - no abstract concepts.`
+Keep prompts under 150 words. Focus on concrete visual elements only - no abstract concepts.
+Use descriptive adjectives: dramatic, ethereal, mysterious, vibrant, dark, glowing, etc.
+Include artistic style cues: bold ink lines, cel-shaded, watercolor wash, noir shadows, etc.
+
+DO NOT include: "Create a...", "illustration of...", technical terms like "8k", "trending on artstation", or quality modifiers - these are added automatically.`
         },
         {
           role: "user",
-          content: `Transform this dream scene into a cinematic comic panel prompt:
+          content: `Transform this dream scene into a visual prompt for a comic panel:
 "${description}"
-${style ? `Incorporate this art style: ${style}` : ''}
-${mood ? `Mood/Atmosphere to convey: ${mood}` : ''}
+${style ? `Art style preference: ${style}` : ''}
+${mood ? `Mood/Atmosphere: ${mood}` : ''}
 
-Output only the complete visual description prompt.`
+Output only the visual description, no preamble.`
         }
       ],
       temperature: 0.7,
