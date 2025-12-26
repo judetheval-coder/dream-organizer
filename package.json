@@ -13,7 +13,7 @@
     "cypress:run": "cypress run"
   },
   "dependencies": {
-    "@clerk/nextjs": "^6.35.4",
+    "@clerk/nextjs": "^6.36.5",
     "@sentry/node": "^8.20.0",
     "@sentry/react": "^8.20.0",
     "@supabase/supabase-js": "^2.84.0",
