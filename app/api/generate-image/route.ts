@@ -86,9 +86,8 @@ export async function POST(req: NextRequest) {
     const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${replicateToken}`,
+        'Authorization': `Token ${replicateToken}`,
         'Content-Type': 'application/json',
-        'Prefer': 'wait',
       },
       body: JSON.stringify({
         version: SDXL_MODEL.split(':')[1],
@@ -124,7 +123,7 @@ export async function POST(req: NextRequest) {
 
       const pollResponse = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
         headers: {
-          'Authorization': `Bearer ${replicateToken}`,
+          'Authorization': `Token ${replicateToken}`,
         }
       })
 
