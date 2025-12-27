@@ -21,36 +21,37 @@ interface AbusePattern {
 }
 
 // Abuse patterns to detect
+// NOTE: Thresholds increased to support multi-panel comic generation (up to 12 panels × 2 calls each)
 const ABUSE_PATTERNS: AbusePattern[] = [
   {
     name: 'rapid-fire',
-    // More than 5 requests within 2 seconds
+    // More than 30 requests within 5 seconds (extremely aggressive behavior)
     detect: (timestamps) => {
-      if (timestamps.length < 5) return false
-      const recent = timestamps.slice(-5)
-      return (recent[4] - recent[0]) < 2000
+      if (timestamps.length < 30) return false
+      const recent = timestamps.slice(-30)
+      return (recent[29] - recent[0]) < 5000
     },
     score: 10,
   },
   {
     name: 'burst',
-    // More than 20 requests within 30 seconds
+    // More than 60 requests within 30 seconds
     detect: (timestamps) => {
-      if (timestamps.length < 20) return false
+      if (timestamps.length < 60) return false
       const cutoff = Date.now() - 30000
       const recentCount = timestamps.filter(t => t > cutoff).length
-      return recentCount >= 20
+      return recentCount >= 60
     },
     score: 15,
   },
   {
     name: 'sustained-abuse',
-    // Consistent high rate for over a minute
+    // More than 100 requests in a minute (truly abusive behavior)
     detect: (timestamps) => {
-      if (timestamps.length < 30) return false
+      if (timestamps.length < 100) return false
       const oneMinAgo = Date.now() - 60000
       const recentCount = timestamps.filter(t => t > oneMinAgo).length
-      return recentCount >= 30
+      return recentCount >= 100
     },
     score: 25,
   },
