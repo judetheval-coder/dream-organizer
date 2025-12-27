@@ -16,6 +16,7 @@ import { StatsOverview } from '@/components/dashboard/StatsOverview'
 import { ActionBar } from '@/components/dashboard/ActionBar'
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed'
 import { PanelShowcase } from '@/components/dashboard/PanelShowcase'
+import { ComicPageShowcase } from '@/components/dashboard/ComicPageShowcase'
 import { DreamList } from '@/components/dashboard/DreamList'
 import { DreamPanelsGallery } from '@/components/dashboard/DreamPanelsGallery'
 import { InsightsPreview } from '@/components/dashboard/InsightsPreview'
@@ -191,6 +192,13 @@ type LocalPanel = {
   image?: string
 }
 
+type ComicPageState = {
+  scenes: string[]
+  image: string
+  isGenerating: boolean
+  dreamId: string | null
+}
+
 type DreamWithOptionalDate = DreamWithPanels & { date?: string | null }
 
 function DashboardPageContent() {
@@ -289,6 +297,12 @@ function DashboardPageContent() {
   })
   const [lastCreatedDreamId, setLastCreatedDreamId] = useState<string | null>(null)
   const [showUpgrade, setShowUpgrade] = useState(false)
+  const [comicPage, setComicPage] = useState<ComicPageState>({
+    scenes: [],
+    image: '',
+    isGenerating: false,
+    dreamId: null
+  })
 
   // Auto-save draft to localStorage whenever dream content changes
   useEffect(() => {
@@ -324,11 +338,11 @@ function DashboardPageContent() {
     return DEFAULT_TAB
   }, [searchParams, tabKeySet])
 
-  const updateTabInUrl = (tab: DashboardTab) => {
+  const updateTabInUrl = useCallback((tab: DashboardTab) => {
     const params = new URLSearchParams(searchParams.toString())
     params.set(TAB_QUERY_KEY, tab)
     router.replace(`/dashboard?${params.toString()}`, { scroll: false })
-  }
+  }, [searchParams, router])
 
   const handleTabChange = (tab: DashboardTab) => {
     if (tab === currentTab) return
@@ -460,20 +474,21 @@ function DashboardPageContent() {
     }
 
     const currentDreamText = dreamText
-    const currentStyle = style
-    const currentMood = mood
+    const currentStyle = 'Marvel Comic'
+    const currentMood = 'Dynamic'
     const sceneDescriptions = generateSceneDescriptions(dreamText)
 
-    const newPanels = Array.from({ length: sceneDescriptions.length }, (_, i) => ({
-      id: Date.now() + i,
-      description: `${sceneDescriptions[i]} - Scene ${i + 1}`,
-      style,
-      mood,
+    // Use comic page mode - generate one cohesive page instead of separate panels
+    setComicPage({
+      scenes: sceneDescriptions,
       image: '',
-    }))
+      isGenerating: true,
+      dreamId: null
+    })
 
-    setPanels(newPanels)
-    setCurrentGeneratingIndex(0)
+    // Clear old panels state
+    setPanels([])
+    setCurrentGeneratingIndex(-1)
     setDreamText('')
     clearDraft()
     setShowCreateModal(false)
@@ -483,20 +498,46 @@ function DashboardPageContent() {
         text: currentDreamText,
         style: currentStyle,
         mood: currentMood,
-        panels: newPanels.map((p, i) => ({
-          description: p.description,
+        panels: sceneDescriptions.map((scene, i) => ({
+          description: scene,
           scene_number: i,
           image_url: undefined,
         })),
       })
       setLastCreatedDreamId(createdDream.id)
-      showToast('Dream created! Generating panels...', 'success')
-      analytics.events.dreamCreated({ style: currentStyle, mood: currentMood, panelCount: newPanels.length })
+      setComicPage(prev => ({ ...prev, dreamId: createdDream.id }))
+      showToast('Dream created! Generating comic page...', 'success')
+      analytics.events.dreamCreated({ style: currentStyle, mood: currentMood, panelCount: sceneDescriptions.length })
     } catch (err) {
       console.error('Error saving dream:', err)
       showToast('Failed to create dream', 'error')
     }
   }
+
+  const handleComicPageReady = useCallback(async (imageUrl: string) => {
+    setComicPage(prev => ({
+      ...prev,
+      image: imageUrl,
+      isGenerating: false
+    }))
+
+    // Save the comic page image to the first panel in the database
+    const targetDreamId = comicPage.dreamId || lastCreatedDreamId || dreams[0]?.id
+    const currentDream = dreams.find(dream => dream.id === targetDreamId) || dreams[0]
+
+    if (currentDream?.panels?.[0] && user) {
+      try {
+        await updatePanel(currentDream.panels[0].id, imageUrl, currentDream.id, 0)
+        showToast('✨ Comic page generated!', 'success')
+        updateTabInUrl('My Dreams')
+        refreshDreams()
+      } catch (err) {
+        console.error('Error saving comic page:', err)
+      }
+    } else {
+      showToast('✨ Comic page generated!', 'success')
+    }
+  }, [comicPage.dreamId, lastCreatedDreamId, dreams, user, updatePanel, showToast, refreshDreams, updateTabInUrl])
 
   const handlePanelImageReady = useCallback(async (panelId: number, imageUrl: string) => {
     setPanels(prevPanels => prevPanels.map(panel =>
@@ -652,18 +693,19 @@ function DashboardPageContent() {
                 />
               </section>
 
-              {!!panels.length && (
-                <section aria-label="Current generation">
-                  <PanelShowcase
-                    panels={panels}
-                    currentGeneratingIndex={currentGeneratingIndex}
-                    onImageReady={handlePanelImageReady}
-                    onReorder={handlePanelReorder}
+              {comicPage.scenes.length > 0 && (
+                <section aria-label="Current comic generation">
+                  <ComicPageShowcase
+                    scenes={comicPage.scenes}
+                    onImageReady={handleComicPageReady}
+                    image={comicPage.image}
+                    dreamId={comicPage.dreamId || undefined}
+                    isGenerating={comicPage.isGenerating}
                   />
                 </section>
               )}
 
-              {!panels.length && !hasDreams && (
+              {comicPage.scenes.length === 0 && !hasDreams && (
                 <Card>
                   <EmptyState
                     icon="💤"
@@ -697,20 +739,21 @@ function DashboardPageContent() {
 
           {currentTab === 'Comics' && (
             <div className="space-y-8">
-              {!!panels.length && (
-                <PanelShowcase
-                  panels={panels}
-                  currentGeneratingIndex={currentGeneratingIndex}
-                  onImageReady={handlePanelImageReady}
-                  onReorder={handlePanelReorder}
+              {comicPage.scenes.length > 0 && (
+                <ComicPageShowcase
+                  scenes={comicPage.scenes}
+                  onImageReady={handleComicPageReady}
+                  image={comicPage.image}
+                  dreamId={comicPage.dreamId || undefined}
+                  isGenerating={comicPage.isGenerating}
                 />
               )}
-              {!panels.length && !dreamsWithPanels.length && (
+              {comicPage.scenes.length === 0 && !dreamsWithPanels.length && (
                 <Card>
                   <EmptyState
                     icon="📚"
-                    title="No comic panels yet"
-                    description="Generate a new dream on the Dashboard to fill this gallery."
+                    title="No comic pages yet"
+                    description="Generate a new dream on the Dashboard to create your first Marvel-style comic."
                     action={{ label: 'Start a dream', onClick: () => setShowCreateModal(true) }}
                   />
                 </Card>
@@ -1140,13 +1183,9 @@ function DashboardPageContent() {
       <DreamCreationModal
         isOpen={showCreateModal}
         dreamText={dreamText}
-        styleValue={style}
-        moodValue={mood}
         enhancing={enhancing}
         onClose={() => setShowCreateModal(false)}
         onDreamTextChange={setDreamText}
-        onStyleChange={setStyle}
-        onMoodChange={setMood}
         onEnhance={handleEnhance}
         onCreate={handleCreate}
       />

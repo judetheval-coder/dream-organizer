@@ -5,7 +5,8 @@ export async function exportDreamsAsPDF(dreams: Dream[], filename: string = 'dre
   // This uses jsPDF - you'll need to: npm install jspdf html2canvas
   
   try {
-    const { jsPDF } = await import('jspdf')
+    const jsPDFModule = await import('jspdf')
+    const jsPDF = jsPDFModule.default
 
     const doc = new jsPDF({
       orientation: 'portrait',

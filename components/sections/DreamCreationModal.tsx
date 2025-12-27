@@ -6,13 +6,9 @@ import VoiceInput from '@/components/VoiceInput'
 interface DreamCreationModalProps {
   isOpen: boolean
   dreamText: string
-  styleValue: string
-  moodValue: string
   enhancing: boolean
   onClose: () => void
   onDreamTextChange: (value: string) => void
-  onStyleChange: (value: string) => void
-  onMoodChange: (value: string) => void
   onEnhance: () => Promise<void> | void
   onCreate: () => Promise<void> | void
 }
@@ -20,13 +16,9 @@ interface DreamCreationModalProps {
 export function DreamCreationModal({
   isOpen,
   dreamText,
-  styleValue,
-  moodValue,
   enhancing,
   onClose,
   onDreamTextChange,
-  onStyleChange,
-  onMoodChange,
   onEnhance,
   onCreate,
 }: DreamCreationModalProps) {
@@ -58,10 +50,10 @@ export function DreamCreationModal({
         <div className="flex items-start justify-between gap-6">
           <div>
             <h2 id={headingId} className="text-2xl font-bold" style={{ color: colors.textPrimary }}>
-              Create New Dream
+              Create Comic Page
             </h2>
             <p id={descriptionId} className="text-sm mt-1" style={{ color: colors.textMuted }}>
-              Describe what you remember, pick a style and mood, then let AI turn it into panels.
+              Describe your dream and we'll turn it into a Marvel-style comic page.
             </p>
           </div>
           <button
@@ -75,12 +67,24 @@ export function DreamCreationModal({
           </button>
         </div>
 
+        {/* Marvel style badge */}
+        <div
+          className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold"
+          style={{
+            background: 'linear-gradient(135deg, #e23636 0%, #c41e3a 100%)',
+            color: 'white'
+          }}
+        >
+          <span>🦸</span>
+          <span>MARVEL STYLE • STAN LEE ERA</span>
+        </div>
+
         <textarea
           value={dreamText}
           onChange={(e) => onDreamTextChange(e.target.value)}
-          placeholder="Describe your dream..."
+          placeholder="Describe your dream... (e.g., I was flying over a city at night when suddenly a giant robot appeared...)"
           className="w-full mt-6 mb-4 p-4 rounded-lg"
-          rows={5}
+          rows={6}
           aria-label="Dream description"
           aria-required="true"
           aria-invalid={!dreamText.trim()}
@@ -100,49 +104,17 @@ export function DreamCreationModal({
           />
         </div>
 
-        <div className="grid grid-cols-1 gap-6 mb-6 md:grid-cols-2" data-onboarding="style-selector">
-          <div>
-            <label className="block text-sm mb-3 font-semibold" style={{ color: colors.textMuted }}>
-              Style
-            </label>
-            <select
-              value={styleValue}
-              onChange={(e) => onStyleChange(e.target.value)}
-              className="w-full p-3 rounded-lg"
-              aria-label="Visual style"
-              style={{
-                background: colors.backgroundDark,
-                color: colors.textPrimary,
-                border: `1px solid ${colors.cyan}`,
-              }}
-            >
-              <option>Anime</option>
-              <option>Watercolor</option>
-              <option>Oil Painting</option>
-              <option>Abstract</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm mb-3 font-semibold" style={{ color: colors.textMuted }}>
-              Mood
-            </label>
-            <select
-              value={moodValue}
-              onChange={(e) => onMoodChange(e.target.value)}
-              className="w-full p-3 rounded-lg"
-              aria-label="Mood"
-              style={{
-                background: colors.backgroundDark,
-                color: colors.textPrimary,
-                border: `1px solid ${colors.cyan}`,
-              }}
-            >
-              <option>Dreamy</option>
-              <option>Dark</option>
-              <option>Vibrant</option>
-              <option>Peaceful</option>
-            </select>
-          </div>
+        {/* Info about what will be generated */}
+        <div
+          className="mb-6 p-4 rounded-lg text-sm"
+          style={{
+            background: 'rgba(139, 92, 246, 0.1)',
+            border: '1px solid rgba(139, 92, 246, 0.3)'
+          }}
+        >
+          <p style={{ color: colors.textMuted }}>
+            <strong style={{ color: colors.purple }}>What you'll get:</strong> A single comic page with 2-4 panels featuring bold ink outlines, vibrant colors, dynamic poses, and white borders — just like classic Marvel comics.
+          </p>
         </div>
 
         <div className="flex flex-col gap-3 mb-6 md:flex-row">
@@ -157,7 +129,7 @@ export function DreamCreationModal({
               border: 'none',
             }}
           >
-            <span aria-live="polite">{enhancing ? '✨ Enhancing…' : '✨ Enhance with AI'}</span>
+            <span aria-live="polite">{enhancing ? '✨ Enhancing…' : '✨ Enhance Story'}</span>
           </button>
           <button
             type="button"
@@ -166,13 +138,13 @@ export function DreamCreationModal({
             className="flex-1 py-3 rounded-lg font-semibold cursor-pointer disabled:opacity-50 transition-all hover:scale-105"
             data-onboarding="create-btn"
             style={{
-              background: gradients.button,
+              background: 'linear-gradient(135deg, #e23636 0%, #8b5cf6 100%)',
               color: colors.white,
               border: 'none',
               boxShadow: shadows.glow,
             }}
           >
-            🎨 Create Comic
+            🦸 Generate Comic
           </button>
         </div>
 
@@ -186,7 +158,7 @@ export function DreamCreationModal({
             border: `1px solid ${colors.surface}`,
           }}
         >
-          Close
+          Cancel
         </button>
       </div>
     </div>

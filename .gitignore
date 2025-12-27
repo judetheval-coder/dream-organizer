@@ -76,3 +76,4 @@ app/page-old-backup.jsx
 .env.production
 
 .vercel
+.claude/

@@ -123,17 +123,59 @@ CREATE POLICY "Authenticated can insert referral signups"
   WITH CHECK (true);
 
 -- ============================================
+-- ENSURE DREAM_GROUPS TABLE HAS ALL COLUMNS
+-- ============================================
+
+-- Add missing columns to dream_groups if they don't exist
+DO $$ BEGIN
+  ALTER TABLE public.dream_groups ADD COLUMN IF NOT EXISTS emoji TEXT DEFAULT '✨';
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER TABLE public.dream_groups ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'general';
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER TABLE public.dream_groups ADD COLUMN IF NOT EXISTS member_count INTEGER DEFAULT 0;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  ALTER TABLE public.dream_groups ADD COLUMN IF NOT EXISTS created_by TEXT;
+EXCEPTION WHEN undefined_table THEN NULL;
+END $$;
+
+-- ============================================
 -- INITIAL DATA FOR GROUPS (so they don't look empty)
 -- ============================================
 
-INSERT INTO public.dream_groups (name, description, emoji, category, member_count, created_by)
-VALUES
-  ('Lucid Dreamers', 'Share techniques and experiences about lucid dreaming', '🌟', 'technique', 0, 'admin'),
-  ('Nightmare Support', 'A safe space to discuss and process nightmares', '🌙', 'support', 0, 'admin'),
-  ('Dream Artists', 'Share your dream-inspired artwork and comics', '🎨', 'creative', 0, 'admin'),
-  ('Recurring Dreams', 'Discuss patterns and recurring themes in your dreams', '🔄', 'analysis', 0, 'admin'),
-  ('Flying Dreams', 'For those who love soaring through the dream sky', '🦅', 'themes', 0, 'admin')
-ON CONFLICT DO NOTHING;
+-- Only insert if dream_groups table exists and has the emoji column
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'dream_groups' AND column_name = 'emoji'
+  ) THEN
+    INSERT INTO public.dream_groups (name, description, emoji, category, member_count, created_by)
+    VALUES
+      ('Lucid Dreamers', 'Share techniques and experiences about lucid dreaming', '🌟', 'technique', 0, 'admin'),
+      ('Nightmare Support', 'A safe space to discuss and process nightmares', '🌙', 'support', 0, 'admin'),
+      ('Dream Artists', 'Share your dream-inspired artwork and comics', '🎨', 'creative', 0, 'admin'),
+      ('Recurring Dreams', 'Discuss patterns and recurring themes in your dreams', '🔄', 'analysis', 0, 'admin'),
+      ('Flying Dreams', 'For those who love soaring through the dream sky', '🦅', 'themes', 0, 'admin')
+    ON CONFLICT DO NOTHING;
+  ELSIF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'dream_groups') THEN
+    -- Table exists but without emoji column, insert with basic columns only
+    INSERT INTO public.dream_groups (name, description)
+    VALUES
+      ('Lucid Dreamers', 'Share techniques and experiences about lucid dreaming'),
+      ('Nightmare Support', 'A safe space to discuss and process nightmares'),
+      ('Dream Artists', 'Share your dream-inspired artwork and comics')
+    ON CONFLICT DO NOTHING;
+  END IF;
+END $$;
 
 -- ============================================
 -- ADD LIKE_COUNT TO DREAMS (for leaderboard)
