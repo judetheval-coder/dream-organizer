@@ -11,6 +11,7 @@ type ComicGridProps = {
   onAllImagesReady?: (images: string[]) => void
   initialImages?: string[]
   dreamId?: string | number
+  columns?: 2 | 3 | 4 // Allow flexible column layouts
 }
 
 type PanelState = {
@@ -25,7 +26,10 @@ export default function ComicGrid({
   onAllImagesReady,
   initialImages = [],
   dreamId,
+  columns: propColumns,
 }: ComicGridProps) {
+  // Auto-calculate columns based on panel count if not specified
+  const columns = propColumns || (scenes.length <= 4 ? 2 : scenes.length <= 9 ? 3 : 4)
   const { showToast } = useToast()
   const [panels, setPanels] = useState<PanelState[]>(() =>
     scenes.map((_, i) => ({
@@ -127,9 +131,9 @@ export default function ComicGrid({
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    const panelSize = 512
+    const panelSize = columns <= 2 ? 512 : columns === 3 ? 400 : 350
     const borderWidth = 12
-    const cols = 2
+    const cols = columns
     const rows = Math.ceil(scenes.length / cols)
 
     canvas.width = cols * panelSize + (cols + 1) * borderWidth
@@ -192,12 +196,12 @@ export default function ComicGrid({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* 2x2 Grid of panels */}
+        {/* Dynamic grid of panels */}
         <div
           className="grid gap-3"
           style={{
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gridTemplateRows: `repeat(${Math.ceil(scenes.length / 2)}, 1fr)`,
+            gridTemplateColumns: `repeat(${columns}, 1fr)`,
+            gridTemplateRows: `repeat(${Math.ceil(scenes.length / columns)}, 1fr)`,
           }}
         >
           {panels.map((panel, index) => (

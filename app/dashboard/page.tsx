@@ -412,64 +412,58 @@ function DashboardPageContent() {
     [dreams]
   )
 
-  const generateSceneDescriptions = (text: string) => {
-    // Always generate exactly 4 panels for a proper comic page layout
+  // Use GPT to intelligently break down dream into cinematic scenes
+  const breakdownDreamIntoScenes = async (text: string): Promise<string[]> => {
     const trimmed = text.trim()
-    const maxPanels = 4 // Always use 4 panels for consistent 2x2 grid
-    const words = trimmed.split(/\s+/)
-    const wordCount = words.length
+    const wordCount = trimmed.split(/\s+/).length
 
-    // Very short dreams (under 30 words) - still make 4 panels by expanding
-    if (wordCount < 30) {
-      // For very short dreams, create 4 variations of the scene
-      return [
-        `Scene establishing: ${trimmed}`,
-        `Action moment: ${trimmed}`,
-        `Dramatic close-up: ${trimmed}`,
-        `Resolution: ${trimmed}`
-      ]
-    }
+    // Calculate optimal panel count based on dream length
+    // Short dreams: 4 panels, Medium: 6-8, Long: 9-12
+    const maxPanels = wordCount < 50 ? 4 : wordCount < 150 ? 6 : wordCount < 300 ? 9 : 12
 
-    // Try to split into sentences first
-    const sentences = trimmed.match(/[^.!?]+[.!?]+/g) || []
+    try {
+      // Try GPT-powered breakdown for rich scene descriptions
+      const response = await fetch('/api/breakdown-dream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ dreamText: trimmed, maxPanels })
+      })
 
-    // If we have at least 4 sentences, group them into 4 panels
-    if (sentences.length >= 4) {
-      const perPanel = Math.ceil(sentences.length / maxPanels)
-      const scenes: string[] = []
-      for (let i = 0; i < maxPanels; i++) {
-        const start = i * perPanel
-        const end = Math.min(start + perPanel, sentences.length)
-        const chunk = sentences.slice(start, end).join(' ').trim()
-        if (chunk) {
-          scenes.push(chunk)
+      if (response.ok) {
+        const data = await response.json()
+        if (data.scenes && Array.isArray(data.scenes) && data.scenes.length > 0) {
+          return data.scenes
         }
       }
-      // Ensure we have exactly 4 panels
-      while (scenes.length < 4) {
-        scenes.push(scenes[scenes.length - 1] || trimmed)
-      }
-      return scenes.slice(0, 4)
+    } catch (error) {
+      console.warn('[breakdownDreamIntoScenes] GPT breakdown failed, using fallback:', error)
     }
 
-    // Fallback: split by word count into 4 equal parts
-    const wordsPerPanel = Math.ceil(wordCount / maxPanels)
+    // Fallback: simple sentence-based splitting
+    return simpleFallbackBreakdown(trimmed, maxPanels)
+  }
+
+  // Simple fallback scene breakdown without GPT
+  const simpleFallbackBreakdown = (text: string, maxPanels: number): string[] => {
+    const sentences = text.match(/[^.!?]+[.!?]+/g) || [text]
     const scenes: string[] = []
-    for (let i = 0; i < maxPanels; i++) {
-      const start = i * wordsPerPanel
-      const end = Math.min(start + wordsPerPanel, wordCount)
-      const chunk = words.slice(start, end).join(' ').trim()
+    const perPanel = Math.max(1, Math.ceil(sentences.length / maxPanels))
+
+    for (let i = 0; i < maxPanels && i * perPanel < sentences.length; i++) {
+      const start = i * perPanel
+      const end = Math.min(start + perPanel, sentences.length)
+      const chunk = sentences.slice(start, end).join(' ').trim()
       if (chunk) {
         scenes.push(chunk)
       }
     }
 
-    // Ensure we always return exactly 4 scenes
+    // Ensure minimum 4 panels
     while (scenes.length < 4) {
-      scenes.push(scenes[scenes.length - 1] || trimmed)
+      scenes.push(scenes[scenes.length - 1] || text.slice(0, 200))
     }
 
-    return scenes.slice(0, 4)
+    return scenes
   }
 
   const handleCreate = async () => {
@@ -483,11 +477,25 @@ function DashboardPageContent() {
     }
 
     const currentDreamText = dreamText
-    const currentStyle = 'Marvel Comic'
+    const currentStyle = 'Comic'
     const currentMood = 'Dynamic'
-    const sceneDescriptions = generateSceneDescriptions(dreamText)
 
-    // Use comic page mode - generate one cohesive page instead of separate panels
+    // Show loading state while GPT breaks down the dream
+    setComicPage({
+      scenes: [],
+      image: '',
+      isGenerating: true,
+      dreamId: null
+    })
+    setDreamText('')
+    clearDraft()
+    setShowCreateModal(false)
+    showToast('Analyzing your dream for optimal scenes...', 'info')
+
+    // Use GPT to intelligently break down dream into cinematic scenes
+    const sceneDescriptions = await breakdownDreamIntoScenes(currentDreamText)
+
+    // Update with the scenes
     setComicPage({
       scenes: sceneDescriptions,
       image: '',
@@ -498,9 +506,6 @@ function DashboardPageContent() {
     // Clear old panels state
     setPanels([])
     setCurrentGeneratingIndex(-1)
-    setDreamText('')
-    clearDraft()
-    setShowCreateModal(false)
 
     try {
       const createdDream = await saveDream({
@@ -515,7 +520,7 @@ function DashboardPageContent() {
       })
       setLastCreatedDreamId(createdDream.id)
       setComicPage(prev => ({ ...prev, dreamId: createdDream.id }))
-      showToast('Dream created! Generating comic page...', 'success')
+      showToast(`Creating ${sceneDescriptions.length}-panel comic...`, 'success')
       analytics.events.dreamCreated({ style: currentStyle, mood: currentMood, panelCount: sceneDescriptions.length })
     } catch (err) {
       console.error('Error saving dream:', err)
