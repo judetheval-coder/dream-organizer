@@ -514,25 +514,31 @@ function DashboardPageContent() {
     }
   }
 
-  const handleComicPageReady = useCallback(async (imageUrl: string) => {
+  const handleComicImagesReady = useCallback(async (images: string[]) => {
     setComicPage(prev => ({
       ...prev,
-      image: imageUrl,
+      image: images[0] || '', // Store first image as reference
       isGenerating: false
     }))
 
-    // Save the comic page image to the first panel in the database
+    // Save each panel image to the database
     const targetDreamId = comicPage.dreamId || lastCreatedDreamId || dreams[0]?.id
     const currentDream = dreams.find(dream => dream.id === targetDreamId) || dreams[0]
 
-    if (currentDream?.panels?.[0] && user) {
+    if (currentDream?.panels && user) {
       try {
-        await updatePanel(currentDream.panels[0].id, imageUrl, currentDream.id, 0)
+        // Update each panel with its corresponding image
+        for (let i = 0; i < images.length; i++) {
+          const panel = currentDream.panels[i]
+          if (panel && images[i]) {
+            await updatePanel(panel.id, images[i], currentDream.id, i)
+          }
+        }
         showToast('✨ Comic page generated!', 'success')
         updateTabInUrl('My Dreams')
         refreshDreams()
       } catch (err) {
-        console.error('Error saving comic page:', err)
+        console.error('Error saving comic panels:', err)
       }
     } else {
       showToast('✨ Comic page generated!', 'success')
@@ -697,8 +703,7 @@ function DashboardPageContent() {
                 <section aria-label="Current comic generation">
                   <ComicPageShowcase
                     scenes={comicPage.scenes}
-                    onImageReady={handleComicPageReady}
-                    image={comicPage.image}
+                    onImagesReady={handleComicImagesReady}
                     dreamId={comicPage.dreamId || undefined}
                     isGenerating={comicPage.isGenerating}
                   />
@@ -742,8 +747,7 @@ function DashboardPageContent() {
               {comicPage.scenes.length > 0 && (
                 <ComicPageShowcase
                   scenes={comicPage.scenes}
-                  onImageReady={handleComicPageReady}
-                  image={comicPage.image}
+                  onImagesReady={handleComicImagesReady}
                   dreamId={comicPage.dreamId || undefined}
                   isGenerating={comicPage.isGenerating}
                 />

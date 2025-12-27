@@ -2,20 +2,20 @@
 
 import { colors } from '@/lib/design'
 import Card from '@/components/ui/Card'
-import ComicPage from '@/components/ComicPage'
+import ComicGrid from '@/components/ComicGrid'
 
 interface ComicPageShowcaseProps {
   scenes: string[]
-  onImageReady: (url: string) => void
-  image?: string
+  onImagesReady?: (images: string[]) => void
+  initialImages?: string[]
   dreamId?: string
   isGenerating?: boolean
 }
 
 export function ComicPageShowcase({
   scenes,
-  onImageReady,
-  image,
+  onImagesReady,
+  initialImages,
   dreamId,
   isGenerating
 }: ComicPageShowcaseProps) {
@@ -42,10 +42,10 @@ export function ComicPageShowcase({
         )}
       </div>
 
-      <ComicPage
+      <ComicGrid
         scenes={scenes}
-        onImageReady={onImageReady}
-        image={image}
+        onAllImagesReady={onImagesReady}
+        initialImages={initialImages}
         dreamId={dreamId}
       />
     </Card>
