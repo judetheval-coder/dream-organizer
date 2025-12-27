@@ -75,12 +75,15 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { prompt } = validation.data as { prompt: string }
+    const { prompt, seed } = validation.data as { prompt: string; seed?: number }
 
-    // Enhance prompt for SDXL comic style
-    const enhancedPrompt = `${prompt}, comic book illustration style, graphic novel art, bold ink outlines, vibrant saturated colors, professional digital art, highly detailed, dynamic composition, cinematic lighting`
+    // Use a VERY specific art style that SDXL will interpret consistently
+    // This ensures all panels in a comic look like they were drawn by the same artist
+    const consistentStyle = 'western comic book art style, flat cel-shaded coloring, bold black ink outlines, clean linework, vibrant saturated colors, professional comic illustration, consistent character designs, dynamic action poses'
 
-    const negativePrompt = 'blurry, low quality, distorted, ugly, deformed, photograph, realistic photo, 3d render, watermark, text, signature, cropped, out of frame, worst quality, low resolution, jpeg artifacts, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers'
+    const enhancedPrompt = `${consistentStyle}, ${prompt}`
+
+    const negativePrompt = 'anime, manga, 3d render, photograph, realistic photo, watercolor, painterly, impressionist, sketch, pencil drawing, blurry, low quality, distorted, ugly, deformed, watermark, text, signature, cropped, out of frame, worst quality, low resolution, jpeg artifacts, duplicate, inconsistent style, mixed media'
 
     // Create prediction with SDXL
     const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
@@ -100,7 +103,8 @@ export async function POST(req: NextRequest) {
           scheduler: 'K_EULER',
           num_inference_steps: 25,
           guidance_scale: 7.5,
-          // Removed refiner for faster generation (~20-30s instead of 60s+)
+          // Use consistent seed across all panels in a comic for style coherence
+          ...(seed !== undefined && { seed }),
         }
       })
     })

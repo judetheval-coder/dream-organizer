@@ -31,6 +31,10 @@ export default function ComicGrid({
   // Auto-calculate columns based on panel count if not specified
   const columns = propColumns || (scenes.length <= 4 ? 2 : scenes.length <= 9 ? 3 : 4)
   const { showToast } = useToast()
+
+  // Generate a consistent seed for this comic - all panels will use the same seed
+  // This helps SDXL maintain a consistent art style across panels
+  const [comicSeed] = useState(() => Math.floor(Math.random() * 2147483647))
   const [panels, setPanels] = useState<PanelState[]>(() =>
     scenes.map((_, i) => ({
       image: initialImages[i] || '',
@@ -63,7 +67,7 @@ export default function ComicGrid({
       const res = await fetch("/api/generate-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt })
+        body: JSON.stringify({ prompt, seed: comicSeed })
       })
 
       const data = await res.json()
@@ -88,7 +92,7 @@ export default function ComicGrid({
       ))
       return null
     }
-  }, [scenes])
+  }, [scenes, comicSeed])
 
   // Generate panels with staggered start to avoid rate limits
   const generateAllPanels = useCallback(async () => {
@@ -132,7 +136,7 @@ export default function ComicGrid({
     if (!ctx) return
 
     const panelSize = columns <= 2 ? 512 : columns === 3 ? 400 : 350
-    const borderWidth = 12
+    const borderWidth = 16 // Thicker white borders like classic comics
     const cols = columns
     const rows = Math.ceil(scenes.length / cols)
 
@@ -183,11 +187,11 @@ export default function ComicGrid({
 
   return (
     <div className="w-full max-w-2xl mx-auto">
-      {/* Comic page container with white border */}
+      {/* Comic page container with thick white borders like classic comics */}
       <div
         className="relative transition-all duration-300"
         style={{
-          padding: '12px',
+          padding: '16px',
           background: 'white',
           borderRadius: '4px',
           boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
@@ -196,12 +200,13 @@ export default function ComicGrid({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {/* Dynamic grid of panels */}
+        {/* Dynamic grid of panels with thick white gutters */}
         <div
-          className="grid gap-3"
+          className="grid"
           style={{
             gridTemplateColumns: `repeat(${columns}, 1fr)`,
             gridTemplateRows: `repeat(${Math.ceil(scenes.length / columns)}, 1fr)`,
+            gap: '16px',
           }}
         >
           {panels.map((panel, index) => (

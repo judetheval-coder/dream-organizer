@@ -120,6 +120,15 @@ export function validateImageGenerationInput(data: unknown): {
     validated.guidance = obj.guidance || 10
   }
 
+  // Validate seed for consistent style across panels
+  if (obj.seed !== undefined) {
+    if (typeof obj.seed !== 'number' || obj.seed < 0) {
+      errors.push('seed: must be a non-negative number')
+    } else {
+      validated.seed = obj.seed
+    }
+  }
+
   return {
     valid: errors.length === 0,
     errors,
