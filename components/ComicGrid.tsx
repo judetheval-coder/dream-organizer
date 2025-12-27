@@ -86,23 +86,18 @@ export default function ComicGrid({
     }
   }, [scenes])
 
-  // Generate all panels sequentially
+  // Generate all panels in parallel for speed
   const generateAllPanels = useCallback(async () => {
-    const images: string[] = []
+    setGeneratingIndex(0) // Show we're generating
 
-    for (let i = 0; i < scenes.length; i++) {
-      setGeneratingIndex(i)
-      const image = await generatePanel(i)
-      if (image) {
-        images.push(image)
-      }
-      // Small delay between generations to avoid rate limits
-      if (i < scenes.length - 1) {
-        await new Promise(resolve => setTimeout(resolve, 1000))
-      }
-    }
+    // Start all panels generating at once (parallel)
+    const promises = scenes.map((_, i) => generatePanel(i))
+    const results = await Promise.all(promises)
 
     setGeneratingIndex(-1)
+
+    // Filter out failed generations and collect successful ones
+    const images = results.filter((img): img is string => img !== null)
 
     if (images.length === scenes.length) {
       onAllImagesReady?.(images)

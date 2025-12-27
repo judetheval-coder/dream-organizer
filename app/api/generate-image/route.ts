@@ -6,7 +6,7 @@ import { captureException } from '@/lib/sentry'
 
 export const runtime = 'nodejs'
 
-const RATE_LIMIT = 10
+const RATE_LIMIT = 20 // Allow 4 panels per dream + retries
 const RATE_WINDOW = 5 * 60 * 1000
 
 // SDXL model on Replicate - latest stable version
@@ -98,10 +98,9 @@ export async function POST(req: NextRequest) {
           height: 1024,
           num_outputs: 1,
           scheduler: 'K_EULER',
-          num_inference_steps: 30,
+          num_inference_steps: 25,
           guidance_scale: 7.5,
-          refine: 'expert_ensemble_refiner',
-          high_noise_frac: 0.8,
+          // Removed refiner for faster generation (~20-30s instead of 60s+)
         }
       })
     })
