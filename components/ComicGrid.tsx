@@ -9,9 +9,14 @@ import { optimizePromptForDalle } from "@/lib/gpt-helpers"
 // Scene data structure from breakdown-dream API
 type SceneData = {
   visual: string
-  overlay_text: string | null
-  text_position: string | null
+  caption: string | null
+  caption_position: string | null
+  dialogue: string | null
+  sfx: string | null
   panel_type: string
+  // Legacy fields for backward compatibility
+  overlay_text?: string | null
+  text_position?: string | null
 }
 
 type ComicGridProps = {
@@ -28,9 +33,15 @@ type PanelState = {
   loading: boolean
   error: string
   progress: number
+  // New caption system
+  caption?: string | null
+  caption_position?: string | null
+  dialogue?: string | null
+  sfx?: string | null
+  panel_type?: string
+  // Legacy fields
   overlay_text?: string | null
   text_position?: string | null
-  panel_type?: string
 }
 
 export default function ComicGrid({
@@ -54,9 +65,15 @@ export default function ComicGrid({
       loading: false,
       error: '',
       progress: 0,
-      overlay_text: sceneData?.[i]?.overlay_text || null,
+      // New caption system
+      caption: sceneData?.[i]?.caption || null,
+      caption_position: sceneData?.[i]?.caption_position || 'top-left',
+      dialogue: sceneData?.[i]?.dialogue || null,
+      sfx: sceneData?.[i]?.sfx || null,
+      panel_type: sceneData?.[i]?.panel_type || 'action',
+      // Legacy fields
+      overlay_text: sceneData?.[i]?.overlay_text || sceneData?.[i]?.dialogue || null,
       text_position: sceneData?.[i]?.text_position || null,
-      panel_type: sceneData?.[i]?.panel_type || 'action'
     }))
   )
   const [isHovered, setIsHovered] = useState(false)
@@ -204,8 +221,139 @@ export default function ComicGrid({
       })
     }
 
-    // Draw text overlay on canvas
-    const drawTextOverlay = (
+    // Draw narrative caption box (aged paper style)
+    const drawCaptionBox = (
+      panelX: number,
+      panelY: number,
+      panelWidth: number,
+      text: string,
+      position: string
+    ) => {
+      ctx.save()
+
+      const maxWidth = panelWidth * 0.85
+      ctx.font = 'italic 13px Georgia, serif'
+      const lines = wrapText(ctx, text, maxWidth - 24)
+      const lineHeight = 18
+      const boxHeight = lines.length * lineHeight + 16
+      const boxWidth = Math.min(maxWidth, Math.max(...lines.map(l => ctx.measureText(l).width)) + 24)
+
+      let boxX = panelX + 8
+      let boxY = panelY + 8
+
+      if (position === 'bottom-left') {
+        boxY = panelY + panelWidth - boxHeight - 8
+      } else if (position === 'top-right') {
+        boxX = panelX + panelWidth - boxWidth - 8
+      } else if (position === 'bottom-center') {
+        boxX = panelX + (panelWidth - boxWidth) / 2
+        boxY = panelY + panelWidth - boxHeight - 8
+      }
+
+      // Aged paper gradient background
+      const gradient = ctx.createLinearGradient(boxX, boxY, boxX + boxWidth, boxY + boxHeight)
+      gradient.addColorStop(0, '#fffef8')
+      gradient.addColorStop(1, '#f4edd8')
+      ctx.fillStyle = gradient
+      ctx.fillRect(boxX, boxY, boxWidth, boxHeight)
+
+      // Border
+      ctx.strokeStyle = '#2a2a2a'
+      ctx.lineWidth = 2
+      ctx.strokeRect(boxX, boxY, boxWidth, boxHeight)
+
+      // Shadow
+      ctx.shadowColor = 'rgba(0,0,0,0.3)'
+      ctx.shadowBlur = 6
+      ctx.shadowOffsetX = 3
+      ctx.shadowOffsetY = 3
+
+      // Text
+      ctx.fillStyle = '#1a1a1a'
+      ctx.shadowColor = 'transparent'
+      lines.forEach((line, i) => {
+        ctx.fillText(line, boxX + 12, boxY + 18 + i * lineHeight)
+      })
+
+      ctx.restore()
+    }
+
+    // Draw speech bubble
+    const drawSpeechBubble = (
+      panelX: number,
+      panelY: number,
+      panelWidth: number,
+      text: string,
+      hasCaption: boolean
+    ) => {
+      ctx.save()
+
+      const maxWidth = panelWidth * 0.7
+      ctx.font = 'bold 14px "Comic Sans MS", cursive'
+      const lines = wrapText(ctx, text, maxWidth - 20)
+      const lineHeight = 18
+      const bubbleHeight = lines.length * lineHeight + 16
+      const bubbleWidth = Math.min(maxWidth, Math.max(...lines.map(l => ctx.measureText(l).width)) + 28)
+
+      const bubbleX = panelX + (panelWidth - bubbleWidth) / 2
+      const bubbleY = hasCaption ? panelY + panelWidth * 0.45 : panelY + panelWidth * 0.15
+
+      // Bubble background
+      ctx.fillStyle = 'white'
+      ctx.strokeStyle = '#1a1a1a'
+      ctx.lineWidth = 2.5
+      ctx.beginPath()
+      ctx.roundRect(bubbleX, bubbleY, bubbleWidth, bubbleHeight, 15)
+      ctx.fill()
+      ctx.stroke()
+
+      // Bubble tail
+      ctx.beginPath()
+      ctx.moveTo(bubbleX + 20, bubbleY + bubbleHeight)
+      ctx.lineTo(bubbleX + 25, bubbleY + bubbleHeight + 12)
+      ctx.lineTo(bubbleX + 35, bubbleY + bubbleHeight)
+      ctx.fillStyle = 'white'
+      ctx.fill()
+      ctx.stroke()
+
+      // Text
+      ctx.fillStyle = '#1a1a1a'
+      lines.forEach((line, i) => {
+        ctx.fillText(line, bubbleX + 14, bubbleY + 18 + i * lineHeight)
+      })
+
+      ctx.restore()
+    }
+
+    // Draw sound effect
+    const drawSoundEffect = (
+      panelX: number,
+      panelY: number,
+      panelWidth: number,
+      text: string
+    ) => {
+      ctx.save()
+
+      const sfxX = panelX + panelWidth * 0.75
+      const sfxY = panelY + panelWidth * 0.85
+
+      ctx.translate(sfxX, sfxY)
+      ctx.rotate(-8 * Math.PI / 180)
+
+      ctx.font = 'bold 24px Impact, sans-serif'
+      ctx.fillStyle = '#ff3b3b'
+      ctx.strokeStyle = '#1a1a1a'
+      ctx.lineWidth = 3
+      ctx.letterSpacing = '3px'
+
+      ctx.strokeText(text, 0, 0)
+      ctx.fillText(text, 0, 0)
+
+      ctx.restore()
+    }
+
+    // Legacy text overlay for backward compatibility
+    const drawLegacyOverlay = (
       x: number,
       y: number,
       width: number,
@@ -215,69 +363,24 @@ export default function ComicGrid({
       ctx.save()
 
       if (position === 'speech-bubble') {
-        // Draw speech bubble
-        const bubbleX = x + 15
-        const bubbleY = y + 15
-        const maxWidth = width * 0.7
-        ctx.font = 'bold 14px "Comic Sans MS", cursive'
-        const lines = wrapText(ctx, text, maxWidth)
-        const lineHeight = 18
-        const bubbleHeight = lines.length * lineHeight + 16
-        const bubbleWidth = Math.min(maxWidth, Math.max(...lines.map(l => ctx.measureText(l).width))) + 20
-
-        // Bubble background
-        ctx.fillStyle = 'white'
-        ctx.strokeStyle = 'black'
-        ctx.lineWidth = 2
-        ctx.beginPath()
-        ctx.roundRect(bubbleX, bubbleY, bubbleWidth, bubbleHeight, 10)
-        ctx.fill()
-        ctx.stroke()
-
-        // Bubble tail
-        ctx.beginPath()
-        ctx.moveTo(bubbleX + 20, bubbleY + bubbleHeight)
-        ctx.lineTo(bubbleX + 25, bubbleY + bubbleHeight + 12)
-        ctx.lineTo(bubbleX + 35, bubbleY + bubbleHeight)
-        ctx.fillStyle = 'white'
-        ctx.fill()
-        ctx.stroke()
-
-        // Text
-        ctx.fillStyle = 'black'
-        lines.forEach((line, i) => {
-          ctx.fillText(line, bubbleX + 10, bubbleY + 18 + i * lineHeight)
-        })
+        drawSpeechBubble(x, y, width, text, false)
       } else if (position === 'sign') {
-        // Draw neon sign style text
         ctx.font = 'bold 18px Impact, sans-serif'
         const textWidth = ctx.measureText(text).width
         const signX = x + (width - textWidth) / 2 - 10
         const signY = y + 10
 
-        // Sign background
         ctx.fillStyle = 'rgba(255, 0, 100, 0.9)'
         ctx.strokeStyle = 'black'
         ctx.lineWidth = 2
         ctx.fillRect(signX, signY, textWidth + 20, 28)
         ctx.strokeRect(signX, signY, textWidth + 20, 28)
 
-        // Text with outline
         ctx.fillStyle = 'white'
         ctx.strokeStyle = 'black'
         ctx.lineWidth = 3
         ctx.strokeText(text, signX + 10, signY + 20)
         ctx.fillText(text, signX + 10, signY + 20)
-      } else if (position === 'top' || position === 'bottom') {
-        // Draw caption box
-        const captionY = position === 'top' ? y : y + panelSize - 25
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
-        ctx.fillRect(x, captionY, width, 25)
-        ctx.font = 'italic 12px "Comic Sans MS", sans-serif'
-        ctx.fillStyle = 'white'
-        ctx.textAlign = 'center'
-        ctx.fillText(text, x + width / 2, captionY + 17)
-        ctx.textAlign = 'left'
       }
 
       ctx.restore()
@@ -310,6 +413,7 @@ export default function ComicGrid({
           const row = Math.floor(i / cols)
           const x = borderWidth + col * (panelSize + borderWidth)
           const y = borderWidth + row * (panelSize + borderWidth)
+          const panel = panels[i]
 
           // Draw the image
           ctx.drawImage(img, x, y, panelSize, panelSize)
@@ -319,9 +423,24 @@ export default function ComicGrid({
           ctx.lineWidth = panelBorder
           ctx.strokeRect(x, y, panelSize, panelSize)
 
-          // Draw text overlay if present
-          if (panels[i].overlay_text && panels[i].text_position) {
-            drawTextOverlay(x, y, panelSize, panels[i].overlay_text!, panels[i].text_position!)
+          // Draw narrative caption if present
+          if (panel.caption) {
+            drawCaptionBox(x, y, panelSize, panel.caption, panel.caption_position || 'top-left')
+          }
+
+          // Draw speech bubble if present
+          if (panel.dialogue) {
+            drawSpeechBubble(x, y, panelSize, panel.dialogue, !!panel.caption)
+          }
+
+          // Draw sound effect if present
+          if (panel.sfx) {
+            drawSoundEffect(x, y, panelSize, panel.sfx)
+          }
+
+          // Legacy: Draw old overlay_text if no new fields present
+          if (!panel.caption && !panel.dialogue && panel.overlay_text && panel.text_position) {
+            drawLegacyOverlay(x, y, panelSize, panel.overlay_text, panel.text_position)
           }
         }
       }
@@ -429,81 +548,149 @@ export default function ComicGrid({
                 />
               )}
 
-              {/* Text overlay - speech bubbles, signs, captions */}
-              {!panel.loading && panel.image && panel.overlay_text && (
+              {/* Text overlays - narrative captions, speech bubbles, sound effects */}
+              {!panel.loading && panel.image && (
                 <div className="absolute inset-0 pointer-events-none z-10">
-                  {panel.text_position === 'speech-bubble' && (
-                    <div className="absolute top-3 left-3 right-3 max-w-[80%]">
+                  {/* Narrative Caption Box - aged paper styling */}
+                  {panel.caption && (
+                    <div
+                      className="absolute max-w-[85%]"
+                      style={{
+                        ...(panel.caption_position === 'top-left' ? { top: 8, left: 8 } : {}),
+                        ...(panel.caption_position === 'bottom-left' ? { bottom: 8, left: 8 } : {}),
+                        ...(panel.caption_position === 'top-right' ? { top: 8, right: 8 } : {}),
+                        ...(panel.caption_position === 'bottom-center' ? { bottom: 8, left: '50%', transform: 'translateX(-50%)' } : {}),
+                      }}
+                    >
                       <div
-                        className="relative bg-white rounded-2xl px-3 py-2 shadow-lg"
+                        className="px-3 py-2"
                         style={{
-                          fontFamily: 'var(--font-comic-neue), "Comic Sans MS", cursive',
-                          fontSize: '0.75rem',
-                          lineHeight: '1.2',
-                          color: '#000',
-                          border: '2px solid #000',
+                          background: 'linear-gradient(145deg, #fffef8 0%, #f4edd8 100%)',
+                          border: '2px solid #2a2a2a',
+                          fontFamily: 'var(--font-eb-garamond), Georgia, serif',
+                          fontSize: '0.8rem',
+                          fontStyle: 'italic',
+                          lineHeight: 1.45,
+                          color: '#1a1a1a',
+                          boxShadow: '3px 3px 6px rgba(0,0,0,0.3)',
                         }}
                       >
-                        {panel.overlay_text}
+                        {panel.caption}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Speech Bubble */}
+                  {panel.dialogue && (
+                    <div
+                      className="absolute"
+                      style={{
+                        top: panel.caption ? '45%' : '15%',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                      }}
+                    >
+                      <div
+                        className="relative bg-white rounded-2xl px-3 py-2"
+                        style={{
+                          fontFamily: 'var(--font-comic-neue), "Comic Sans MS", cursive',
+                          fontSize: '0.8rem',
+                          fontWeight: 600,
+                          lineHeight: 1.3,
+                          color: '#1a1a1a',
+                          border: '2.5px solid #1a1a1a',
+                          boxShadow: '2px 2px 0 rgba(0,0,0,0.15)',
+                          maxWidth: '80%',
+                        }}
+                      >
+                        {panel.dialogue}
                         {/* Speech bubble tail */}
                         <div
-                          className="absolute -bottom-2 left-4 w-0 h-0"
+                          className="absolute -bottom-3 left-5 w-0 h-0"
                           style={{
                             borderLeft: '8px solid transparent',
                             borderRight: '8px solid transparent',
-                            borderTop: '10px solid #000',
+                            borderTop: '12px solid #1a1a1a',
                           }}
                         />
                         <div
-                          className="absolute -bottom-1.5 left-4 w-0 h-0"
+                          className="absolute -bottom-2 left-5 w-0 h-0"
                           style={{
                             borderLeft: '6px solid transparent',
                             borderRight: '6px solid transparent',
-                            borderTop: '8px solid white',
+                            borderTop: '10px solid white',
                             marginLeft: '2px',
                           }}
                         />
                       </div>
                     </div>
                   )}
-                  {panel.text_position === 'sign' && (
-                    <div className="absolute top-2 left-1/2 -translate-x-1/2">
-                      <div
-                        className="px-3 py-1 rounded"
-                        style={{
-                          fontFamily: 'var(--font-bangers), Impact, sans-serif',
-                          fontSize: '0.9rem',
-                          fontWeight: 'bold',
-                          color: '#fff',
-                          textShadow: '2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000',
-                          background: 'linear-gradient(180deg, rgba(255,0,100,0.9), rgba(200,0,80,0.9))',
-                          border: '2px solid #000',
-                          letterSpacing: '1px',
-                        }}
-                      >
-                        {panel.overlay_text}
-                      </div>
+
+                  {/* Sound Effect */}
+                  {panel.sfx && (
+                    <div
+                      className="absolute"
+                      style={{
+                        bottom: '15%',
+                        right: '10%',
+                        fontFamily: 'var(--font-bangers), Impact, sans-serif',
+                        fontSize: '1.5rem',
+                        color: '#ff3b3b',
+                        textShadow: '2px 2px 0 #1a1a1a, -1px -1px 0 #1a1a1a',
+                        letterSpacing: '3px',
+                        transform: 'rotate(-8deg)',
+                      }}
+                    >
+                      {panel.sfx}
                     </div>
                   )}
-                  {panel.text_position === 'top' && (
-                    <div className="absolute top-0 left-0 right-0 px-2 py-1 bg-black/80">
-                      <p
-                        className="text-center text-white text-xs italic"
-                        style={{ fontFamily: 'var(--font-comic-neue), "Comic Sans MS", sans-serif' }}
-                      >
-                        {panel.overlay_text}
-                      </p>
-                    </div>
-                  )}
-                  {panel.text_position === 'bottom' && (
-                    <div className="absolute bottom-0 left-0 right-0 px-2 py-1 bg-black/80">
-                      <p
-                        className="text-center text-white text-xs italic"
-                        style={{ fontFamily: 'var(--font-comic-neue), "Comic Sans MS", sans-serif' }}
-                      >
-                        {panel.overlay_text}
-                      </p>
-                    </div>
+
+                  {/* Legacy: Old overlay_text system for backward compatibility */}
+                  {!panel.caption && !panel.dialogue && panel.overlay_text && (
+                    <>
+                      {panel.text_position === 'speech-bubble' && (
+                        <div className="absolute top-3 left-3 right-3 max-w-[80%]">
+                          <div
+                            className="relative bg-white rounded-2xl px-3 py-2 shadow-lg"
+                            style={{
+                              fontFamily: 'var(--font-comic-neue), "Comic Sans MS", cursive',
+                              fontSize: '0.75rem',
+                              lineHeight: '1.2',
+                              color: '#000',
+                              border: '2px solid #000',
+                            }}
+                          >
+                            {panel.overlay_text}
+                            <div
+                              className="absolute -bottom-2 left-4 w-0 h-0"
+                              style={{
+                                borderLeft: '8px solid transparent',
+                                borderRight: '8px solid transparent',
+                                borderTop: '10px solid #000',
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )}
+                      {panel.text_position === 'sign' && (
+                        <div className="absolute top-2 left-1/2 -translate-x-1/2">
+                          <div
+                            className="px-3 py-1 rounded"
+                            style={{
+                              fontFamily: 'var(--font-bangers), Impact, sans-serif',
+                              fontSize: '0.9rem',
+                              fontWeight: 'bold',
+                              color: '#fff',
+                              textShadow: '2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000',
+                              background: 'linear-gradient(180deg, rgba(255,0,100,0.9), rgba(200,0,80,0.9))',
+                              border: '2px solid #000',
+                            }}
+                          >
+                            {panel.overlay_text}
+                          </div>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               )}

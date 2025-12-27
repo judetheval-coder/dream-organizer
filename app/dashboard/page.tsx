@@ -195,9 +195,14 @@ type LocalPanel = {
 // Scene data from the new breakdown-dream API format
 type SceneData = {
   visual: string
-  overlay_text: string | null
-  text_position: string | null
+  caption: string | null
+  caption_position: string | null
+  dialogue: string | null
+  sfx: string | null
   panel_type: string
+  // Legacy fields for backward compatibility
+  overlay_text?: string | null
+  text_position?: string | null
 }
 
 type ComicPageState = {

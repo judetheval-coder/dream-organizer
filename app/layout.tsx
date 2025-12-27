@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Bangers, Comic_Neue } from "next/font/google";
+import { Inter, Bangers, Comic_Neue, EB_Garamond } from "next/font/google";
 import { ClerkProvider } from '@clerk/nextjs'
 import { validateEnvironment } from '@/lib/env-validation'
 import { PostHogProvider } from '@/lib/analytics'
@@ -35,6 +35,15 @@ const comicNeue = Comic_Neue({
   subsets: ["latin"],
   variable: "--font-comic-neue",
   display: "swap",
+});
+
+// Serif font for narrative captions (literary/journal feel)
+const ebGaramond = EB_Garamond({
+  weight: ["400", "600"],
+  subsets: ["latin"],
+  variable: "--font-eb-garamond",
+  display: "swap",
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
@@ -115,7 +124,7 @@ export default function RootLayout({
           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
           <link rel="preconnect" href="https://app.posthog.com" />
         </head>
-        <body className={`${inter.variable} ${bangers.variable} ${comicNeue.variable} font-sans antialiased`}>
+        <body className={`${inter.variable} ${bangers.variable} ${comicNeue.variable} ${ebGaramond.variable} font-sans antialiased`}>
           {/* Animated nebula background */}
           <div className="nebula-bg" />
           <div className="dream-dust-layer" />

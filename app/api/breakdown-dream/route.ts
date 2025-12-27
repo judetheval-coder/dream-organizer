@@ -51,74 +51,80 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: "system",
-          content: `You are a comic book storyboard artist specializing in surrealist dream comics. Your job is to break down dream narratives into vivid, cinematic comic panel descriptions.
+          content: `You are a comic book storyboard artist specializing in surrealist dream comics. Your job is to break down dream narratives into vivid, cinematic comic panel descriptions WITH narrative text overlays.
 
 ## OUTPUT FORMAT
 Return a JSON array of objects, each with:
-- "visual": The image generation prompt (NO text/signs/words - these render as gibberish)
-- "overlay_text": Any text that should appear (speech bubbles, signs, titles) - will be added programmatically
-- "text_position": Where the text should go ("top", "bottom", "speech-bubble", "sign")
+- "visual": The image generation prompt (NO text/signs/words - AI cannot render text)
+- "caption": Narrative caption text - 1-2 sentences from dream, max 30 words. Use second person ("you"). Goes in a journal-style box.
+- "caption_position": "top-left" | "bottom-left" | "top-right" | "bottom-center"
+- "dialogue": Speech bubble text if someone speaks, max 15 words. null if no speech.
+- "sfx": Sound effect text like "BEEP" or "CRASH". null if no distinct sound.
 - "panel_type": "establishing" | "action" | "emotional" | "reaction" | "climax" | "transition"
 
-## CRITICAL RULES FOR SURREAL/IMPOSSIBLE ELEMENTS
-Dreams contain impossible physics - PRESERVE THEM, don't normalize:
-- Make impossible elements the PRIMARY SUBJECT, not background detail
-- Use "cross-section view" or "cutaway showing" for underground/internal scenes
-- Describe impossible physics matter-of-factly: "ferris wheel rotating downward INTO the earth" not "ferris wheel going underground"
-- Add "surrealist, impossible geometry, MC Escher inspired, dream logic" to scenes with impossible physics
-- Be visually LITERAL about surreal concepts - no metaphors
+## NARRATIVE CAPTION RULES (CRITICAL)
+Every panel SHOULD have a caption to tell the story. Captions are the reader's guide through the dream.
+- Pull directly from the dream text, lightly edited for flow
+- Prioritize sensory details and emotional beats
+- Use second person: "You feel...", "The floor shifts...", "Your hands..."
+- First panel: Set the scene and mood
+- Last panel: Emotional resonance or lingering feeling
+- If the image clearly shows something, the caption can hint at what ISN'T visible (internal feelings, sounds, smells)
 
-## HANDLING MULTIPLE SPECIFIC ELEMENTS
-When a scene has 3+ specific unique elements (creatures, characters, objects):
-- Pick the MOST visually striking element as the hero subject
-- Describe it in full detail (materials, textures, mechanisms)
-- Reference others as "silhouettes in background" or "blurred shapes"
+Caption positioning:
+- "top-left": Default for most panels
+- "bottom-left": For action panels where top may be busy
+- "top-right": When something important is on the left
+- "bottom-center": For dramatic final panels
+
+## DIALOGUE RULES
+Only add dialogue if someone SPEAKS in the dream:
+- Keep short: max 15 words
+- Include thought trails: "Wait... is that...?"
+- Echoes or unclear speech: "...calling your name..."
+
+## SOUND EFFECTS (SFX)
+Only for distinct, visceral sounds mentioned in the dream:
+- Alarms: "BEEP BEEP", "RING RING"
+- Impacts: "CRASH", "THUD"
+- Mechanical: "CLICK", "WHIRR"
+- Keep uppercase, 1-3 words max
+
+## CRITICAL RULES FOR SURREAL/IMPOSSIBLE ELEMENTS
+Dreams contain impossible physics - PRESERVE THEM:
+- Make impossible elements the PRIMARY SUBJECT
+- Use "cross-section view" for underground scenes
+- Add "surrealist, impossible geometry, dream logic" to impossible scenes
 
 ## PROTAGONIST CONSISTENCY
-The dreamer/protagonist should ALWAYS be shown:
+The dreamer should ALWAYS be shown:
 - From behind (back to viewer)
 - In silhouette
-- Or with face obscured/in shadow
-This allows viewer self-insertion and maintains consistency across panels.
+- Or with face obscured
+This allows viewer self-insertion.
 
-## ABSTRACT CONCEPTS → VISUAL METAPHORS
-Never skip emotionally significant moments. Visualize abstract concepts:
-- "memories flooding in" → "translucent images swirling around character's head like moths"
-- "feeling of falling" → "figure suspended in void, motion lines, floating objects frozen mid-fall"
-- "time distortion" → "melting clocks, multiple ghost-exposures of same figure"
-- "transformation" → "figure mid-morph, half one form half another, surreal transition"
-- "emotional weight" → "heavy chains or stones attached to figure, physically manifested"
-
-## TEXT HANDLING (CRITICAL)
-NEVER include readable text in the visual prompt - AI cannot render text properly.
-Instead:
-- Describe signs as "glowing sign with empty face" or "blank neon marquee"
-- Put the actual text in "overlay_text" field
-- Speech goes in overlay_text with text_position: "speech-bubble"
-
-## PANEL VARIETY
-Include a mix of:
-- Wide establishing shots (panel_type: "establishing")
-- Dynamic action moments (panel_type: "action")
-- Emotional close-ups (panel_type: "emotional")
-- Quick reactions (panel_type: "reaction")
-- Key dramatic moments (panel_type: "climax")
+## TEXT IN IMAGES (CRITICAL)
+NEVER include readable text in the visual prompt - AI cannot render it.
+- Describe signs as "blank neon marquee" or "glowing sign with empty face"
 
 Example output:
 [
-  {"visual": "Wide shot of empty school parking lot at dusk, towering carnival emerging from the asphalt, ferris wheel half-buried rotating into the ground, cross-section view showing underground carnival tunnels, impossible geometry, dream logic", "overlay_text": null, "text_position": null, "panel_type": "establishing"},
-  {"visual": "Silhouetted figure seen from behind approaching giant carnival entrance shaped like a gaping mouth, neon teeth flickering, blank glowing marquee above, surrealist architecture", "overlay_text": "MIDNIGHT CARNIVAL", "text_position": "sign", "panel_type": "action"},
-  {"visual": "Close-up of an anthropomorphic fox in burgundy velvet suit, top hat tilted, one paw extended in welcome, mechanical gears visible through gaps in fur, steampunk carnival booths blurred behind, speech bubble space left empty", "overlay_text": "Welcome, dreamer. We've been waiting.", "text_position": "speech-bubble", "panel_type": "emotional"}
+  {"visual": "Long hallway stretching impossibly far, damp carpet underfoot, flickering fluorescent lights, silhouetted figure seen from behind, surrealist perspective", "caption": "The hallway is too long. The carpet is damp under bare feet, though there's no reason it should be.", "caption_position": "bottom-left", "dialogue": null, "sfx": null, "panel_type": "establishing"},
+  {"visual": "Silhouetted figure approaching bright doorway, light spilling through, ghostly hand reaching out from the light", "caption": "Someone is calling your name from a room that doesn't exist anymore.", "caption_position": "top-left", "dialogue": "...your name...", "sfx": null, "panel_type": "action"},
+  {"visual": "Wide shot of surreal grocery store interior, aisle signs with blank faces, tilted perspective, empty aisles stretching to infinity", "caption": "Every aisle sign has words that almost make sense—Bread, Time, Appointments You Missed.", "caption_position": "top-left", "dialogue": null, "sfx": null, "panel_type": "establishing"},
+  {"visual": "Close-up of hand holding vibrating phone, screen glowing, dozens of notification bubbles, face reflected in screen is blurred", "caption": "Dozens of missed calls. When you answer, you hear your own voice breathing on the other end.", "caption_position": "top-left", "dialogue": "Hello?", "sfx": null, "panel_type": "emotional"},
+  {"visual": "Faceless figure in cashier uniform behind counter, scanning mysterious items, single shoe and bent key on conveyor, harsh overhead lighting", "caption": "A faceless cashier scans items you never picked up: a single shoe, unopened letters, a bent house key.", "caption_position": "top-left", "dialogue": null, "sfx": "BEEP BEEP BEEP", "panel_type": "climax"},
+  {"visual": "Wide shot of empty gymnasium with single figure at podium, mouth open, sand pouring out instead of words, audience seats empty, dream logic", "caption": "You're supposed to speak. When you open your mouth, sand pours out instead of words.", "caption_position": "bottom-center", "dialogue": null, "sfx": null, "panel_type": "emotional"}
 ]`
         },
         {
           role: "user",
-          content: `Break this dream into exactly ${maxPanels} comic panels. Extract EVERY key visual and emotional moment - do not skip surreal or abstract scenes, visualize them with metaphors.
+          content: `Break this dream into exactly ${maxPanels} comic panels. Extract EVERY key moment with narrative captions that help the reader follow the dream's emotional arc.
 
 Dream:
 "${dreamText}"
 
-Return ONLY a JSON array of objects with visual, overlay_text, text_position, and panel_type fields.`
+Return ONLY a JSON array with visual, caption, caption_position, dialogue, sfx, and panel_type fields.`
         }
       ],
       temperature: 0.8,
@@ -134,9 +140,14 @@ Return ONLY a JSON array of objects with visual, overlay_text, text_position, an
     // Parse the JSON array from the response
     type SceneData = {
       visual: string
-      overlay_text: string | null
-      text_position: string | null
+      caption: string | null
+      caption_position: string | null
+      dialogue: string | null
+      sfx: string | null
       panel_type: string
+      // Legacy fields for backward compatibility
+      overlay_text?: string | null
+      text_position?: string | null
     }
 
     let scenes: SceneData[]
@@ -148,17 +159,31 @@ Return ONLY a JSON array of objects with visual, overlay_text, text_position, an
       if (jsonMatch) {
         const parsed = JSON.parse(jsonMatch[0])
 
-        // Check if it's the new object format or legacy string format
+        // Check if it's the new format with caption field
         if (parsed.length > 0 && typeof parsed[0] === 'object' && parsed[0].visual) {
-          scenes = parsed as SceneData[]
+          scenes = parsed.map((s: Record<string, unknown>) => ({
+            visual: s.visual as string,
+            caption: s.caption as string | null ?? null,
+            caption_position: s.caption_position as string | null ?? 'top-left',
+            dialogue: s.dialogue as string | null ?? null,
+            sfx: s.sfx as string | null ?? null,
+            panel_type: s.panel_type as string ?? 'action',
+            // Legacy compatibility - also populate old fields
+            overlay_text: s.overlay_text as string | null ?? s.dialogue as string | null ?? null,
+            text_position: s.text_position as string | null ?? (s.dialogue ? 'speech-bubble' : null),
+          }))
         } else if (parsed.length > 0 && typeof parsed[0] === 'string') {
           // Legacy string format - convert to new format
           legacyFormat = true
           scenes = parsed.map((s: string) => ({
             visual: s,
+            caption: null,
+            caption_position: null,
+            dialogue: null,
+            sfx: null,
+            panel_type: 'action',
             overlay_text: null,
             text_position: null,
-            panel_type: 'action'
           }))
         } else {
           throw new Error("Invalid JSON format")
@@ -172,9 +197,13 @@ Return ONLY a JSON array of objects with visual, overlay_text, text_position, an
       const fallback = simpleFallbackBreakdown(dreamText, maxPanels)
       scenes = fallback.map(s => ({
         visual: s,
+        caption: null,
+        caption_position: null,
+        dialogue: null,
+        sfx: null,
+        panel_type: 'action',
         overlay_text: null,
         text_position: null,
-        panel_type: 'action'
       }))
       legacyFormat = true
     }
@@ -188,7 +217,7 @@ Return ONLY a JSON array of objects with visual, overlay_text, text_position, an
     // Also include a simple string array for backward compatibility
     return NextResponse.json({
       scenes: scenes.map(s => s.visual), // Backward compatible
-      sceneData: scenes, // Full structured data
+      sceneData: scenes, // Full structured data with captions, dialogue, sfx
       legacyFormat
     }, { headers: rate.headers });
   } catch (error) {
