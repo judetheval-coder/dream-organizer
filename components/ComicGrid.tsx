@@ -76,7 +76,6 @@ export default function ComicGrid({
       text_position: sceneData?.[i]?.text_position || null,
     }))
   )
-  const [isHovered, setIsHovered] = useState(false)
   const [generatingIndex, setGeneratingIndex] = useState(-1)
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
   const lightboxRef = useRef<HTMLDivElement>(null)
@@ -504,16 +503,14 @@ export default function ComicGrid({
     <div className="w-full max-w-2xl mx-auto">
       {/* Comic page container with thick white borders like classic comics */}
       <div
-        className="relative transition-all duration-300"
+        className="relative"
         style={{
           padding: '16px',
+          paddingBottom: allLoaded ? '60px' : '16px', // Extra padding for action buttons
           background: 'white',
           borderRadius: '4px',
           boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
-          transform: isHovered && allLoaded ? 'translateY(-4px)' : 'none',
         }}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
       >
         {/* Dynamic grid of panels with thick white gutters */}
         <div
@@ -766,24 +763,22 @@ export default function ComicGrid({
           ))}
         </div>
 
-        {/* Hover overlay for actions */}
+        {/* Action buttons at bottom - no longer blocking panel clicks */}
         {allLoaded && (
-          <div className={`absolute inset-0 bg-black/60 flex items-center justify-center transition-opacity duration-200 z-30 rounded ${isHovered ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-            <div className="flex gap-3">
-              <button
-                onClick={handleDownload}
-                className="px-4 py-2 rounded-lg text-sm font-semibold bg-white text-black hover:bg-gray-100 transition-colors"
-              >
-                ↓ Download Comic
-              </button>
-              <button
-                onClick={generateAllPanels}
-                className="px-4 py-2 rounded-lg text-sm font-semibold text-white"
-                style={{ background: `linear-gradient(135deg, ${colors.purple}, ${colors.cyan})` }}
-              >
-                ↻ Regenerate All
-              </button>
-            </div>
+          <div className="absolute bottom-0 left-0 right-0 flex justify-center gap-3 p-3 bg-gradient-to-t from-black/80 to-transparent rounded-b z-30">
+            <button
+              onClick={handleDownload}
+              className="px-4 py-2 rounded-lg text-sm font-semibold bg-white text-black hover:bg-gray-100 transition-colors shadow-lg"
+            >
+              ↓ Download Comic
+            </button>
+            <button
+              onClick={generateAllPanels}
+              className="px-4 py-2 rounded-lg text-sm font-semibold text-white shadow-lg"
+              style={{ background: `linear-gradient(135deg, ${colors.purple}, ${colors.cyan})` }}
+            >
+              ↻ Regenerate All
+            </button>
           </div>
         )}
       </div>
