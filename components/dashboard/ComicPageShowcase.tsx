@@ -4,8 +4,17 @@ import { colors } from '@/lib/design'
 import Card from '@/components/ui/Card'
 import ComicGrid from '@/components/ComicGrid'
 
+// Scene data structure from breakdown-dream API
+type SceneData = {
+  visual: string
+  overlay_text: string | null
+  text_position: string | null
+  panel_type: string
+}
+
 interface ComicPageShowcaseProps {
   scenes: string[]
+  sceneData?: SceneData[]
   onImagesReady?: (images: string[]) => void
   initialImages?: string[]
   dreamId?: string
@@ -14,6 +23,7 @@ interface ComicPageShowcaseProps {
 
 export function ComicPageShowcase({
   scenes,
+  sceneData,
   onImagesReady,
   initialImages,
   dreamId,
@@ -44,6 +54,7 @@ export function ComicPageShowcase({
 
       <ComicGrid
         scenes={scenes}
+        sceneData={sceneData}
         onAllImagesReady={onImagesReady}
         initialImages={initialImages}
         dreamId={dreamId}

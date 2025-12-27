@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Bangers, Comic_Neue } from "next/font/google";
 import { ClerkProvider } from '@clerk/nextjs'
 import { validateEnvironment } from '@/lib/env-validation'
 import { PostHogProvider } from '@/lib/analytics'
@@ -20,6 +20,21 @@ const MaybeClerk: React.ComponentType<{ children?: React.ReactNode }> = CLERK_EN
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-inter",
+});
+
+// Comic fonts for speech bubbles and overlays
+const bangers = Bangers({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-bangers",
+  display: "swap",
+});
+
+const comicNeue = Comic_Neue({
+  weight: ["300", "400", "700"],
+  subsets: ["latin"],
+  variable: "--font-comic-neue",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -100,7 +115,7 @@ export default function RootLayout({
           <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
           <link rel="preconnect" href="https://app.posthog.com" />
         </head>
-        <body className={`${inter.variable} font-sans antialiased`}>
+        <body className={`${inter.variable} ${bangers.variable} ${comicNeue.variable} font-sans antialiased`}>
           {/* Animated nebula background */}
           <div className="nebula-bg" />
           <div className="dream-dust-layer" />

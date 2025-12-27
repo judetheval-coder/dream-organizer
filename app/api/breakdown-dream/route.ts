@@ -51,37 +51,74 @@ export async function POST(req: NextRequest) {
       messages: [
         {
           role: "system",
-          content: `You are a comic book storyboard artist. Your job is to break down dream narratives into vivid, cinematic comic panel descriptions.
+          content: `You are a comic book storyboard artist specializing in surrealist dream comics. Your job is to break down dream narratives into vivid, cinematic comic panel descriptions.
 
-For each panel, describe:
-1. The SETTING (where - be specific about environment, lighting, colors)
-2. The ACTION (what's happening - dynamic poses, movement)
-3. Any KEY ELEMENTS (characters, objects, surreal details)
-4. The MOOD (emotional tone, atmosphere)
+## OUTPUT FORMAT
+Return a JSON array of objects, each with:
+- "visual": The image generation prompt (NO text/signs/words - these render as gibberish)
+- "overlay_text": Any text that should appear (speech bubbles, signs, titles) - will be added programmatically
+- "text_position": Where the text should go ("top", "bottom", "speech-bubble", "sign")
+- "panel_type": "establishing" | "action" | "emotional" | "reaction" | "climax" | "transition"
 
-Guidelines:
-- Each panel should be a single, capturable moment
-- Use vivid, visual language that an AI image generator can interpret
-- Include surreal/dreamlike elements that make dreams special
-- For characters, describe their appearance, pose, and expression
-- For dialogue, indicate it should appear in a speech bubble
-- Progress the story logically from panel to panel
-- Include establishing shots, close-ups, and action shots for variety
+## CRITICAL RULES FOR SURREAL/IMPOSSIBLE ELEMENTS
+Dreams contain impossible physics - PRESERVE THEM, don't normalize:
+- Make impossible elements the PRIMARY SUBJECT, not background detail
+- Use "cross-section view" or "cutaway showing" for underground/internal scenes
+- Describe impossible physics matter-of-factly: "ferris wheel rotating downward INTO the earth" not "ferris wheel going underground"
+- Add "surrealist, impossible geometry, MC Escher inspired, dream logic" to scenes with impossible physics
+- Be visually LITERAL about surreal concepts - no metaphors
 
-Output format: Return a JSON array of panel descriptions. Each description should be 2-3 sentences of pure visual description.
+## HANDLING MULTIPLE SPECIFIC ELEMENTS
+When a scene has 3+ specific unique elements (creatures, characters, objects):
+- Pick the MOST visually striking element as the hero subject
+- Describe it in full detail (materials, textures, mechanisms)
+- Reference others as "silhouettes in background" or "blurred shapes"
+
+## PROTAGONIST CONSISTENCY
+The dreamer/protagonist should ALWAYS be shown:
+- From behind (back to viewer)
+- In silhouette
+- Or with face obscured/in shadow
+This allows viewer self-insertion and maintains consistency across panels.
+
+## ABSTRACT CONCEPTS → VISUAL METAPHORS
+Never skip emotionally significant moments. Visualize abstract concepts:
+- "memories flooding in" → "translucent images swirling around character's head like moths"
+- "feeling of falling" → "figure suspended in void, motion lines, floating objects frozen mid-fall"
+- "time distortion" → "melting clocks, multiple ghost-exposures of same figure"
+- "transformation" → "figure mid-morph, half one form half another, surreal transition"
+- "emotional weight" → "heavy chains or stones attached to figure, physically manifested"
+
+## TEXT HANDLING (CRITICAL)
+NEVER include readable text in the visual prompt - AI cannot render text properly.
+Instead:
+- Describe signs as "glowing sign with empty face" or "blank neon marquee"
+- Put the actual text in "overlay_text" field
+- Speech goes in overlay_text with text_position: "speech-bubble"
+
+## PANEL VARIETY
+Include a mix of:
+- Wide establishing shots (panel_type: "establishing")
+- Dynamic action moments (panel_type: "action")
+- Emotional close-ups (panel_type: "emotional")
+- Quick reactions (panel_type: "reaction")
+- Key dramatic moments (panel_type: "climax")
 
 Example output:
-["Wide shot of an empty school parking lot at dusk, neon carnival lights glowing in the distance, ferris wheel silhouette against purple sky",
-"Close-up of a giant carnival entrance shaped like a gaping mouth, neon teeth flickering, 'WELCOME' sign buzzing overhead",
-"A fox in a burgundy velvet suit tips his top hat, speech bubble saying 'Welcome, dreamer', carnival games blurred in background"]`
+[
+  {"visual": "Wide shot of empty school parking lot at dusk, towering carnival emerging from the asphalt, ferris wheel half-buried rotating into the ground, cross-section view showing underground carnival tunnels, impossible geometry, dream logic", "overlay_text": null, "text_position": null, "panel_type": "establishing"},
+  {"visual": "Silhouetted figure seen from behind approaching giant carnival entrance shaped like a gaping mouth, neon teeth flickering, blank glowing marquee above, surrealist architecture", "overlay_text": "MIDNIGHT CARNIVAL", "text_position": "sign", "panel_type": "action"},
+  {"visual": "Close-up of an anthropomorphic fox in burgundy velvet suit, top hat tilted, one paw extended in welcome, mechanical gears visible through gaps in fur, steampunk carnival booths blurred behind, speech bubble space left empty", "overlay_text": "Welcome, dreamer. We've been waiting.", "text_position": "speech-bubble", "panel_type": "emotional"}
+]`
         },
         {
           role: "user",
-          content: `Break this dream into ${maxPanels} comic panels. Extract the key visual moments and make each panel description vivid and specific:
+          content: `Break this dream into exactly ${maxPanels} comic panels. Extract EVERY key visual and emotional moment - do not skip surreal or abstract scenes, visualize them with metaphors.
 
+Dream:
 "${dreamText}"
 
-Return ONLY a JSON array of strings, no other text.`
+Return ONLY a JSON array of objects with visual, overlay_text, text_position, and panel_type fields.`
         }
       ],
       temperature: 0.8,
@@ -95,19 +132,51 @@ Return ONLY a JSON array of strings, no other text.`
     }
 
     // Parse the JSON array from the response
-    let scenes: string[]
+    type SceneData = {
+      visual: string
+      overlay_text: string | null
+      text_position: string | null
+      panel_type: string
+    }
+
+    let scenes: SceneData[]
+    let legacyFormat = false
+
     try {
       // Try to extract JSON array from the response
       const jsonMatch = content.match(/\[[\s\S]*\]/)
       if (jsonMatch) {
-        scenes = JSON.parse(jsonMatch[0])
+        const parsed = JSON.parse(jsonMatch[0])
+
+        // Check if it's the new object format or legacy string format
+        if (parsed.length > 0 && typeof parsed[0] === 'object' && parsed[0].visual) {
+          scenes = parsed as SceneData[]
+        } else if (parsed.length > 0 && typeof parsed[0] === 'string') {
+          // Legacy string format - convert to new format
+          legacyFormat = true
+          scenes = parsed.map((s: string) => ({
+            visual: s,
+            overlay_text: null,
+            text_position: null,
+            panel_type: 'action'
+          }))
+        } else {
+          throw new Error("Invalid JSON format")
+        }
       } else {
         throw new Error("No JSON array found")
       }
     } catch {
       // If parsing fails, split by newlines or use fallback
       console.warn('[breakdown-dream] Failed to parse GPT response, using fallback')
-      scenes = simpleFallbackBreakdown(dreamText, maxPanels)
+      const fallback = simpleFallbackBreakdown(dreamText, maxPanels)
+      scenes = fallback.map(s => ({
+        visual: s,
+        overlay_text: null,
+        text_position: null,
+        panel_type: 'action'
+      }))
+      legacyFormat = true
     }
 
     // Ensure we have the right number of scenes
@@ -115,7 +184,13 @@ Return ONLY a JSON array of strings, no other text.`
       scenes = scenes.slice(0, maxPanels)
     }
 
-    return NextResponse.json({ scenes }, { headers: rate.headers });
+    // Return full scene data for the new format
+    // Also include a simple string array for backward compatibility
+    return NextResponse.json({
+      scenes: scenes.map(s => s.visual), // Backward compatible
+      sceneData: scenes, // Full structured data
+      legacyFormat
+    }, { headers: rate.headers });
   } catch (error) {
     console.error("❌ Dream breakdown error:", error);
     const message = error instanceof Error ? error.message : 'Failed to break down dream'

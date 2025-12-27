@@ -129,6 +129,17 @@ export function validateImageGenerationInput(data: unknown): {
     }
   }
 
+  // Validate panel_type for style adjustments
+  const validPanelTypes = ['establishing', 'action', 'emotional', 'reaction', 'climax', 'transition']
+  if (obj.panel_type !== undefined) {
+    if (typeof obj.panel_type !== 'string' || !validPanelTypes.includes(obj.panel_type)) {
+      // Don't error, just ignore invalid panel types
+      validated.panel_type = 'action'
+    } else {
+      validated.panel_type = obj.panel_type
+    }
+  }
+
   return {
     valid: errors.length === 0,
     errors,

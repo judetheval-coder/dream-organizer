@@ -6,8 +6,17 @@ import { colors } from "@/lib/design"
 import { useToast } from "@/contexts/ToastContext"
 import { optimizePromptForDalle } from "@/lib/gpt-helpers"
 
+// Scene data structure from breakdown-dream API
+type SceneData = {
+  visual: string
+  overlay_text: string | null
+  text_position: string | null
+  panel_type: string
+}
+
 type ComicGridProps = {
-  scenes: string[]
+  scenes: string[] // Legacy support - visual prompts only
+  sceneData?: SceneData[] // New structured data with overlays
   onAllImagesReady?: (images: string[]) => void
   initialImages?: string[]
   dreamId?: string | number
@@ -19,10 +28,14 @@ type PanelState = {
   loading: boolean
   error: string
   progress: number
+  overlay_text?: string | null
+  text_position?: string | null
+  panel_type?: string
 }
 
 export default function ComicGrid({
   scenes,
+  sceneData,
   onAllImagesReady,
   initialImages = [],
   dreamId,
@@ -33,14 +46,17 @@ export default function ComicGrid({
   const { showToast } = useToast()
 
   // Generate a consistent seed for this comic - all panels will use the same seed
-  // This helps SDXL maintain a consistent art style across panels
+  // This helps maintain a consistent art style across panels
   const [comicSeed] = useState(() => Math.floor(Math.random() * 2147483647))
   const [panels, setPanels] = useState<PanelState[]>(() =>
     scenes.map((_, i) => ({
       image: initialImages[i] || '',
       loading: false,
       error: '',
-      progress: 0
+      progress: 0,
+      overlay_text: sceneData?.[i]?.overlay_text || null,
+      text_position: sceneData?.[i]?.text_position || null,
+      panel_type: sceneData?.[i]?.panel_type || 'action'
     }))
   )
   const [isHovered, setIsHovered] = useState(false)
@@ -66,11 +82,12 @@ export default function ComicGrid({
     try {
       // Optimize prompt for this specific scene
       const prompt = await optimizePromptForDalle(scenes[index], 'Comic', 'Dynamic')
+      const panelType = sceneData?.[index]?.panel_type || 'action'
 
       const res = await fetch("/api/generate-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt, seed: comicSeed })
+        body: JSON.stringify({ prompt, seed: comicSeed, panel_type: panelType })
       })
 
       const data = await res.json()
@@ -165,6 +182,7 @@ export default function ComicGrid({
 
     const panelSize = columns <= 2 ? 512 : columns === 3 ? 400 : 350
     const borderWidth = 16 // Thicker white borders like classic comics
+    const panelBorder = 3 // Black border around each panel
     const cols = columns
     const rows = Math.ceil(scenes.length / cols)
 
@@ -186,6 +204,104 @@ export default function ComicGrid({
       })
     }
 
+    // Draw text overlay on canvas
+    const drawTextOverlay = (
+      x: number,
+      y: number,
+      width: number,
+      text: string,
+      position: string
+    ) => {
+      ctx.save()
+
+      if (position === 'speech-bubble') {
+        // Draw speech bubble
+        const bubbleX = x + 15
+        const bubbleY = y + 15
+        const maxWidth = width * 0.7
+        ctx.font = 'bold 14px "Comic Sans MS", cursive'
+        const lines = wrapText(ctx, text, maxWidth)
+        const lineHeight = 18
+        const bubbleHeight = lines.length * lineHeight + 16
+        const bubbleWidth = Math.min(maxWidth, Math.max(...lines.map(l => ctx.measureText(l).width))) + 20
+
+        // Bubble background
+        ctx.fillStyle = 'white'
+        ctx.strokeStyle = 'black'
+        ctx.lineWidth = 2
+        ctx.beginPath()
+        ctx.roundRect(bubbleX, bubbleY, bubbleWidth, bubbleHeight, 10)
+        ctx.fill()
+        ctx.stroke()
+
+        // Bubble tail
+        ctx.beginPath()
+        ctx.moveTo(bubbleX + 20, bubbleY + bubbleHeight)
+        ctx.lineTo(bubbleX + 25, bubbleY + bubbleHeight + 12)
+        ctx.lineTo(bubbleX + 35, bubbleY + bubbleHeight)
+        ctx.fillStyle = 'white'
+        ctx.fill()
+        ctx.stroke()
+
+        // Text
+        ctx.fillStyle = 'black'
+        lines.forEach((line, i) => {
+          ctx.fillText(line, bubbleX + 10, bubbleY + 18 + i * lineHeight)
+        })
+      } else if (position === 'sign') {
+        // Draw neon sign style text
+        ctx.font = 'bold 18px Impact, sans-serif'
+        const textWidth = ctx.measureText(text).width
+        const signX = x + (width - textWidth) / 2 - 10
+        const signY = y + 10
+
+        // Sign background
+        ctx.fillStyle = 'rgba(255, 0, 100, 0.9)'
+        ctx.strokeStyle = 'black'
+        ctx.lineWidth = 2
+        ctx.fillRect(signX, signY, textWidth + 20, 28)
+        ctx.strokeRect(signX, signY, textWidth + 20, 28)
+
+        // Text with outline
+        ctx.fillStyle = 'white'
+        ctx.strokeStyle = 'black'
+        ctx.lineWidth = 3
+        ctx.strokeText(text, signX + 10, signY + 20)
+        ctx.fillText(text, signX + 10, signY + 20)
+      } else if (position === 'top' || position === 'bottom') {
+        // Draw caption box
+        const captionY = position === 'top' ? y : y + panelSize - 25
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)'
+        ctx.fillRect(x, captionY, width, 25)
+        ctx.font = 'italic 12px "Comic Sans MS", sans-serif'
+        ctx.fillStyle = 'white'
+        ctx.textAlign = 'center'
+        ctx.fillText(text, x + width / 2, captionY + 17)
+        ctx.textAlign = 'left'
+      }
+
+      ctx.restore()
+    }
+
+    // Helper to wrap text
+    const wrapText = (context: CanvasRenderingContext2D, text: string, maxWidth: number): string[] => {
+      const words = text.split(' ')
+      const lines: string[] = []
+      let currentLine = ''
+
+      words.forEach(word => {
+        const testLine = currentLine ? `${currentLine} ${word}` : word
+        if (context.measureText(testLine).width > maxWidth && currentLine) {
+          lines.push(currentLine)
+          currentLine = word
+        } else {
+          currentLine = testLine
+        }
+      })
+      if (currentLine) lines.push(currentLine)
+      return lines
+    }
+
     try {
       for (let i = 0; i < panels.length; i++) {
         if (panels[i].image) {
@@ -194,7 +310,19 @@ export default function ComicGrid({
           const row = Math.floor(i / cols)
           const x = borderWidth + col * (panelSize + borderWidth)
           const y = borderWidth + row * (panelSize + borderWidth)
+
+          // Draw the image
           ctx.drawImage(img, x, y, panelSize, panelSize)
+
+          // Draw black panel border
+          ctx.strokeStyle = 'black'
+          ctx.lineWidth = panelBorder
+          ctx.strokeRect(x, y, panelSize, panelSize)
+
+          // Draw text overlay if present
+          if (panels[i].overlay_text && panels[i].text_position) {
+            drawTextOverlay(x, y, panelSize, panels[i].overlay_text!, panels[i].text_position!)
+          }
         }
       }
 
@@ -298,6 +426,96 @@ export default function ComicGrid({
                   sizes="(max-width: 768px) 50vw, 300px"
                   className="object-cover"
                   unoptimized
+                />
+              )}
+
+              {/* Text overlay - speech bubbles, signs, captions */}
+              {!panel.loading && panel.image && panel.overlay_text && (
+                <div className="absolute inset-0 pointer-events-none z-10">
+                  {panel.text_position === 'speech-bubble' && (
+                    <div className="absolute top-3 left-3 right-3 max-w-[80%]">
+                      <div
+                        className="relative bg-white rounded-2xl px-3 py-2 shadow-lg"
+                        style={{
+                          fontFamily: 'var(--font-comic-neue), "Comic Sans MS", cursive',
+                          fontSize: '0.75rem',
+                          lineHeight: '1.2',
+                          color: '#000',
+                          border: '2px solid #000',
+                        }}
+                      >
+                        {panel.overlay_text}
+                        {/* Speech bubble tail */}
+                        <div
+                          className="absolute -bottom-2 left-4 w-0 h-0"
+                          style={{
+                            borderLeft: '8px solid transparent',
+                            borderRight: '8px solid transparent',
+                            borderTop: '10px solid #000',
+                          }}
+                        />
+                        <div
+                          className="absolute -bottom-1.5 left-4 w-0 h-0"
+                          style={{
+                            borderLeft: '6px solid transparent',
+                            borderRight: '6px solid transparent',
+                            borderTop: '8px solid white',
+                            marginLeft: '2px',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                  {panel.text_position === 'sign' && (
+                    <div className="absolute top-2 left-1/2 -translate-x-1/2">
+                      <div
+                        className="px-3 py-1 rounded"
+                        style={{
+                          fontFamily: 'var(--font-bangers), Impact, sans-serif',
+                          fontSize: '0.9rem',
+                          fontWeight: 'bold',
+                          color: '#fff',
+                          textShadow: '2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000',
+                          background: 'linear-gradient(180deg, rgba(255,0,100,0.9), rgba(200,0,80,0.9))',
+                          border: '2px solid #000',
+                          letterSpacing: '1px',
+                        }}
+                      >
+                        {panel.overlay_text}
+                      </div>
+                    </div>
+                  )}
+                  {panel.text_position === 'top' && (
+                    <div className="absolute top-0 left-0 right-0 px-2 py-1 bg-black/80">
+                      <p
+                        className="text-center text-white text-xs italic"
+                        style={{ fontFamily: 'var(--font-comic-neue), "Comic Sans MS", sans-serif' }}
+                      >
+                        {panel.overlay_text}
+                      </p>
+                    </div>
+                  )}
+                  {panel.text_position === 'bottom' && (
+                    <div className="absolute bottom-0 left-0 right-0 px-2 py-1 bg-black/80">
+                      <p
+                        className="text-center text-white text-xs italic"
+                        style={{ fontFamily: 'var(--font-comic-neue), "Comic Sans MS", sans-serif' }}
+                      >
+                        {panel.overlay_text}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Panel border for comic book effect */}
+              {!panel.loading && panel.image && (
+                <div
+                  className="absolute inset-0 pointer-events-none z-5"
+                  style={{
+                    boxShadow: 'inset 0 0 0 3px #000',
+                    borderRadius: '2px',
+                  }}
                 />
               )}
 

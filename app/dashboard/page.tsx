@@ -192,8 +192,17 @@ type LocalPanel = {
   image?: string
 }
 
+// Scene data from the new breakdown-dream API format
+type SceneData = {
+  visual: string
+  overlay_text: string | null
+  text_position: string | null
+  panel_type: string
+}
+
 type ComicPageState = {
   scenes: string[]
+  sceneData?: SceneData[]
   image: string
   isGenerating: boolean
   dreamId: string | null
@@ -413,7 +422,7 @@ function DashboardPageContent() {
   )
 
   // Use GPT to intelligently break down dream into cinematic scenes
-  const breakdownDreamIntoScenes = async (text: string): Promise<string[]> => {
+  const breakdownDreamIntoScenes = async (text: string): Promise<{ scenes: string[], sceneData?: SceneData[] }> => {
     const trimmed = text.trim()
 
     // Fixed at 6 panels for optimal comic page layout and story flow
@@ -431,15 +440,19 @@ function DashboardPageContent() {
       if (response.ok) {
         const data = await response.json()
         if (data.scenes && Array.isArray(data.scenes) && data.scenes.length > 0) {
-          return data.scenes
+          // Return both the visual prompts and the full scene data (with overlays)
+          return {
+            scenes: data.scenes,
+            sceneData: data.sceneData // New structured data with text overlays
+          }
         }
       }
     } catch (error) {
       console.warn('[breakdownDreamIntoScenes] GPT breakdown failed, using fallback:', error)
     }
 
-    // Fallback: simple sentence-based splitting
-    return simpleFallbackBreakdown(trimmed, maxPanels)
+    // Fallback: simple sentence-based splitting (no overlays)
+    return { scenes: simpleFallbackBreakdown(trimmed, maxPanels) }
   }
 
   // Simple fallback scene breakdown without GPT
@@ -492,11 +505,12 @@ function DashboardPageContent() {
     showToast('Analyzing your dream for optimal scenes...', 'info')
 
     // Use GPT to intelligently break down dream into cinematic scenes
-    const sceneDescriptions = await breakdownDreamIntoScenes(currentDreamText)
+    const { scenes: sceneDescriptions, sceneData } = await breakdownDreamIntoScenes(currentDreamText)
 
-    // Update with the scenes
+    // Update with the scenes and structured data
     setComicPage({
       scenes: sceneDescriptions,
+      sceneData: sceneData,
       image: '',
       isGenerating: true,
       dreamId: null
@@ -716,6 +730,7 @@ function DashboardPageContent() {
                 <section aria-label="Current comic generation">
                   <ComicPageShowcase
                     scenes={comicPage.scenes}
+                    sceneData={comicPage.sceneData}
                     onImagesReady={handleComicImagesReady}
                     dreamId={comicPage.dreamId || undefined}
                     isGenerating={comicPage.isGenerating}
@@ -760,6 +775,7 @@ function DashboardPageContent() {
               {comicPage.scenes.length > 0 && (
                 <ComicPageShowcase
                   scenes={comicPage.scenes}
+                  sceneData={comicPage.sceneData}
                   onImagesReady={handleComicImagesReady}
                   dreamId={comicPage.dreamId || undefined}
                   isGenerating={comicPage.isGenerating}

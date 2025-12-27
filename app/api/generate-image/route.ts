@@ -78,10 +78,20 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { prompt, seed } = validation.data as { prompt: string; seed?: number }
+    const { prompt, seed, panel_type } = validation.data as { prompt: string; seed?: number; panel_type?: string }
+
+    // Comic style suffix - emphasizes bold outlines and comic book aesthetics
+    const comicStyleSuffix = "comic book panel art, bold black ink outlines, cel shaded coloring, dramatic shadows, slight halftone texture, graphic novel illustration, professional sequential art"
+
+    // Adjust style based on panel type for variety
+    const panelTypeStyle = panel_type === 'establishing' ? ', wide cinematic shot, epic scale'
+      : panel_type === 'emotional' ? ', intimate close-up, expressive lighting'
+      : panel_type === 'climax' ? ', dramatic angle, high contrast, intense action'
+      : panel_type === 'reaction' ? ', tight framing, focus on expression'
+      : ', dynamic composition'
 
     // Enhance prompt for comic book style - Flux model responds well to descriptive prompts
-    const enhancedPrompt = `comic book panel, ${prompt}, bold ink outlines, vibrant colors, dynamic action pose, professional comic illustration, sequential art style`
+    const enhancedPrompt = `${prompt}, ${comicStyleSuffix}${panelTypeStyle}`
 
     // Create prediction with Flux comic-style model
     const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
