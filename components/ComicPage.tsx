@@ -237,9 +237,9 @@ export default function ComicPage({
         {/* Empty State */}
         {!loading && !image && !error && (
           <div className="absolute inset-0 flex flex-col items-center justify-center z-10 p-8" style={{ background: 'linear-gradient(135deg, #0a0118 0%, #1a0a2e 100%)' }}>
-            <div className="text-6xl mb-4 opacity-60">📚</div>
-            <p className="text-lg text-white/60 text-center mb-2 font-medium">Marvel-Style Comic Page</p>
-            <p className="text-sm text-white/40 text-center mb-6">{scenes.length} panels will be generated</p>
+            <div className="text-6xl mb-4 opacity-60">📖</div>
+            <p className="text-lg text-white/60 text-center mb-2 font-medium">Comic Page</p>
+            <p className="text-sm text-white/40 text-center mb-6">{scenes.length} panels with white borders</p>
             <button
               onClick={generate}
               className="px-6 py-3 rounded-full text-base font-semibold text-white"

@@ -26,10 +26,10 @@ export function ComicPageShowcase({
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <p className="text-lg font-semibold" style={{ color: colors.textPrimary }}>
-            🦸 Marvel-Style Comic Page
+            📖 Comic Page
           </p>
           <p className="text-sm" style={{ color: colors.textMuted }}>
-            {scenes.length} panel{scenes.length > 1 ? 's' : ''} • Stan Lee era style • White borders
+            {scenes.length} panel{scenes.length > 1 ? 's' : ''} • White borders • Dynamic action
           </p>
         </div>
         {isGenerating && (

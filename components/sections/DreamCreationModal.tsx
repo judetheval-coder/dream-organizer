@@ -53,7 +53,7 @@ export function DreamCreationModal({
               Create Comic Page
             </h2>
             <p id={descriptionId} className="text-sm mt-1" style={{ color: colors.textMuted }}>
-              Describe your dream and we'll turn it into a Marvel-style comic page.
+              Describe your dream and we'll turn it into a comic page with panels.
             </p>
           </div>
           <button
@@ -65,18 +65,6 @@ export function DreamCreationModal({
           >
             ✕
           </button>
-        </div>
-
-        {/* Marvel style badge */}
-        <div
-          className="mt-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold"
-          style={{
-            background: 'linear-gradient(135deg, #e23636 0%, #c41e3a 100%)',
-            color: 'white'
-          }}
-        >
-          <span>🦸</span>
-          <span>MARVEL STYLE • STAN LEE ERA</span>
         </div>
 
         <textarea
@@ -113,7 +101,7 @@ export function DreamCreationModal({
           }}
         >
           <p style={{ color: colors.textMuted }}>
-            <strong style={{ color: colors.purple }}>What you'll get:</strong> A single comic page with 2-4 panels featuring bold ink outlines, vibrant colors, dynamic poses, and white borders — just like classic Marvel comics.
+            <strong style={{ color: colors.purple }}>What you'll get:</strong> A comic page with 2-4 panels, white borders between them, bold outlines, and dynamic action poses.
           </p>
         </div>
 
@@ -138,13 +126,13 @@ export function DreamCreationModal({
             className="flex-1 py-3 rounded-lg font-semibold cursor-pointer disabled:opacity-50 transition-all hover:scale-105"
             data-onboarding="create-btn"
             style={{
-              background: 'linear-gradient(135deg, #e23636 0%, #8b5cf6 100%)',
+              background: gradients.button,
               color: colors.white,
               border: 'none',
               boxShadow: shadows.glow,
             }}
           >
-            🦸 Generate Comic
+            🎨 Generate Comic
           </button>
         </div>
 

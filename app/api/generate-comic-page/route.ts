@@ -85,20 +85,20 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Build the comic page prompt with Marvel/Stan Lee style
+    // Build the comic page prompt - focused on clean panel layout with white borders
     const layoutDescription = getLayoutDescription(panelCount || scenes.length as 2 | 3 | 4)
 
     const sceneDescriptions = scenes
       .map((scene, i) => `Panel ${i + 1}: ${scene}`)
       .join('\n')
 
-    const comicPagePrompt = `Marvel comic book page, classic Stan Lee era style, ${layoutDescription}, white panel borders and gutters separating each panel, bold black ink outlines, dynamic action poses, dramatic angles, vibrant saturated colors, halftone dot shading, speed lines for motion, professional comic book art, American superhero comic style:
+    const comicPagePrompt = `Comic book page, ${layoutDescription}, white borders between panels, bold ink outlines, vibrant colors, dynamic action poses, professional illustration:
 
 ${sceneDescriptions}
 
-The panels should flow together as one cohesive comic page with consistent character designs and art style throughout. White borders between panels, classic comic book layout.`
+Single cohesive page with white gutters separating each panel. Consistent art style throughout all panels.`
 
-    const negativePrompt = 'manga style, anime style, japanese style, chibi, realistic photo, 3d render, watermark, text bubbles, speech bubbles, dialogue, words, letters, blurry, low quality, distorted, ugly, deformed, photograph, cropped, out of frame, worst quality, low resolution, jpeg artifacts, duplicate, morbid, mutilated, extra fingers, mutated hands, poorly drawn hands, poorly drawn face, mutation, deformed, bad anatomy, bad proportions, extra limbs, cloned face, disfigured, gross proportions, malformed limbs, missing arms, missing legs, extra arms, extra legs, fused fingers, too many fingers, disconnected panels, separate images'
+    const negativePrompt = 'realistic photo, 3d render, watermark, text, speech bubbles, dialogue, words, letters, blurry, low quality, distorted, deformed, photograph, cropped, worst quality, low resolution, jpeg artifacts, separate images, no borders, borderless'
 
     // Use a taller aspect ratio for comic pages (portrait orientation like real comics)
     const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
