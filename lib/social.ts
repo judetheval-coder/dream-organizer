@@ -184,17 +184,13 @@ export async function fetchPublicDreams(currentUserId?: string): Promise<PublicD
   }
 }
 
-// Check published state for a dream
+// Check published state for a dream (via API to avoid RLS issues)
 export async function isDreamPublished(dreamId: string): Promise<boolean> {
   try {
-    const { data, error } = await supabase
-      .from('published_dreams')
-      .select('id')
-      .eq('dream_id', dreamId)
-      .limit(1)
-      .single()
-    if (error) return false
-    return !!data
+    const res = await fetch(`/api/dream-published?dreamId=${encodeURIComponent(dreamId)}`)
+    if (!res.ok) return false
+    const data = await res.json()
+    return data.published === true
   } catch {
     return false
   }
