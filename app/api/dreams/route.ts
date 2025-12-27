@@ -1,4 +1,4 @@
-import { auth } from '@clerk/nextjs/server'
+import { auth, clerkClient } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { getClient } from '@/lib/supabase-server'
 import { SUBSCRIPTION_TIERS, type SubscriptionTier } from '@/lib/subscription-tiers'
@@ -15,6 +15,17 @@ export async function POST(req: Request) {
 
         if (!text || !panels || !Array.isArray(panels)) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+        }
+
+        // Check if user is admin (bypasses all limits)
+        let isAdmin = false
+        try {
+            const client = await clerkClient()
+            const user = await client.users.getUser(userId)
+            isAdmin = user.publicMetadata?.role === 'admin'
+        } catch (err) {
+            console.error('[API dreams] Error checking admin status:', err)
+            // Continue without admin privileges if check fails
         }
 
         const supabase = getClient()
@@ -36,7 +47,8 @@ export async function POST(req: Request) {
         const limit = SUBSCRIPTION_TIERS[tier].limits.dreamsPerMonth
 
         // Check if user has reached their monthly limit (-1 means unlimited)
-        if (limit !== -1 && currentCount >= limit) {
+        // Admins bypass this check
+        if (!isAdmin && limit !== -1 && currentCount >= limit) {
             return NextResponse.json({
                 error: `You've reached your monthly limit of ${limit} dreams. Upgrade to create more!`,
                 code: 'LIMIT_REACHED',
@@ -45,9 +57,9 @@ export async function POST(req: Request) {
             }, { status: 403 })
         }
 
-        // Check panel limit for this tier
+        // Check panel limit for this tier (admins bypass this too)
         const panelLimit = SUBSCRIPTION_TIERS[tier].limits.panelsPerDream
-        if (panels.length > panelLimit) {
+        if (!isAdmin && panels.length > panelLimit) {
             return NextResponse.json({
                 error: `Your plan allows ${panelLimit} panels per dream. You submitted ${panels.length}.`,
                 code: 'PANEL_LIMIT_EXCEEDED',
