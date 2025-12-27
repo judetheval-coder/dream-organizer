@@ -168,12 +168,13 @@ export default function Panel({
     } catch { /* ignore */ }
   }, [initialImage, key]) // Remove onImageReady from deps to prevent loop
 
+  // Auto-generate image on mount, but NOT if there's an error (prevents infinite retry loop on 429s)
   useEffect(() => {
-    if (!image && !loading && description && shouldGenerate) {
+    if (!image && !loading && !error && description && shouldGenerate) {
       const t = setTimeout(() => void generate(), generateDelay)
       return () => clearTimeout(t)
     }
-  }, [description, generateDelay, generate, image, loading, shouldGenerate])
+  }, [description, generateDelay, generate, image, loading, error, shouldGenerate])
 
   const handleDelete = () => {
     setImage('')
