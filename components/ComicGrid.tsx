@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect, useCallback } from "react"
+import React, { useState, useEffect, useCallback, useRef } from "react"
 import Image from "next/image"
 import { colors } from "@/lib/design"
 import { useToast } from "@/contexts/ToastContext"
@@ -78,6 +78,46 @@ export default function ComicGrid({
   )
   const [isHovered, setIsHovered] = useState(false)
   const [generatingIndex, setGeneratingIndex] = useState(-1)
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null)
+  const lightboxRef = useRef<HTMLDivElement>(null)
+
+  // Handle keyboard navigation for lightbox
+  useEffect(() => {
+    if (lightboxIndex === null) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setLightboxIndex(null)
+      } else if (e.key === 'ArrowLeft') {
+        setLightboxIndex(prev => prev !== null && prev > 0 ? prev - 1 : prev)
+      } else if (e.key === 'ArrowRight') {
+        setLightboxIndex(prev => prev !== null && prev < panels.length - 1 ? prev + 1 : prev)
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    // Prevent body scroll when lightbox is open
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown)
+      document.body.style.overflow = ''
+    }
+  }, [lightboxIndex, panels.length])
+
+  // Open lightbox for a specific panel
+  const openLightbox = (index: number) => {
+    if (panels[index]?.image) {
+      setLightboxIndex(index)
+    }
+  }
+
+  // Close lightbox when clicking outside the image
+  const handleLightboxBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === lightboxRef.current) {
+      setLightboxIndex(null)
+    }
+  }
 
   // Generate a single panel with automatic retry
   const generatePanel = useCallback(async (index: number, retryCount = 0): Promise<string | null> => {
@@ -487,12 +527,14 @@ export default function ComicGrid({
           {panels.map((panel, index) => (
             <div
               key={index}
-              className="relative overflow-hidden"
+              className="relative overflow-hidden group"
               style={{
                 aspectRatio: '1',
                 background: '#0a0118',
                 borderRadius: '2px',
+                cursor: panel.image && !panel.loading ? 'pointer' : 'default',
               }}
+              onClick={() => openLightbox(index)}
             >
               {/* Loading state */}
               {panel.loading && (
@@ -538,14 +580,24 @@ export default function ComicGrid({
 
               {/* Generated image */}
               {!panel.loading && panel.image && (
-                <Image
-                  src={panel.image}
-                  alt={`Panel ${index + 1}: ${scenes[index]?.slice(0, 50)}...`}
-                  fill
-                  sizes="(max-width: 768px) 50vw, 300px"
-                  className="object-cover"
-                  unoptimized
-                />
+                <>
+                  <Image
+                    src={panel.image}
+                    alt={`Panel ${index + 1}: ${scenes[index]?.slice(0, 50)}...`}
+                    fill
+                    sizes="(max-width: 768px) 50vw, 300px"
+                    className="object-cover transition-transform duration-200 group-hover:scale-105"
+                    unoptimized
+                  />
+                  {/* Magnify hint on hover */}
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-200 flex items-center justify-center pointer-events-none">
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-black/70 rounded-full p-3">
+                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                      </svg>
+                    </div>
+                  </div>
+                </>
               )}
 
               {/* Text overlays - narrative captions, speech bubbles, sound effects */}
@@ -761,6 +813,216 @@ export default function ComicGrid({
                 <p className="text-sm text-white/70 leading-relaxed">{scene}</p>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox Modal */}
+      {lightboxIndex !== null && panels[lightboxIndex]?.image && (
+        <div
+          ref={lightboxRef}
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
+          onClick={handleLightboxBackdropClick}
+        >
+          {/* Close button */}
+          <button
+            onClick={() => setLightboxIndex(null)}
+            className="absolute top-4 right-4 z-50 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+            aria-label="Close lightbox"
+          >
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          {/* Previous button */}
+          {lightboxIndex > 0 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex - 1); }}
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-50 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+              aria-label="Previous panel"
+            >
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          )}
+
+          {/* Next button */}
+          {lightboxIndex < panels.length - 1 && panels[lightboxIndex + 1]?.image && (
+            <button
+              onClick={(e) => { e.stopPropagation(); setLightboxIndex(lightboxIndex + 1); }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-50 p-3 rounded-full bg-white/10 hover:bg-white/20 transition-colors"
+              aria-label="Next panel"
+            >
+              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          )}
+
+          {/* Panel counter */}
+          <div className="absolute top-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-black/50 text-white text-sm font-medium">
+            Panel {lightboxIndex + 1} of {panels.filter(p => p.image).length}
+          </div>
+
+          {/* Main lightbox content */}
+          <div
+            className="relative max-w-4xl max-h-[85vh] w-full aspect-square bg-black rounded-lg overflow-hidden"
+            style={{ boxShadow: '0 0 60px rgba(0,0,0,0.8)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Full-size image */}
+            <Image
+              src={panels[lightboxIndex].image}
+              alt={`Panel ${lightboxIndex + 1}: ${scenes[lightboxIndex]?.slice(0, 50)}...`}
+              fill
+              sizes="100vw"
+              className="object-contain"
+              unoptimized
+              priority
+            />
+
+            {/* Text overlays in lightbox (larger) */}
+            <div className="absolute inset-0 pointer-events-none">
+              {/* Narrative Caption Box */}
+              {panels[lightboxIndex].caption && (
+                <div
+                  className="absolute max-w-[75%]"
+                  style={{
+                    ...(panels[lightboxIndex].caption_position === 'top-left' ? { top: 16, left: 16 } : {}),
+                    ...(panels[lightboxIndex].caption_position === 'bottom-left' ? { bottom: 16, left: 16 } : {}),
+                    ...(panels[lightboxIndex].caption_position === 'top-right' ? { top: 16, right: 16 } : {}),
+                    ...(panels[lightboxIndex].caption_position === 'bottom-center' ? { bottom: 16, left: '50%', transform: 'translateX(-50%)' } : {}),
+                  }}
+                >
+                  <div
+                    className="px-5 py-3"
+                    style={{
+                      background: 'linear-gradient(145deg, #fffef8 0%, #f4edd8 100%)',
+                      border: '3px solid #2a2a2a',
+                      fontFamily: 'var(--font-eb-garamond), Georgia, serif',
+                      fontSize: '1.1rem',
+                      fontStyle: 'italic',
+                      lineHeight: 1.5,
+                      color: '#1a1a1a',
+                      boxShadow: '4px 4px 12px rgba(0,0,0,0.4)',
+                    }}
+                  >
+                    {panels[lightboxIndex].caption}
+                  </div>
+                </div>
+              )}
+
+              {/* Speech Bubble */}
+              {panels[lightboxIndex].dialogue && (
+                <div
+                  className="absolute"
+                  style={{
+                    top: panels[lightboxIndex].caption ? '40%' : '15%',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                  }}
+                >
+                  <div
+                    className="relative bg-white rounded-3xl px-5 py-3"
+                    style={{
+                      fontFamily: 'var(--font-comic-neue), "Comic Sans MS", cursive',
+                      fontSize: '1.1rem',
+                      fontWeight: 600,
+                      lineHeight: 1.4,
+                      color: '#1a1a1a',
+                      border: '3px solid #1a1a1a',
+                      boxShadow: '3px 3px 0 rgba(0,0,0,0.2)',
+                      maxWidth: '70%',
+                    }}
+                  >
+                    {panels[lightboxIndex].dialogue}
+                    {/* Speech bubble tail */}
+                    <div
+                      className="absolute -bottom-4 left-6 w-0 h-0"
+                      style={{
+                        borderLeft: '12px solid transparent',
+                        borderRight: '12px solid transparent',
+                        borderTop: '16px solid #1a1a1a',
+                      }}
+                    />
+                    <div
+                      className="absolute -bottom-3 left-6 w-0 h-0"
+                      style={{
+                        borderLeft: '10px solid transparent',
+                        borderRight: '10px solid transparent',
+                        borderTop: '14px solid white',
+                        marginLeft: '2px',
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Sound Effect */}
+              {panels[lightboxIndex].sfx && (
+                <div
+                  className="absolute"
+                  style={{
+                    bottom: '15%',
+                    right: '10%',
+                    fontFamily: 'var(--font-bangers), Impact, sans-serif',
+                    fontSize: '2.5rem',
+                    color: '#ff3b3b',
+                    textShadow: '3px 3px 0 #1a1a1a, -2px -2px 0 #1a1a1a',
+                    letterSpacing: '4px',
+                    transform: 'rotate(-8deg)',
+                  }}
+                >
+                  {panels[lightboxIndex].sfx}
+                </div>
+              )}
+
+              {/* Legacy overlay text */}
+              {!panels[lightboxIndex].caption && !panels[lightboxIndex].dialogue && panels[lightboxIndex].overlay_text && (
+                <>
+                  {panels[lightboxIndex].text_position === 'speech-bubble' && (
+                    <div className="absolute top-6 left-6 right-6 max-w-[70%]">
+                      <div
+                        className="relative bg-white rounded-3xl px-5 py-3 shadow-xl"
+                        style={{
+                          fontFamily: 'var(--font-comic-neue), "Comic Sans MS", cursive',
+                          fontSize: '1rem',
+                          lineHeight: '1.3',
+                          color: '#000',
+                          border: '3px solid #000',
+                        }}
+                      >
+                        {panels[lightboxIndex].overlay_text}
+                        <div
+                          className="absolute -bottom-3 left-6 w-0 h-0"
+                          style={{
+                            borderLeft: '12px solid transparent',
+                            borderRight: '12px solid transparent',
+                            borderTop: '14px solid #000',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Black panel border */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                boxShadow: 'inset 0 0 0 4px #000',
+                borderRadius: '8px',
+              }}
+            />
+          </div>
+
+          {/* Keyboard hint */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-4 py-2 rounded-full bg-black/50 text-white/60 text-xs">
+            Use arrow keys to navigate • ESC to close
           </div>
         </div>
       )}
