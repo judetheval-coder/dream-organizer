@@ -148,7 +148,16 @@ export async function GET(req: Request) {
             nextCursor = last?.created_at
         }
 
-        return NextResponse.json({ dreams: items, nextCursor })
+        // Also fetch user tier for the client
+        const { data: userData } = await supabase
+            .from('users')
+            .select('subscription_tier')
+            .eq('id', userId)
+            .single()
+
+        const userTier = userData?.subscription_tier || 'free'
+
+        return NextResponse.json({ dreams: items, nextCursor, userTier })
     } catch (err) {
         console.error('[API dreams] Unexpected error:', err)
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 })

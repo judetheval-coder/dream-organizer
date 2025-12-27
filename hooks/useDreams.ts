@@ -2,10 +2,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { useUser } from '@clerk/nextjs'
 import {
-  supabase,
-  getUserDreams,
-  createDream,
-  createPanels,
   updatePanelImage,
   deleteDream,
   type DreamWithPanels,
@@ -170,7 +166,7 @@ export function useDreams(): UseDreamsResult {
         throw lastError || new Error('Failed to fetch dreams after multiple attempts')
       }
 
-      const { dreams: fetchedDreams, nextCursor: newCursor } = await res.json()
+      const { dreams: fetchedDreams, nextCursor: newCursor, userTier: fetchedTier } = await res.json()
 
       // Prevent race conditions
       if (fetchId !== fetchIdRef.current) return
@@ -185,17 +181,9 @@ export function useDreams(): UseDreamsResult {
         updateCache(user.id, fetchedDreams, newCursor || null)
       }
 
-      // Fetch user tier on reset only
-      if (reset) {
-        const { data: userData } = await supabase
-          .from('users')
-          .select('subscription_tier')
-          .eq('id', user.id)
-          .single()
-
-        if (userData) {
-          setUserTier(userData.subscription_tier as SubscriptionTier)
-        }
+      // Set user tier from API response (server-side fetch avoids RLS issues)
+      if (reset && fetchedTier) {
+        setUserTier(fetchedTier as SubscriptionTier)
       }
 
       setError(null)
