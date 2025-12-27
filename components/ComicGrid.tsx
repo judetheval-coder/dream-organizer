@@ -46,12 +46,15 @@ export default function ComicGrid({
   const [isHovered, setIsHovered] = useState(false)
   const [generatingIndex, setGeneratingIndex] = useState(-1)
 
-  // Generate a single panel
-  const generatePanel = useCallback(async (index: number) => {
-    if (!scenes[index]) return
+  // Generate a single panel with automatic retry
+  const generatePanel = useCallback(async (index: number, retryCount = 0): Promise<string | null> => {
+    const MAX_RETRIES = 3
+    const RETRY_DELAY_BASE = 2000 // 2 seconds, doubles each retry
+
+    if (!scenes[index]) return null
 
     setPanels(prev => prev.map((p, i) =>
-      i === index ? { ...p, loading: true, error: '', progress: 0 } : p
+      i === index ? { ...p, loading: true, error: retryCount > 0 ? `Retrying (${retryCount}/${MAX_RETRIES})...` : '', progress: 0 } : p
     ))
 
     const progressInterval = setInterval(() => {
@@ -73,6 +76,14 @@ export default function ComicGrid({
       const data = await res.json()
 
       if (!res.ok) {
+        // If rate limited or server error, retry with backoff
+        if ((res.status === 429 || res.status >= 500) && retryCount < MAX_RETRIES) {
+          clearInterval(progressInterval)
+          const delay = RETRY_DELAY_BASE * Math.pow(2, retryCount)
+          console.log(`[ComicGrid] Panel ${index + 1} failed with ${res.status}, retrying in ${delay}ms...`)
+          await new Promise(resolve => setTimeout(resolve, delay))
+          return generatePanel(index, retryCount + 1)
+        }
         throw new Error(data?.error || `Generation failed (${res.status})`)
       }
 
@@ -80,13 +91,28 @@ export default function ComicGrid({
 
       clearInterval(progressInterval)
       setPanels(prev => prev.map((p, i) =>
-        i === index ? { ...p, image: data.image, loading: false, progress: 100 } : p
+        i === index ? { ...p, image: data.image, loading: false, progress: 100, error: '' } : p
       ))
 
       return data.image
     } catch (e) {
       clearInterval(progressInterval)
+
+      // Auto-retry on certain errors
       const errorMessage = e instanceof Error ? e.message : "Generation failed"
+      const isRetryable = errorMessage.includes('429') ||
+                          errorMessage.includes('500') ||
+                          errorMessage.includes('502') ||
+                          errorMessage.includes('503') ||
+                          errorMessage.includes('timeout')
+
+      if (isRetryable && retryCount < MAX_RETRIES) {
+        const delay = RETRY_DELAY_BASE * Math.pow(2, retryCount)
+        console.log(`[ComicGrid] Panel ${index + 1} error: ${errorMessage}, retrying in ${delay}ms...`)
+        await new Promise(resolve => setTimeout(resolve, delay))
+        return generatePanel(index, retryCount + 1)
+      }
+
       setPanels(prev => prev.map((p, i) =>
         i === index ? { ...p, loading: false, error: errorMessage, progress: 0 } : p
       ))
@@ -94,21 +120,23 @@ export default function ComicGrid({
     }
   }, [scenes, comicSeed])
 
-  // Generate panels with staggered start to avoid rate limits
+  // Generate panels sequentially to avoid overwhelming the API
+  // This is more reliable than parallel generation with staggering
   const generateAllPanels = useCallback(async () => {
-    setGeneratingIndex(0) // Show we're generating
+    setGeneratingIndex(0)
+    const results: (string | null)[] = []
 
-    // Stagger requests by 500ms each to avoid hitting API rate limits
-    const promises = scenes.map((_, i) =>
-      new Promise<string | null>(resolve => {
-        setTimeout(async () => {
-          const result = await generatePanel(i)
-          resolve(result)
-        }, i * 500) // 0ms, 500ms, 1000ms, 1500ms delays
-      })
-    )
+    for (let i = 0; i < scenes.length; i++) {
+      setGeneratingIndex(i)
+      const result = await generatePanel(i)
+      results.push(result)
 
-    const results = await Promise.all(promises)
+      // Small delay between panels to let Replicate breathe
+      if (i < scenes.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 1000))
+      }
+    }
+
     setGeneratingIndex(-1)
 
     // Filter out failed generations and collect successful ones
