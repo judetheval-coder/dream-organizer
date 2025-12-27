@@ -11,9 +11,10 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Allow enough requests for multi-panel comics (up to 8 panels + some retries)
-const RATE_LIMIT = 20
+// Rate limit for prompt optimization: 12 panels max + retries
+const RATE_LIMIT = 30
 const RATE_WINDOW = 5 * 60 * 1000
+const RATE_KEY_PREFIX = 'opt-prompt:' // Separate rate limit bucket from other endpoints
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,7 +23,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const rate = checkRateLimit(userId, RATE_LIMIT, RATE_WINDOW)
+    // Use prefixed key to separate rate limits from other endpoints
+    const rate = checkRateLimit(`${RATE_KEY_PREFIX}${userId}`, RATE_LIMIT, RATE_WINDOW)
     if (!rate.allowed) {
       return NextResponse.json(
         { error: `Too many prompt optimizations. Try again in ${rate.resetTime}s.` },

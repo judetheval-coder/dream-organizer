@@ -6,8 +6,10 @@ import { captureException } from '@/lib/sentry'
 
 export const runtime = 'nodejs'
 
-const RATE_LIMIT = 20 // Allow 4 panels per dream + retries
+// Rate limit for image generation: 12 panels max + retries
+const RATE_LIMIT = 30
 const RATE_WINDOW = 5 * 60 * 1000
+const RATE_KEY_PREFIX = 'gen-img:' // Separate rate limit bucket from other endpoints
 
 // SDXL model on Replicate - latest stable version
 const SDXL_MODEL = 'stability-ai/sdxl:7762fd07cf82c948538e41f63f77d685e02b063e37e496e96eefd46c929f9bdc'
@@ -26,8 +28,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Use prefixed key to separate rate limits from other endpoints
     const { allowed, remaining, resetTime, abuse, headers } = checkRateLimit(
-      userId,
+      `${RATE_KEY_PREFIX}${userId}`,
       RATE_LIMIT,
       RATE_WINDOW,
     )
@@ -104,7 +107,8 @@ export async function POST(req: NextRequest) {
           num_inference_steps: 25,
           guidance_scale: 7.5,
           // Use consistent seed across all panels in a comic for style coherence
-          ...(seed !== undefined && { seed }),
+          // Note: seed must be an integer for SDXL
+          seed: seed !== undefined ? Math.floor(seed) : Math.floor(Math.random() * 2147483647),
         }
       })
     })
