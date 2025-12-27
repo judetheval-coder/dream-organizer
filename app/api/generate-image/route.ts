@@ -11,8 +11,8 @@ const RATE_LIMIT = 30
 const RATE_WINDOW = 5 * 60 * 1000
 const RATE_KEY_PREFIX = 'gen-img:' // Separate rate limit bucket from other endpoints
 
-// SDXL model on Replicate - latest stable version
-const SDXL_MODEL = 'stability-ai/sdxl:7762fd07cf82c948538e41f63f77d685e02b063e37e496e96eefd46c929f9bdc'
+// Comic-style Flux model on Replicate - produces consistent comic book art
+const COMIC_FLUX_MODEL = 'genericdeag/comic-style:b02e16758db6ee6d8ff6f75cb5cfb73119cecff157439a87f0bd598d72525599'
 
 interface ReplicatePrediction {
   id: string
@@ -80,15 +80,10 @@ export async function POST(req: NextRequest) {
 
     const { prompt, seed } = validation.data as { prompt: string; seed?: number }
 
-    // Use a VERY specific art style that SDXL will interpret consistently
-    // This ensures all panels in a comic look like they were drawn by the same artist
-    const consistentStyle = 'western comic book art style, flat cel-shaded coloring, bold black ink outlines, clean linework, vibrant saturated colors, professional comic illustration, consistent character designs, dynamic action poses'
+    // Enhance prompt for comic book style - Flux model responds well to descriptive prompts
+    const enhancedPrompt = `comic book panel, ${prompt}, bold ink outlines, vibrant colors, dynamic action pose, professional comic illustration, sequential art style`
 
-    const enhancedPrompt = `${consistentStyle}, ${prompt}`
-
-    const negativePrompt = 'anime, manga, 3d render, photograph, realistic photo, watercolor, painterly, impressionist, sketch, pencil drawing, blurry, low quality, distorted, ugly, deformed, watermark, text, signature, cropped, out of frame, worst quality, low resolution, jpeg artifacts, duplicate, inconsistent style, mixed media'
-
-    // Create prediction with SDXL
+    // Create prediction with Flux comic-style model
     const createResponse = await fetch('https://api.replicate.com/v1/predictions', {
       method: 'POST',
       headers: {
@@ -96,18 +91,13 @@ export async function POST(req: NextRequest) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        version: SDXL_MODEL.split(':')[1],
+        version: COMIC_FLUX_MODEL.split(':')[1],
         input: {
           prompt: enhancedPrompt,
-          negative_prompt: negativePrompt,
-          width: 1024,
-          height: 1024,
-          num_outputs: 1,
-          scheduler: 'K_EULER',
-          num_inference_steps: 25,
-          guidance_scale: 7.5,
-          // Use consistent seed across all panels in a comic for style coherence
-          // Note: seed must be an integer for SDXL
+          aspect_ratio: '1:1',
+          output_format: 'png',
+          output_quality: 90,
+          // Flux uses seed for consistency
           seed: seed !== undefined ? Math.floor(seed) : Math.floor(Math.random() * 2147483647),
         }
       })
@@ -115,7 +105,7 @@ export async function POST(req: NextRequest) {
 
     if (!createResponse.ok) {
       const errorText = await createResponse.text()
-      console.error('[SDXL] Replicate create error:', createResponse.status, errorText)
+      console.error('[Flux Comic] Replicate create error:', createResponse.status, errorText)
       // Return specific error for debugging
       return NextResponse.json(
         { error: `Image service error: ${createResponse.status}`, details: errorText },
@@ -147,7 +137,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (prediction.status === 'failed') {
-      console.error('[SDXL] Generation failed:', prediction.error)
+      console.error('[Flux Comic] Generation failed:', prediction.error)
       throw new Error(prediction.error || 'Image generation failed')
     }
 
@@ -171,7 +161,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       image: dataUri,
       metadata: {
-        model: 'SDXL',
+        model: 'Flux-Comic',
         prediction_id: prediction.id,
       }
     }, { headers })

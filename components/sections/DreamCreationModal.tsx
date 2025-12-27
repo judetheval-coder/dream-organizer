@@ -101,7 +101,7 @@ export function DreamCreationModal({
           }}
         >
           <p style={{ color: colors.textMuted }}>
-            <strong style={{ color: colors.purple }}>What you'll get:</strong> A comic page with 4-12 panels (based on dream length), white borders, cinematic scene breakdowns, and dynamic action poses.
+            <strong style={{ color: colors.purple }}>What you'll get:</strong> A 6-panel comic page with white borders, cinematic scene breakdowns, and dynamic action poses.
           </p>
         </div>
 

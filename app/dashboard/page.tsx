@@ -415,11 +415,10 @@ function DashboardPageContent() {
   // Use GPT to intelligently break down dream into cinematic scenes
   const breakdownDreamIntoScenes = async (text: string): Promise<string[]> => {
     const trimmed = text.trim()
-    const wordCount = trimmed.split(/\s+/).length
 
-    // Calculate optimal panel count based on dream length
-    // Short dreams: 4 panels, Medium: 6-8, Long: 9-12
-    const maxPanels = wordCount < 50 ? 4 : wordCount < 150 ? 6 : wordCount < 300 ? 9 : 12
+    // Fixed at 6 panels for optimal comic page layout and story flow
+    // This provides enough scenes for a narrative without overwhelming the viewer
+    const maxPanels = 6
 
     try {
       // Try GPT-powered breakdown for rich scene descriptions
