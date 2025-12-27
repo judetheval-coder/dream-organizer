@@ -206,6 +206,7 @@ function DashboardPageContent() {
   const searchParams = useSearchParams()
   const tabKeySet = useMemo(() => new Set(DASHBOARD_TABS.map(({ key }) => key)), [])
   const { user, isLoaded } = useUser()
+  const isAdmin = user?.publicMetadata?.role === 'admin'
   const {
     dreams,
     loading,
@@ -412,55 +413,63 @@ function DashboardPageContent() {
   )
 
   const generateSceneDescriptions = (text: string) => {
-    // Smart scene splitting - only split on natural scene breaks
+    // Always generate exactly 4 panels for a proper comic page layout
     const trimmed = text.trim()
-    const maxPanels = SUBSCRIPTION_TIERS[userTier].limits.panelsPerDream
+    const maxPanels = 4 // Always use 4 panels for consistent 2x2 grid
+    const words = trimmed.split(/\s+/)
+    const wordCount = words.length
 
-    // Scene break indicators (in order of priority)
-    const sceneBreakPatterns = [
-      /\n\n+/g,                           // Double line breaks
-      /(?:then |suddenly |next |later |after that |meanwhile )/gi, // Transition words
-      /(?:I (?:woke up|found myself|realized|noticed|saw) )/gi,   // POV shifts
-    ]
+    // Very short dreams (under 30 words) - still make 4 panels by expanding
+    if (wordCount < 30) {
+      // For very short dreams, create 4 variations of the scene
+      return [
+        `Scene establishing: ${trimmed}`,
+        `Action moment: ${trimmed}`,
+        `Dramatic close-up: ${trimmed}`,
+        `Resolution: ${trimmed}`
+      ]
+    }
 
-    // First try to split on explicit breaks (double newlines)
-    let scenes = trimmed.split(/\n\n+/).map(s => s.trim()).filter(s => s.length > 20)
+    // Try to split into sentences first
+    const sentences = trimmed.match(/[^.!?]+[.!?]+/g) || []
 
-    // If no natural breaks, check word count to decide
-    if (scenes.length <= 1) {
-      const wordCount = trimmed.split(/\s+/).length
-
-      // Short dreams (under 80 words) = 1 panel
-      // Medium dreams (80-200 words) = 2 panels
-      // Long dreams (200+ words) = up to maxPanels
-      if (wordCount < 80) {
-        return [trimmed]
-      } else if (wordCount < 200) {
-        // Try to find a natural midpoint using transition words
-        const sentences = trimmed.match(/[^.!?]+[.!?]+/g) || [trimmed]
-        if (sentences.length >= 2) {
-          const mid = Math.ceil(sentences.length / 2)
-          return [
-            sentences.slice(0, mid).join(' ').trim(),
-            sentences.slice(mid).join(' ').trim()
-          ]
+    // If we have at least 4 sentences, group them into 4 panels
+    if (sentences.length >= 4) {
+      const perPanel = Math.ceil(sentences.length / maxPanels)
+      const scenes: string[] = []
+      for (let i = 0; i < maxPanels; i++) {
+        const start = i * perPanel
+        const end = Math.min(start + perPanel, sentences.length)
+        const chunk = sentences.slice(start, end).join(' ').trim()
+        if (chunk) {
+          scenes.push(chunk)
         }
-        return [trimmed]
-      } else {
-        // Long dream - split into 3-4 panels based on sentences
-        const sentences = trimmed.match(/[^.!?]+[.!?]+/g) || [trimmed]
-        const targetPanels = Math.min(Math.ceil(wordCount / 75), maxPanels)
-        const perPanel = Math.ceil(sentences.length / targetPanels)
+      }
+      // Ensure we have exactly 4 panels
+      while (scenes.length < 4) {
+        scenes.push(scenes[scenes.length - 1] || trimmed)
+      }
+      return scenes.slice(0, 4)
+    }
 
-        scenes = []
-        for (let i = 0; i < sentences.length; i += perPanel) {
-          const chunk = sentences.slice(i, i + perPanel).join(' ').trim()
-          if (chunk) scenes.push(chunk)
-        }
+    // Fallback: split by word count into 4 equal parts
+    const wordsPerPanel = Math.ceil(wordCount / maxPanels)
+    const scenes: string[] = []
+    for (let i = 0; i < maxPanels; i++) {
+      const start = i * wordsPerPanel
+      const end = Math.min(start + wordsPerPanel, wordCount)
+      const chunk = words.slice(start, end).join(' ').trim()
+      if (chunk) {
+        scenes.push(chunk)
       }
     }
 
-    return scenes.slice(0, maxPanels)
+    // Ensure we always return exactly 4 scenes
+    while (scenes.length < 4) {
+      scenes.push(scenes[scenes.length - 1] || trimmed)
+    }
+
+    return scenes.slice(0, 4)
   }
 
   const handleCreate = async () => {
@@ -468,7 +477,7 @@ function DashboardPageContent() {
       return
     }
 
-    if (!canCreateDream(userTier, dreams.length)) {
+    if (!canCreateDream(userTier, dreams.length, isAdmin)) {
       setShowUpgrade(true)
       return
     }

@@ -52,7 +52,9 @@ export const SUBSCRIPTION_TIERS = {
 
 export type SubscriptionTier = keyof typeof SUBSCRIPTION_TIERS
 
-export function canCreateDream(tier: SubscriptionTier, currentCount: number): boolean {
+export function canCreateDream(tier: SubscriptionTier, currentCount: number, isAdmin?: boolean): boolean {
+  // Admins have no limits
+  if (isAdmin) return true
   const limit = SUBSCRIPTION_TIERS[tier].limits.dreamsPerMonth
   if (limit === -1) return true
   return currentCount < limit
