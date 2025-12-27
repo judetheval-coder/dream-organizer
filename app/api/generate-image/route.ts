@@ -108,7 +108,11 @@ export async function POST(req: NextRequest) {
     if (!createResponse.ok) {
       const errorText = await createResponse.text()
       console.error('[SDXL] Replicate create error:', createResponse.status, errorText)
-      throw new Error(`Replicate API error: ${createResponse.status}`)
+      // Return specific error for debugging
+      return NextResponse.json(
+        { error: `Image service error: ${createResponse.status}`, details: errorText },
+        { status: createResponse.status === 401 ? 401 : 500, headers }
+      )
     }
 
     let prediction: ReplicatePrediction = await createResponse.json()
