@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useMemo, useState, useEffect, useCallback } from 'react'
+import { Suspense, useMemo, useState, useEffect, useCallback, useRef } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { analytics } from '@/lib/analytics'
 import { useUser, SignOutButton } from '@clerk/nextjs'
@@ -318,6 +318,9 @@ function DashboardPageContent() {
     isGenerating: false,
     dreamId: null
   })
+  // Store panels for the current generation to avoid stale closure issues
+  const [generatingPanels, setGeneratingPanels] = useState<Array<{ id: string; scene_number: number }>>([])
+  const generatingDreamIdRef = useRef<string | null>(null)
 
   // Auto-save draft to localStorage whenever dream content changes
   useEffect(() => {
@@ -383,20 +386,26 @@ function DashboardPageContent() {
     [dreams]
   )
 
+  // Dreams that have at least one panel with a generated image
   const dreamsWithPanels = useMemo(
     () =>
       dreams
         .filter(
-          (dream): dream is DreamWithPanels & { panels: Panel[] } => Array.isArray(dream.panels) && dream.panels.length > 0
+          (dream): dream is DreamWithPanels & { panels: Panel[] } =>
+            Array.isArray(dream.panels) &&
+            dream.panels.length > 0 &&
+            dream.panels.some(p => p.image_url) // Must have at least one image
         )
         .map(dream => ({
           id: dream.id,
           text: dream.text,
-          panels: dream.panels.map(panel => ({
-            id: panel.id,
-            image_url: panel.image_url,
-            description: panel.description,
-          })),
+          panels: dream.panels
+            .filter(panel => panel.image_url) // Only include panels with images
+            .map(panel => ({
+              id: panel.id,
+              image_url: panel.image_url,
+              description: panel.description,
+            })),
           created_at: dream.created_at,
           date: (dream as { date?: string }).date,
         })),
@@ -538,6 +547,14 @@ function DashboardPageContent() {
       })
       setLastCreatedDreamId(createdDream.id)
       setComicPage(prev => ({ ...prev, dreamId: createdDream.id }))
+
+      // Store panels info in ref and state for the callback to use
+      // This avoids stale closure issues with the dreams array
+      generatingDreamIdRef.current = createdDream.id
+      if (createdDream.panels) {
+        setGeneratingPanels(createdDream.panels.map(p => ({ id: p.id, scene_number: p.scene_number })))
+      }
+
       showToast(`Creating ${sceneDescriptions.length}-panel comic...`, 'success')
       analytics.events.dreamCreated({ style: currentStyle, mood: currentMood, panelCount: sceneDescriptions.length })
     } catch (err) {
@@ -553,29 +570,54 @@ function DashboardPageContent() {
       isGenerating: false
     }))
 
-    // Save each panel image to the database
-    const targetDreamId = comicPage.dreamId || lastCreatedDreamId || dreams[0]?.id
-    const currentDream = dreams.find(dream => dream.id === targetDreamId) || dreams[0]
+    // Use the ref and state to get stable references to the dream/panels
+    // This avoids stale closure issues when the callback was created before saveDream completed
+    const dreamId = generatingDreamIdRef.current
 
-    if (currentDream?.panels && user) {
-      try {
-        // Update each panel with its corresponding image
-        for (let i = 0; i < images.length; i++) {
-          const panel = currentDream.panels[i]
-          if (panel && images[i]) {
-            await updatePanel(panel.id, images[i], currentDream.id, i)
-          }
-        }
-        showToast('✨ Comic page generated!', 'success')
-        updateTabInUrl('My Dreams')
-        refreshDreams()
-      } catch (err) {
-        console.error('Error saving comic panels:', err)
-      }
-    } else {
-      showToast('✨ Comic page generated!', 'success')
+    if (!dreamId || !user) {
+      console.error('[handleComicImagesReady] No dream ID or user available', { dreamId, user: !!user })
+      showToast('Comic generated but could not save to database', 'error')
+      return
     }
-  }, [comicPage.dreamId, lastCreatedDreamId, dreams, user, updatePanel, showToast, refreshDreams, updateTabInUrl])
+
+    // Get panels from the generatingPanels state (set when dream was created)
+    // We need to read from current state, not the closure
+    setGeneratingPanels(currentPanels => {
+      // This runs synchronously with access to current state
+      if (currentPanels.length === 0) {
+        console.error('[handleComicImagesReady] No panels found in generatingPanels state')
+        return currentPanels
+      }
+
+      // Start async save process with current panels data
+      const saveImages = async () => {
+        try {
+          console.log(`[handleComicImagesReady] Saving ${images.length} images to ${currentPanels.length} panels for dream ${dreamId}`)
+
+          for (let i = 0; i < images.length; i++) {
+            const panel = currentPanels[i]
+            if (panel && images[i]) {
+              console.log(`[handleComicImagesReady] Saving image ${i + 1} to panel ${panel.id}`)
+              await updatePanel(panel.id, images[i], dreamId, i)
+            }
+          }
+
+          showToast('Comic saved to your collection!', 'success')
+          updateTabInUrl('My Dreams')
+          refreshDreams()
+
+          // Clear the generating state
+          generatingDreamIdRef.current = null
+        } catch (err) {
+          console.error('[handleComicImagesReady] Error saving comic panels:', err)
+          showToast('Failed to save some panels', 'error')
+        }
+      }
+
+      saveImages()
+      return currentPanels // Don't modify state, just use it
+    })
+  }, [user, updatePanel, showToast, refreshDreams, updateTabInUrl])
 
   const handlePanelImageReady = useCallback(async (panelId: number, imageUrl: string) => {
     setPanels(prevPanels => prevPanels.map(panel =>

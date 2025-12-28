@@ -26,33 +26,21 @@ const DATE_FORMAT: Intl.DateTimeFormatOptions = {
 export function DreamPanelsGallery({ dreams }: DreamPanelsGalleryProps) {
   const [lightboxImage, setLightboxImage] = useState<string | null>(null)
 
-  // Only show dreams that have at least one panel with an image
-  const dreamsWithImages = dreams.filter(dream =>
-    dream.panels.some(p => p.image_url)
-  )
-
-  if (!dreamsWithImages.length) {
-    return (
-      <Card>
-        <EmptyState
-          icon="📚"
-          title="No comic panels yet"
-          description="Generate a new dream comic on the Dashboard to see your panels here."
-        />
-      </Card>
-    )
+  // Dreams are pre-filtered by parent component to only include those with images
+  if (!dreams.length) {
+    return null // Parent handles empty state
   }
 
   return (
     <>
       <div className="space-y-8">
-        {dreamsWithImages.map((dream) => {
+        {dreams.map((dream) => {
           const timestamp = dream.created_at || dream.date
           const formattedDate = timestamp
             ? new Date(timestamp).toLocaleDateString('en-US', DATE_FORMAT)
             : 'Unknown date'
 
-          // Only show panels that have images
+          // Panels are pre-filtered by parent to only include those with images
           const panelsWithImages = dream.panels.filter(p => p.image_url)
 
           return (
