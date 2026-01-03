@@ -105,9 +105,11 @@ export default function DreamGroups() {
     }
   }
 
-  const handleViewGroup = (_groupId: string) => {
-    // Group detail pages will be implemented in a future release
-    // For now, clicking a group card shows join/leave button
+  const handleViewGroup = (groupId: string) => {
+    // Navigate to group detail page
+    if (typeof window !== 'undefined') {
+      window.location.href = `/groups/${groupId}`
+    }
   }
 
   const filtered = groups.filter(g => {
