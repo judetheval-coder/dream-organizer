@@ -104,6 +104,12 @@ export default function GroupDetailPage() {
     }
   }, [groupId, user])
 
+  useEffect(() => {
+    if (posts.length > 0 && user) {
+      loadDreamMatches()
+    }
+  }, [posts, user])
+
   const loadGroup = async () => {
     try {
       const { data, error } = await supabase
@@ -266,6 +272,30 @@ export default function GroupDetailPage() {
       }
     } catch (err) {
       // No streak yet is fine
+    }
+  }
+
+  const loadDreamMatches = async () => {
+    if (!user || posts.length < 2) return
+    
+    try {
+      // Find matches for the current user's posts
+      const userPostIds = posts.filter(p => p.user_id === user.id).map(p => p.id)
+      if (userPostIds.length === 0) return
+
+      const { data } = await supabase
+        .from('dream_matches')
+        .select('*')
+        .eq('group_id', groupId)
+        .in('post_id_1', userPostIds)
+        .order('similarity_score', { ascending: false })
+        .limit(5)
+
+      if (data) {
+        setDreamMatches(data)
+      }
+    } catch (err) {
+      // Matching not available yet
     }
   }
 
@@ -712,6 +742,42 @@ export default function GroupDetailPage() {
                       </div>
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* Dream Matches */}
+            {dreamMatches.length > 0 && (
+              <div className="mt-6 p-6 rounded-2xl border-2 relative overflow-hidden" style={{ 
+                borderColor: 'rgba(6, 182, 212, 0.4)',
+                background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(139, 92, 246, 0.1))'
+              }}>
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-600/10 via-transparent to-purple-600/10 animate-pulse"></div>
+                <div className="relative z-10">
+                  <p className="text-sm font-semibold mb-3 text-center uppercase tracking-wider" style={{ color: '#22D3EE' }}>
+                    🔮 Dream Connections
+                  </p>
+                  <div className="space-y-2">
+                    {dreamMatches.slice(0, 3).map((match, idx) => {
+                      const otherPost = posts.find(p => p.id === (match.post_id_1 === posts.find(p2 => p2.user_id === user?.id)?.id ? match.post_id_2 : match.post_id_1))
+                      return (
+                        <div key={idx} className="p-3 rounded-xl" style={{ background: 'rgba(6, 182, 212, 0.1)' }}>
+                          <p className="text-sm" style={{ color: colors.textPrimary }}>
+                            Your dream overlaps <span className="font-bold text-cyan-400">{match.similarity_score}%</span> with {otherPost?.users?.email?.split('@')[0] || 'another dreamer'}'s dream
+                          </p>
+                          {match.matched_symbols && match.matched_symbols.length > 0 && (
+                            <div className="flex gap-1 mt-2">
+                              {match.matched_symbols.slice(0, 3).map((symbol, sIdx) => (
+                                <span key={sIdx} className="text-xs px-2 py-1 rounded" style={{ background: 'rgba(6, 182, 212, 0.2)', color: '#22D3EE' }}>
+                                  {symbol}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                  </div>
                 </div>
               </div>
             )}
