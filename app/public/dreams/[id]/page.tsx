@@ -41,14 +41,23 @@ export default async function DreamPublicPage({ params }: { params: Promise<{ id
   // Handle both array and null/undefined cases
   const rawPanels = dreamNest?.panels
   const panels = Array.isArray(rawPanels)
-    ? rawPanels.sort((a: any, b: any) => {
-        // Sort by scene_number if available, otherwise by id
-        if (a.scene_number !== undefined && b.scene_number !== undefined) {
-          return a.scene_number - b.scene_number
-        }
-        return 0
-      })
+    ? rawPanels
+        .filter((p: any) => p) // Filter out null/undefined panels
+        .sort((a: any, b: any) => {
+          // Sort by scene_number if available, otherwise by id
+          if (a.scene_number !== undefined && b.scene_number !== undefined) {
+            return a.scene_number - b.scene_number
+          }
+          return 0
+        })
     : []
+
+  // Debug: Log panel data to help diagnose image issues
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[DreamPublicPage] Dream ID:', id)
+    console.log('[DreamPublicPage] Panels count:', panels.length)
+    console.log('[DreamPublicPage] Panels with images:', panels.filter((p: any) => p.image_url).length)
+  }
 
   return (
     <main className="max-w-4xl mx-auto p-8" style={{ background: '#0a0118', minHeight: '100vh', color: '#fff' }}>
