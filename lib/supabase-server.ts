@@ -172,7 +172,7 @@ export async function getPublicDreamById(dreamId: string) {
         style,
         mood,
         created_at,
-        panels (id, description, image_url)
+        panels (id, description, image_url, scene_number)
       ),
       users (id, email)
     `)

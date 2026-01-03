@@ -14,6 +14,20 @@ const nextConfig = {
             },
         },
     } : {},
+    images: {
+        remotePatterns: [
+            {
+                protocol: 'https',
+                hostname: '*.supabase.co',
+            },
+            {
+                protocol: 'https',
+                hostname: '*.supabase.in',
+            },
+        ],
+        // Allow unoptimized images for external domains
+        unoptimized: false,
+    },
 }
 
 module.exports = nextConfig;

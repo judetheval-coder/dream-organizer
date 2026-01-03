@@ -33,25 +33,74 @@ export default async function DreamPublicPage({ params }: { params: Promise<{ id
   const { id } = await params
   const dream = await getPublicDreamById(id)
   if (!dream) return notFound()
+
   const dreamNest = dream.dreams || {}
   const author = dream.users
 
+  // Get panels and sort by scene_number if available
+  // Handle both array and null/undefined cases
+  const rawPanels = dreamNest?.panels
+  const panels = Array.isArray(rawPanels)
+    ? rawPanels.sort((a: any, b: any) => {
+        // Sort by scene_number if available, otherwise by id
+        if (a.scene_number !== undefined && b.scene_number !== undefined) {
+          return a.scene_number - b.scene_number
+        }
+        return 0
+      })
+    : []
+
   return (
-    <main className="max-w-4xl mx-auto p-8">
-      <h1 className="text-3xl font-bold mb-4">{author?.email?.split('@')[0] || 'Dreamer'}’s Dream</h1>
-      <p className="text-lg mb-6">{dreamNest?.text}</p>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {dreamNest?.panels?.map((p: { id: string; image_url?: string; description?: string }) => (
-          <div key={p.id} className="rounded-lg overflow-hidden border" style={{ background: '#0a0118' }}>
-            {p.image_url ? (
-              <Image src={p.image_url} alt={p.description ?? ''} width={600} height={400} sizes="(max-width: 768px) 100vw, 50vw" />
-            ) : (
-              <div className="p-6">{p.description}</div>
-            )}
-            <div className="p-3 text-sm text-gray-300">{p.description}</div>
-          </div>
-        ))}
-      </div>
+    <main className="max-w-4xl mx-auto p-8" style={{ background: '#0a0118', minHeight: '100vh', color: '#fff' }}>
+      <h1 className="text-3xl font-bold mb-4">{author?.email?.split('@')[0] || 'Dreamer'}'s Dream</h1>
+      <p className="text-lg mb-6 text-gray-300">{dreamNest?.text}</p>
+
+      {panels.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {panels.map((p: { id: string; image_url?: string | null; description?: string; scene_number?: number }) => (
+            <div key={p.id} className="rounded-lg overflow-hidden border border-gray-700" style={{ background: '#1a0a2e' }}>
+              {p.image_url ? (
+                <div className="relative aspect-video w-full">
+                  {p.image_url.startsWith('data:') ? (
+                    // Use regular img tag for data URLs
+                    <img
+                      src={p.image_url}
+                      alt={p.description ?? `Panel ${p.scene_number !== undefined ? p.scene_number + 1 : ''}`}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    // Use Next Image for regular URLs
+                    <Image
+                      src={p.image_url}
+                      alt={p.description ?? `Panel ${p.scene_number !== undefined ? p.scene_number + 1 : ''}`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      unoptimized={p.image_url.includes('supabase.co') || p.image_url.includes('supabase.in')}
+                    />
+                  )}
+                </div>
+              ) : (
+                <div className="aspect-video w-full flex items-center justify-center p-6 bg-gradient-to-br from-purple-900/20 to-blue-900/20">
+                  <div className="text-center">
+                    <div className="text-4xl mb-2">🎨</div>
+                    <p className="text-sm text-gray-400">Image generating...</p>
+                  </div>
+                </div>
+              )}
+              {p.description && (
+                <div className="p-4 border-t border-gray-700">
+                  <p className="text-sm text-gray-300">{p.description}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="text-center py-12">
+          <p className="text-gray-400">No panels available for this dream yet.</p>
+        </div>
+      )}
     </main>
   )
 }
