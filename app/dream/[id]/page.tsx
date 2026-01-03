@@ -136,6 +136,7 @@ export default function PublicDreamPage() {
                                 image={panel.image_url || undefined}
                                 style={dream.style || 'Arcane'}
                                 mood={dream.mood || 'Mysterious'}
+                                shouldGenerate={false}
                             />
                             <p className="mt-3 text-sm text-center" style={{ color: colors.textSecondary }}>
                                 {panel.description}
