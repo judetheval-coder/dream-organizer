@@ -3,8 +3,8 @@ import { getPublicDreamById } from '@/lib/supabase-server'
 import { Metadata } from 'next'
 import Image from 'next/image'
 
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
-  const id = params.id
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
   const dream = await getPublicDreamById(id)
   if (!dream) {
     return { title: 'Dream not found' }
@@ -29,8 +29,8 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   }
 }
 
-export default async function DreamPublicPage({ params }: { params: { id: string } }) {
-  const id = params.id
+export default async function DreamPublicPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const dream = await getPublicDreamById(id)
   if (!dream) return notFound()
   const dreamNest = dream.dreams || {}
