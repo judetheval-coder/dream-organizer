@@ -84,7 +84,7 @@ export default async function DreamPublicPage({ params }: { params: Promise<{ id
                 <div className="aspect-video w-full flex items-center justify-center p-6 bg-gradient-to-br from-purple-900/20 to-blue-900/20">
                   <div className="text-center">
                     <div className="text-4xl mb-2">🎨</div>
-                    <p className="text-sm text-gray-400">Image generating...</p>
+                    <p className="text-sm text-gray-400">Image not available</p>
                   </div>
                 </div>
               )}
